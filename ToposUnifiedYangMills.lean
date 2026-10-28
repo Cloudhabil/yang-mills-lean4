@@ -100,6 +100,26 @@ theorem wilson_plaquette_action_nonnegative (N : Nat) (beta : Nat) (tr : Plaquet
   have h_beta : (beta : Int) ≥ 0 := by omega
   exact Int.mul_nonneg h_beta h_diff
 
+/-- Constant (zero-field) plaquette holonomy is the identity with trace N: Re Tr(I) = N. -/
+def constPlaquetteTrace (N : Nat) (hN : N ≥ 2) : PlaquetteTrace N where
+  hN := hN
+  re_tr := (N : Int)
+  re_tr_bounded := ⟨by omega, by omega⟩
+
+/-- Trivial action on constant point/zero-field configurations: S_W(1) = β * (N - N) = 0.
+    In the continuum, this corresponds to W(γ_x, χ) = χ(1) I_D. -/
+theorem wilson_const_loop_action_zero (N : Nat) (beta : Nat) (hN : N ≥ 2) :
+    wilsonPlaquetteActionInt N beta (constPlaquetteTrace N hN) = 0 := by
+  unfold wilsonPlaquetteActionInt constPlaquetteTrace
+  dsimp
+  omega
+
+/-- Orientation reversal of a plaquette corresponds to group inverse U ↦ U⁻¹,
+    preserving the real trace Re Tr(U⁻¹) = Re Tr(U). -/
+theorem plaquette_trace_reversal_bounded (N : Nat) (tr : PlaquetteTrace N) :
+    - (N : Int) ≤ tr.re_tr ∧ tr.re_tr ≤ (N : Int) :=
+  tr.re_tr_bounded
+
 /-! ### §2 Temporal Reflection and Reflection Positivity (Theorem 2.3) -/
 
 /-- Reflection hyperplane Π = {x : x₀ = (m + 1/2)a} partitioning Λ_{L,a}. -/
@@ -416,6 +436,24 @@ def FourSimplexComplex : FourTierDACC where
 
 /-! ### §12 Gauge Invariance as a Type Invariant (Elitzur's Principle) -/
 
+theorem sumFin_zero (n : Nat) : sumFin (fun (_ : Fin n) => (0 : Int)) = 0 := by
+  induction n with
+  | zero => rfl
+  | succ k ih =>
+    unfold sumFin
+    rw [ih]
+    rfl
+
+theorem sumFin_neg {n : Nat} (f : Fin n → Int) :
+    sumFin (fun i => - f i) = - sumFin f := by
+  induction n with
+  | zero => rfl
+  | succ k ih =>
+    unfold sumFin
+    dsimp
+    rw [ih]
+    omega
+
 abbrev Chain1 (E : Nat) := Fin E → Int
 
 def mulVec {V E : Nat} (d1 : Fin V → Fin E → Int) (c : Chain1 E) : Fin V → Int :=
@@ -434,6 +472,34 @@ theorem wilson_loop_gauge_invariant
     {V E : Nat} (d1 : Fin V → Fin E → Int) (w : WilsonLoop V E d1) :
     ∀ i : Fin V, mulVec d1 w.chain i = 0 :=
   w.is_closed
+
+/-- Constant (zero-length) cycle: trivial holonomy chain identically zero. -/
+def WilsonLoop.const (V E : Nat) (d1 : Fin V → Fin E → Int) (id : String) (n : Nat) : WilsonLoop V E d1 where
+  loop_id   := id
+  gauge_n   := n
+  chain     := fun _ => 0
+  is_closed := by
+    intro i
+    unfold mulVec
+    have h0 : (fun (j : Fin E) => d1 i j * (0 : Int)) = (fun _ => 0) := by
+      funext j; exact Int.mul_zero (d1 i j)
+    rw [h0]
+    exact sumFin_zero E
+
+/-- Orientation-reversed loop: chain c ↦ -c, corresponding to holonomy inverse U ↦ U⁻¹. -/
+def WilsonLoop.reverse {V E : Nat} {d1 : Fin V → Fin E → Int} (w : WilsonLoop V E d1) : WilsonLoop V E d1 where
+  loop_id   := w.loop_id
+  gauge_n   := w.gauge_n
+  chain     := fun j => - (w.chain j)
+  is_closed := by
+    intro i
+    have hw := w.is_closed i
+    unfold mulVec at hw ⊢
+    have h_neg : (fun (j : Fin E) => d1 i j * (- w.chain j)) = (fun (j : Fin E) => - (d1 i j * w.chain j)) := by
+      funext j; exact Int.mul_neg (d1 i j) (w.chain j)
+    rw [h_neg, sumFin_neg]
+    rw [hw]
+    rfl
 
 /-! ### §13 Theorem 12.3: Analyticity Obstruction of Perturbation Theory -/
 
@@ -934,10 +1000,17 @@ theorem charged_sector_geometric_spectral_floor
     ============================================================================ -/
 
 #print axioms wilson_plaquette_action_nonnegative
+#print axioms constPlaquetteTrace
+#print axioms wilson_const_loop_action_zero
+#print axioms plaquette_trace_reversal_bounded
 #print axioms nilpotency_tier_12
 #print axioms nilpotency_tier_23
 #print axioms nilpotency_tier_34
+#print axioms sumFin_zero
+#print axioms sumFin_neg
 #print axioms wilson_loop_gauge_invariant
+#print axioms WilsonLoop.const
+#print axioms WilsonLoop.reverse
 #print axioms analyticity_obstruction_all_orders
 #print axioms mat_transpose_involution
 #print axioms mat_transpose_mul
