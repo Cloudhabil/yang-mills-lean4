@@ -1,5 +1,12 @@
 {"version": "1.1.0",
  "packagesDir": ".lake/packages",
- "packages": [],
+ "packages":
+ [{"type": "path",
+   "scope": "",
+   "name": "paritas",
+   "manifestFile": "lake-manifest.json",
+   "inherited": false,
+   "dir": "./../Paritas",
+   "configFile": "lakefile.lean"}],
  "name": "«yang-mills-lean4»",
  "lakeDir": ".lake"}
