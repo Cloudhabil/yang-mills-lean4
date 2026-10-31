@@ -176,29 +176,22 @@ theorem rg_step_contraction
     positivity
 
 /-! ============================================================================
-    PART V: ANALYTICAL PROOF OF HYPOTHESIS (C1) — NON-PERTURBATIVE RG SCALE
+    PART V: THE RENORMALIZATION GROUP SCALING BRIDGE (C1)
     ============================================================================ -/
 
-/-- **Proof of Hypothesis (C1)**: Non-Perturbative Scale Invariance & RG Mass Scale.
-    Constructs the physical mass scale $\Lambda_{\text{YM}} > 0$ from the 2-loop asymptotic freedom
-    scaling function and proves strictly positive compatibility with $b_0(G) > 0$. -/
-theorem prove_hypothesis_c1_rg_scale
-    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
-    (Curv : CurvaturePolynomialAlgebra G) :
-    HypothesisC1_RGScale G Curv := by
-  have h_b0 : 0 < Curv.beta_b0 := Curv.beta_b0_pos
-  -- Construct non-perturbative scale Lambda_YM = exp(-1 / (4 * b0)) > 0
-  let lambda_ym : ℝ := Real.exp (-1.0 / (4.0 * Curv.beta_b0))
-  have h_lambda_pos : 0 < lambda_ym := Real.exp_pos _
-  have h_prod_pos : 0 < lambda_ym * Curv.beta_b0 := mul_pos h_lambda_pos h_b0
-  exact ⟨lambda_ym, h_lambda_pos, h_prod_pos⟩
+/-- The 2-loop asymptotic scaling function determined by the 1-loop beta function
+    coefficient b₀(G) > 0. Connecting the multi-step decimation sequence βₖ ↦ βₖ₊₁
+    to an explicit continuum trajectory β_lat(a) satisfying `HypothesisC1_RGScale`
+    constitutes the full non-perturbative continuum scaling bridge. -/
+def asymptotic_scaling_factor (b0 : ℝ) (g2 : ℝ) : ℝ :=
+  Real.exp (1.0 / (2.0 * b0 * g2))
 
 /-! ============================================================================
     PART VI: STRONG-COUPLING CLUSTER EXPANSION & THE (C4) ARITHMETIC FLOOR
     ============================================================================ -/
 
-/-- At the infrared stopping scale $\beta_{\text{IR}}$, the Dobrushin–Shlosman complete analyticity
-    condition is satisfied, and the coarse-scale spectral gap is anchored by the single-pace floor $q^* > 0$. -/
+/-- At the infrared stopping scale β_IR, the coarse-scale spectral gap is anchored
+    by the proven single-pace arithmetic floor q* = 8 c₀⁶ c₁/₂² > 0. -/
 def coarse_scale_gap_of_seed (q : SinglePaceFloorData) : ℝ :=
   (8 * (q.c0 ^ 6) * (q.c_half ^ 2) : ℝ) / (8 * 16 * Real.pi ^ 2)
 
@@ -213,15 +206,14 @@ theorem coarse_scale_gap_pos (q : SinglePaceFloorData) :
   exact div_pos h_num h_den
 
 /-! ============================================================================
-    PART VII: SPECTRAL GAP PERMANENCE & PROOF OF HYPOTHESIS (C2)
+    PART VII: SPECTRAL GAP LOWER BOUND AT COARSE SCALE
     ============================================================================ -/
 
-/-- **Spectral Gap Permanence Under Block Decimation**.
-    Under $k$ steps of block decimation, the fine transfer matrix operator norm is bounded by
-    the coarse transfer matrix norm plus a summable polymer remainder error series:
-    $$\|T_{a_k}^{2^k} \upharpoonright_{(\mathbb{C}\Omega)^\perp}\|_{\text{op}} \le \|T_{a_{\text{IR}}} \upharpoonright_{(\mathbb{C}\Omega)^\perp}\|_{\text{op}} + \mathcal{E}_k(R_k)$$
-    yielding a uniform lower floor $q_{\text{floor}} = \frac{1}{2} m_0(q^*) > 0$ for all lattice spacings. -/
-theorem spectral_gap_permanence_floor
+/-- **Coarse-Scale Floor Bound**.
+    At the strong-coupling anchor scale, the character expansion floor ensures that
+    the initial spectral gap is bounded below by a strictly positive rational fraction
+    q_floor = (1/2) m₀(q*) > 0. -/
+theorem coarse_scale_floor_positive
     (q : SinglePaceFloorData) :
     ∃ q_floor : ℝ, 0 < q_floor ∧ q_floor ≤ coarse_scale_gap_of_seed q := by
   let q_floor := (coarse_scale_gap_of_seed q) / 2.0
@@ -233,50 +225,23 @@ theorem spectral_gap_permanence_floor
     linarith [coarse_scale_gap_pos q]
   exact ⟨q_floor, h_pos, h_le⟩
 
-/-- **Proof of Hypothesis (C2)**: Uniform Lattice Transfer Matrix Spectral Gap & Lower Floor.
-    Proves that for any positive continuum physical mass scale $\Lambda_{\text{YM}} > 0$,
-    the uniform lattice spectral gap is bounded below by the single-pace arithmetic floor. -/
-theorem prove_hypothesis_c2_uniform_lattice_gap
-    (q : SinglePaceFloorData)
-    (lambda_ym : ℝ)
-    (h_lambda : 0 < lambda_ym) :
-    HypothesisC2_UniformLatticeGap lambda_ym := by
-  rcases spectral_gap_permanence_floor q with ⟨q_floor, h_q_pos, _⟩
-  have h_prod : 0 < q_floor * lambda_ym := mul_pos h_q_pos h_lambda
-  exact ⟨q_floor, h_q_pos, h_prod⟩
-
 /-! ============================================================================
-    PART VIII: CONSTRUCTIVE REDUCTION THEOREM (ZERO CIRCULAR HYPOTHESES)
+    PART VIII: STATUS OF THE NON-PERTURBATIVE CONTINUUM REDUCTION
     ============================================================================ -/
 
-/-- **Constructive Master Mass Gap Reduction**:
-    With Hypotheses (C1), (C2), and (C4) analytically discharged from the multiscale
-    renormalization group flow and DACC single-pace arithmetic floor, the 4D Yang–Mills
-    mass gap $\Delta > 0$ reduces purely to the Osterwalder–Schrader continuum measure (C3). -/
-theorem master_yang_mills_mass_gap_constructive_reduction
-    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
-    {Curv : CurvaturePolynomialAlgebra G}
-    (q : SinglePaceFloorData)
-    (lambda_ym : ℝ)
-    (h_lambda : 0 < lambda_ym)
-    (h3 : HypothesisC3_ContinuumOSMeasure G Curv lambda_ym) :
-    ∃ (ℋ : Type*) (_ : NormedAddCommGroup ℋ) (_ : InnerProductSpace ℂ ℋ)
-      (_ : CompleteSpace ℋ) (_ : TopologicalSpace.SeparableSpace ℋ)
-      (theory : WightmanQuantumYangMills G ℋ Curv),
-      HasMassGap G ℋ theory := by
-  -- Discharge (C1) via constructive RG flow
-  have h1 : HypothesisC1_RGScale G Curv :=
-    prove_hypothesis_c1_rg_scale Curv
+/-!
+### Remark on Non-Perturbative Closure:
+The combinatorial Hodge 1-Laplacian bound on the fundamental cell unit (`dacc_hodge_laplacian_uniform_positive`)
+and the single-pace character expansion floor (`coarse_scale_gap_pos`) are machine-checked algebraic theorems.
+However, extending these finite-cell estimates to:
+  1. An infinite-volume spatial lattice (ℤ/Lℤ)³ without infrared zero-mode pinching,
+  2. The full non-abelian Haar integration over G^{Edges} under continuous decimation a → 0,
+is precisely the content of the non-perturbative hypotheses `HypothesisC1_RGScale`
+and `HypothesisC2_UniformLatticeGap` formalized in `ToposUnifiedYangMills.lean`.
 
-  -- Discharge (C2) via spectral gap permanence anchored at (C4)
-  have h2 : HypothesisC2_UniformLatticeGap lambda_ym :=
-    prove_hypothesis_c2_uniform_lattice_gap q lambda_ym h_lambda
-
-  -- Discharge (C4) via single-pace character expansion
-  have h4 : HypothesisC4_SinglePaceSeed :=
-    single_pace_seed_anchor_proven q
-
-  -- Apply Master Reduction Theorem
-  exact master_yang_mills_mass_gap_reduction lambda_ym h1 h2 h3 h4
+The Master Reduction Theorem `master_yang_mills_mass_gap_reduction` in `ToposUnifiedYangMills.lean`
+rigorously and conditionally reduces the Wightman mass gap to these explicit operator-norm
+and weak-* convergence hypotheses without surrogate arithmetic shortcuts.
+-/
 
 end YangMills.ConstructiveRG
