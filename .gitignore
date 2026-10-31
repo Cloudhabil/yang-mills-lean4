@@ -4,3 +4,6 @@
 *.ilean
 *.c
 *.o
+
+__pycache__/
+*.pyc
