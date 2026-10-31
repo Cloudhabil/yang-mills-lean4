@@ -1,3 +1,5 @@
+import Mathlib
+
 /-
 Copyright 2026 The Formal Conjectures & ToposLang Authors.
 
@@ -247,6 +249,7 @@ theorem spin8_characteristic_inversion :
     For m = 1 (Milnor's exotic 7-sphere), no integer Â can satisfy 1 + 28Â = 0. -/
 theorem milnor_exotic_7sphere_obstruction (A_hat : Int) :
     Omega_8 0 0 * (8 : Int) + Omega_8 0 1 * A_hat ≠ 0 := by
+  change 4 * 8 + 896 * A_hat ≠ 0
   omega
 
 /-- THEOREM 7 (Exotic Sphere Group Order |bP₈| = 28):
@@ -256,6 +259,7 @@ theorem milnor_exotic_7sphere_obstruction (A_hat : Int) :
     The obstruction vanishes if and only if m is a multiple of 28. -/
 theorem exotic_sphere_group_order_28 (m : Int) (hm1 : 1 ≤ m) (hm2 : m < 28) (A_hat : Int) :
     Omega_8 0 0 * (8 * m) + Omega_8 0 1 * A_hat ≠ 0 := by
+  change 4 * (8 * m) + 896 * A_hat ≠ 0
   omega
 
 /-- THEOREM 8 (Generator Periodicity):

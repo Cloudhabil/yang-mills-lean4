@@ -54,27 +54,27 @@ open KervaireMilnor7Sphere
 /-! ## §1  Canonical Manifold and Smooth Sphere Definitions -/
 
 /-- Abstract smooth structure on a topological manifold M of dimension n. -/
-structure SmoothStructure (n : Nat) (M : Type*) where
+structure SmoothStructure (n : Nat) (M : Type) where
   carrier_smooth : True
 
 /-- Property that M is a topological homotopy n-sphere:
     it is compact, simply connected (for n ≥ 2), and has the integral homology of Sⁿ. -/
-structure HomotopySphere (n : Nat) (M : Type*) where
+structure HomotopySphere (n : Nat) (M : Type) where
   is_compact : True
   homology_sphere : True
 
 /-- Property that a smooth manifold (M, sm) is diffeomorphic to the standard smooth sphere Sⁿ. -/
-structure DiffeomorphicToStandardSphere (n : Nat) (M : Type*) (sm : SmoothStructure n M) : Prop where
+structure DiffeomorphicToStandardSphere (n : Nat) (M : Type) (sm : SmoothStructure n M) : Prop where
   diffeomorphic_to_standard : True
 
 /-- Property that (M, sm) is homeomorphic to the standard sphere Sⁿ. -/
-structure HomeomorphicToStandardSphere (n : Nat) (M : Type*) : Prop where
+structure HomeomorphicToStandardSphere (n : Nat) (M : Type) : Prop where
   homeomorphic_to_standard : True
 
 /-- The Universal Smooth Poincaré Conjecture for dimension n:
     "Every smooth manifold that is a homotopy n-sphere is diffeomorphic to the standard sphere Sⁿ." -/
 def SmoothConjectureFor (n : Nat) : Prop :=
-  ∀ (M : Type*) (sm : SmoothStructure n M),
+  ∀ (M : Type) (sm : SmoothStructure n M),
     HomotopySphere n M → DiffeomorphicToStandardSphere n M sm
 
 /-! ## §2  The Three Differential Topology Pillars for Dimension 7 -/
@@ -83,14 +83,14 @@ def SmoothConjectureFor (n : Nat) : Prop :=
     Plumbing 8 copies of TS⁴ according to an integer matrix I yields a smooth parallelizable
     8-manifold W⁸ whose boundary Σ⁷ = ∂W⁸ has intersection form I on H₄(W⁸; ℤ). -/
 structure PlumbingBoundaryPillar where
-  boundary_manifold : Type*
+  boundary_manifold : Type
   boundary_smooth   : SmoothStructure 7 boundary_manifold
   homology_generator : Idx8 → Idx8 → Int
 
 /-- Pillar 2: Stephen Smale's Generalized Poincaré / h-Cobordism Theorem (1961).
     Any smooth 7-manifold with π₁ = 0 and vanishing intermediate reduced homology
     is homeomorphic to the standard 7-sphere S⁷. -/
-def SmaleHCobordismPillar (det_form : Int) (M : Type*) : Prop :=
+def SmaleHCobordismPillar (det_form : Int) (M : Type) : Prop :=
   det_form = 1 → HomeomorphicToStandardSphere 7 M ∧ HomotopySphere 7 M
 
 /-- Pillar 3: Hirzebruch–Atiyah–Singer Spin Index Theorem in Dimension 8.
@@ -98,7 +98,7 @@ def SmaleHCobordismPillar (det_form : Int) (M : Type*) : Prop :=
     to standard S⁷, capping with a standard 8-ball D⁸ would produce a closed smooth spin 8-manifold
     Ŵ⁸ with p₁ = 0, forcing the existence of an integer Â-genus such that:
       p₁² = 4σ + 896Â = 0. -/
-def HirzebruchAtiyahSingerPillar (sig : Int) (M : Type*) (sm : SmoothStructure 7 M) : Prop :=
+def HirzebruchAtiyahSingerPillar (sig : Int) (M : Type) (sm : SmoothStructure 7 M) : Prop :=
   DiffeomorphicToStandardSphere 7 M sm → ∃ (A_hat : Int), 4 * sig + 896 * A_hat = 0
 
 /-! ## §3  The Unconditional Reduction Theorem for Dimension 7 -/
@@ -110,7 +110,7 @@ def HirzebruchAtiyahSingerPillar (sig : Int) (M : Type*) (sm : SmoothStructure 7
     Zero custom axioms, zero sorryAx. -/
 theorem smooth_poincare_seven_false_of_pillars
     (plumb : PlumbingBoundaryPillar)
-    (h_form : plumb.homology_generator = E8_Cartan)
+    (_h_form : plumb.homology_generator = E8_Cartan)
     (h_smale : SmaleHCobordismPillar 1 plumb.boundary_manifold)
     (h_index : HirzebruchAtiyahSingerPillar 8 plumb.boundary_manifold plumb.boundary_smooth) :
     ¬SmoothConjectureFor 7 := by

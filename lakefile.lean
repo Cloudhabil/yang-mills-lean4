@@ -14,6 +14,12 @@ lean_lib «MillenniumYangMills» where
 lean_lib «ToposUnifiedYangMills» where
   roots := #[`ToposUnifiedYangMills]
 
+lean_lib «ToposConstructiveRG» where
+  roots := #[`ToposConstructiveRG]
+
+lean_lib «RGCrossoverCertificate» where
+  roots := #[`RGCrossoverCertificate]
+
 lean_lib «KervaireMilnor7Sphere» where
   roots := #[`KervaireMilnor7Sphere]
 

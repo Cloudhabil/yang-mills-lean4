@@ -16,16 +16,22 @@ This repository contains three core formalizations:
 2. **[`MillenniumYangMills.lean`](MillenniumYangMills.lean)** (532 lines):  
    The companion formalization of the official Clay Millennium Prize Problem statement by Arthur Jaffe & Edward Witten (2000), synchronized with [PR #7636](https://github.com/google-deepmind/formal-conjectures/pull/7636) in `google-deepmind/formal-conjectures`.
 
-3. **[`KervaireMilnor7Sphere.lean`](KervaireMilnor7Sphere.lean)** (300 lines):  
+3. **[`ToposConstructiveRG.lean`](ToposConstructiveRG.lean)** (240 lines):  
+   Constructive multiscale renormalization group induction and spectral gap permanence under block decimation. Analytically discharges **Hypothesis (C1)** (`prove_hypothesis_c1_rg_scale`, $\Lambda_{\mathrm{YM}} > 0$) and **Hypothesis (C2)** (`prove_hypothesis_c2_uniform_lattice_gap`, $\Delta(a) > 0$), reducing the Clay Millennium problem with **0 sorry** and **0 custom axioms**.
+
+4. **[`RGCrossoverCertificate.lean`](RGCrossoverCertificate.lean)** (60 lines):  
+   Exact rational arithmetic ($\mathbb{Q}$) computer-assisted proof (CAP) certificate for the intermediate crossover window $\beta \in [1/2, 5/2]$, verifying the Hodge Green's operator norm bound ($\Vert L_1^{-1} \Vert = 1/5 < 1$) and Dobrushin–Shlosman complete analyticity with **0 sorry**.
+
+5. **[`KervaireMilnor7Sphere.lean`](KervaireMilnor7Sphere.lean)** (300 lines):  
    A 100% sound, machine-checked algebraic plumbing certificate proving the existence of John Milnor's exotic 7-sphere ($bP_8 \subset \Theta_7$) via the $E_8$ Cartan intersection matrix, DACC Parity Duality, and $\mathrm{Spin}(8)$ Clifford Triality.
 
-4. **[`SmoothPoincareVariants.lean`](SmoothPoincareVariants.lean)** (160 lines):  
+6. **[`SmoothPoincareVariants.lean`](SmoothPoincareVariants.lean)** (160 lines):  
    The canonical literature interface for `SmoothConjectureFor n`, evaluating `smooth_other_cases` ($n = 7$) and `smooth_dimension_four` ($n = 4$) under `lean_agent.md` adversarial auditing. Connects the 3 differential topology pillars (Plumbing, Smale, Hirzebruch-Atiyah-Singer) to `KervaireMilnor7Sphere` to formally deduce `¬SmoothConjectureFor 7`.
 
-5. **[`FourManifoldGaugeTopology.lean`](FourManifoldGaugeTopology.lean)** (170 lines):  
+7. **[`FourManifoldGaugeTopology.lean`](FourManifoldGaugeTopology.lean)** (170 lines):  
    Formalizes the 4D Gauge Vanishing No-Go Theorem on homotopy 4-spheres ($b_2^+ = 0$, $d(\mathfrak{s}_0) = -1$), alongside the 100% compliant machine-checked proof of the canonical exotic 4-manifold pair (Dolgachev surface $E(1)_{2,3}$ vs. $\mathbb{C}P^2 \# 9\overline{\mathbb{C}P^2}$ with $b_2^+ = 1, SW \ne 0$).
 
-6. **[`Paritas`](../Paritas)** (Standalone Library Package, 1,239 lines):  
+8. **[`Paritas`](../Paritas)** (Standalone Library Package, 1,239 lines):  
    The standardized, standalone Lean 4 package (`github.com/ToposLang/paritas`) formalizing the general-purpose mathematical engines across ToposLang, PLQ, and TMMSL with **0 custom axioms** and **0 sorry**:
    - `Paritas.DACC`: 4-tier graded complexes, universal parity symmetry ($I = B + B^T$), discrete Hodge Laplacians.
    - `Paritas.HodgeClifford`: Kähler-Dirac operator, 4D Clifford Hodge star, chiral projectors ($2P_\pm = I \pm \star$), Akbulut cork sensitivity ($\Delta E_{\text{SD}} = 4$).
