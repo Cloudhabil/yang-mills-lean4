@@ -13,54 +13,9 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -/
-module
 
-public import FormalConjecturesUtil
+import Mathlib
 
-/-!
-# 4D Yang–Mills Existence and Mass Gap (Clay Millennium Prize Problem)
-
-This file formalizes the official Clay Millennium Prize Problem statement by Arthur Jaffe
-and Edward Witten (2000): *"Quantum Yang-Mills Theory"*.
-
-## Mathematical Structure
-For any compact simple Lie group $G$, pure quantum Yang–Mills theory on four-dimensional
-Minkowski spacetime $\mathbb{R}^{1,3}$ (or Euclidean spacetime $\mathbb{R}^4$) must:
-1. Satisfy the **Wightman Axioms** on a complete, separable complex Hilbert space $\mathcal{H}$
-   with a dense Poincaré-invariant linear domain $\mathcal{D} \subset \mathcal{H}$, a unitary
-   representation of the restricted Poincaré group $\mathcal{P}_+^\uparrow$, unbounded
-   symmetric and mutually commuting energy-momentum generators $P^\mu = (H, \mathbf{P})$ on
-   $\mathcal{D}$ acting as strong spacetime translation derivatives (`HasDerivAt`) whose joint
-   expectations lie in the closed forward light cone $\bar{V}_+$, a unique normalized
-   zero-energy vacuum state $\Omega \in \mathcal{D}$ ($H\Omega = 0$), Poincaré covariance, and
-   microcausality (spacelike commutativity).
-2. Exhibit **Local Quantum Field Operators and Yang–Mills Short-Distance Dynamics**
-   (Jaffe–Witten §4, p. 6):
-   Local quantum field operators in dimension-filtered correspondence ($\dim \le d$) with
-   gauge-invariant local differential polynomials in the curvature $F = dA + A \wedge A$ and
-   its covariant derivatives (such as $\operatorname{Tr}(F_{\mu\nu}F^{\mu\nu})(x)$ and the
-   symmetric conserved stress-energy tensor $T_{\mu\nu}(x)$ generating the Hamiltonian $H$),
-   whose short-distance correlations and Operator Product Expansion (OPE) agree with the
-   predictions of asymptotic freedom ($b_0 > 0$) and perturbative renormalization theory,
-   alongside gauge-invariant Wilson loop observables $W(\gamma, \chi)$.
-3. Exhibit a strictly positive **Mass Gap** $\Delta > 0$ on the orthogonal complement
-   $(\mathbb{C}\Omega)^\perp \cap \mathcal{D}$:
-   $$\forall \psi \in \mathcal{D},\, \langle \Omega, \psi \rangle = 0 \implies \|H\psi\| \ge \Delta \|\psi\|$$
-4. Admit an equivalent **Osterwalder–Schrader Euclidean Framework** on $\mathbb{R}^4$
-   (Osterwalder–Schrader I, pp. 88–89; II, pp. 282, 287) via Schwinger distributions $S_n$
-   satisfying the uniform linear growth condition ($\text{E}0'$), multilinearity, $\mathrm{ISO}(4)$
-   Euclidean invariance (E1), mixed-degree reflection positivity across $\{x^0 = 0\}$ (E2), permutation
-   symmetry (E3), full multi-field exponential clustering with rate $m > 0$ (E4), and integral
-   compatibility on non-coincident configurations.
-
-## References
-* Jaffe, A., & Witten, E. (2000). *Quantum Yang-Mills Theory*. Clay Mathematics Institute.
-* Osterwalder, K., & Schrader, R. (1973, 1975). *Axioms for Euclidean Green's Functions I & II*.
-  Communications in Mathematical Physics, 31(2), 83–112; 42(3), 281–305.
-* Streater, R. F., & Wightman, A. S. (1964). *PCT, Spin and Statistics, and All That*.
--/
-
-@[expose] public section
 
 open scoped Real InnerProductSpace Topology Matrix BigOperators
 open scoped SchwartzMap
@@ -122,7 +77,6 @@ instance : Fact (2 ≤ 3) := ⟨by omega⟩
 /-- Standard Lie-theoretic theorem: For every $N \ge 2$, the special unitary group $\mathrm{SU}(N)$
 is a compact, connected, non-abelian simple Lie group with center $\mathbb{Z}/N\mathbb{Z}$
 and trace character of dimension $N \ge 2$. -/
-@[category research solved, AMS 22]
 theorem sun_compactSimpleLieGroup (N : ℕ) [Fact (2 ≤ N)] :
     CompactSimpleLieGroup (SUN N) := by
   sorry
@@ -246,56 +200,153 @@ def PoincareGroup.actLoop (g : PoincareGroup) (gamma : ClosedLoop4D) : ClosedLoo
   curve := fun s => euclideanTransform g.lorentz g.translation (gamma.curve s)
   periodic := fun s => by simp [gamma.periodic s]
 
+/-- Two Schwartz test functions on Minkowski spacetime have spacelike separated supports
+    if every point where $f(x) \neq 0$ is spacelike separated from every point where $g(y) \neq 0$. -/
+def SchwartzSpacelikeSeparated (f g : SchwartzMap MinkowskiSpace ℂ) : Prop :=
+  ∀ x y : MinkowskiSpace, f x ≠ 0 → g y ≠ 0 → SpacelikeSeparated x y
+
 /- ### 2b. Classical Gauge-Invariant Curvature Polynomials and Perturbative UV Data -/
 
-/-- Specification of the graded space of classical gauge-invariant local differential polynomials
-in the $\mathfrak{g}$-valued Yang–Mills curvature two-form $F_{\mu\nu} = \partial_\mu A_\nu - \partial_\nu A_\mu + [A_\mu, A_\nu]$
+/-- Specification of the graded commutative algebra of classical gauge-invariant local differential polynomials
+in the Lie-algebra-valued Yang–Mills curvature two-form $F_{\mu\nu} = \partial_\mu A_\nu - \partial_\nu A_\mu + [A_\mu, A_\nu]$
 and its covariant derivatives $D_{\alpha_1} \cdots D_{\alpha_k} F_{\mu\nu}$ (Jaffe–Witten §4, p. 6).
-Includes the canonical scaling dimension ($\dim(F) = 2$, $\dim(D) = 1$), the scalar action density
-$\operatorname{Tr}(F_{\mu\nu}F^{\mu\nu})$ of dimension $4$, the symmetric classical stress-energy tensor
-$T_{\mu\nu}$ of dimension $4$, and the perturbative short-distance renormalization group data governed
-by the 1-loop asymptotic freedom beta-function coefficient $b_0 = \frac{11 C_2(G)}{48\pi^2} > 0$. -/
+Includes:
+- An associative, commutative $\mathbb{C}$-algebra structure (`CommRing Poly`, `Algebra ℂ Poly`),
+- Scaling dimension filtration ($\dim(1) = 0$, $\dim(P \cdot Q) = \dim(P) + \dim(Q)$, $\dim(P + Q) \le \max(\dim P, \dim Q)$),
+- Space of $\mathfrak{g}$-valued differential generators `LiePoly` with adjoint action of $G$,
+- Antisymmetric curvature 2-form $F_{\mu\nu} = -F_{\nu\mu}$ of scaling dimension $2$,
+- Covariant derivative generators $D_\alpha$ of scaling dimension $1$ commuting with gauge transformations,
+- Gauge-invariant trace pairing mapping Lie polynomials to gauge-invariant polynomials in `Poly`,
+- Distinguished scalar Lagrangian density $\operatorname{Tr}(F_{\mu\nu}F^{\mu\nu})$ of scaling dimension $4$,
+- Distinguished symmetric classical stress-energy tensor $T_{\mu\nu}$ of scaling dimension $4$,
+- Perturbative short-distance renormalization group data strictly governed by the 1-loop asymptotic
+  freedom beta-function coefficient $b_0 = \frac{11 C_2(G)}{48\pi^2} > 0$ and anomalous dimension constraints. -/
 structure CurvaturePolynomialAlgebra (G : Type*) [TopologicalSpace G] [Group G]
     [CompactSimpleLieGroup G] where
   /-- Type of classical gauge-invariant local differential polynomials in $(F, D F, D^2 F, \dots)$ -/
-  Poly : Type*
-  [addCommGroup : AddCommGroup Poly]
-  [module : Module ℂ Poly]
+  Poly : Type
+  [commRing : CommRing Poly]
+  [algebra : Algebra ℂ Poly]
+  [nontrivial : Nontrivial Poly]
+
   /-- Star involution / Hermitian conjugation on classical curvature polynomials -/
   conj : Poly → Poly
   conj_involutive : ∀ P : Poly, conj (conj P) = P
+  conj_one : conj 1 = 1
+  conj_add : ∀ P Q : Poly, conj (P + Q) = conj P + conj Q
+  conj_mul : ∀ P Q : Poly, conj (P * Q) = conj P * conj Q
+  conj_smul : ∀ (c : ℂ) (P : Poly), conj (c • P) = starRingEnd ℂ c • conj P
+
   /-- Classical mass/scaling dimension $\dim(P) \in \mathbb{N}$ ($\dim(F_{\mu\nu}) = 2$, $\dim(D_\mu) = 1$) -/
   classicalDim : Poly → ℕ
   dim_zero : classicalDim 0 = 0
+  dim_one : classicalDim 1 = 0
   dim_conj : ∀ P : Poly, classicalDim (conj P) = classicalDim P
+  dim_mul : ∀ P Q : Poly, classicalDim (P * Q) = classicalDim P + classicalDim Q
+  dim_add : ∀ P Q : Poly, classicalDim (P + Q) ≤ max (classicalDim P) (classicalDim Q)
+  dim_smul : ∀ (c : ℂ) (P : Poly), c ≠ 0 → classicalDim (c • P) = classicalDim P
+
+  /-- Space of Lie-algebra-valued classical differential forms / polynomials -/
+  LiePoly : Type
+  [addCommGroupLie : AddCommGroup LiePoly]
+  [moduleLie : Module ℂ LiePoly]
+
+  /-- Classical adjoint gauge action of $G$ on Lie-algebra-valued polynomials -/
+  gauge_action : G → LiePoly →ₗ[ℂ] LiePoly
+  gauge_action_one : ∀ X : LiePoly, gauge_action 1 X = X
+  gauge_action_mul : ∀ (g h : G) (X : LiePoly), gauge_action (g * h) X = gauge_action g (gauge_action h X)
+
+  /-- Scaling dimension grading on Lie-algebra-valued differential polynomials -/
+  classicalDimLie : LiePoly → ℕ
+  dimLie_zero : classicalDimLie 0 = 0
+
+  /-- Classical Yang–Mills curvature two-form generators $F_{\mu\nu} \in \mathfrak{g}$ of dimension $2$ -/
+  F : Fin 4 → Fin 4 → LiePoly
+  F_antisymm : ∀ μ ν : Fin 4, F μ ν = - F ν μ
+  F_dim : ∀ μ ν : Fin 4, μ ≠ ν → classicalDimLie (F μ ν) = 2
+  /-- Non-degeneracy: non-zero curvature for distinct spacetime indices -/
+  F_nonzero : ∀ μ ν : Fin 4, μ ≠ ν → F μ ν ≠ 0
+
+  /-- Classical spacetime covariant derivative generators $D_\alpha$ of dimension $1$ -/
+  covDeriv : Fin 4 → LiePoly →ₗ[ℂ] LiePoly
+  covDeriv_dim : ∀ (μ : Fin 4) (X : LiePoly), X ≠ 0 →
+    classicalDimLie (covDeriv μ X) = classicalDimLie X + 1
+  covDeriv_gauge_equivariant : ∀ (g : G) (μ : Fin 4) (X : LiePoly),
+    gauge_action g (covDeriv μ X) = covDeriv μ (gauge_action g X)
+
+  /-- Gauge-invariant trace pairing contracting two Lie-algebra-valued polynomials into `Poly` -/
+  trace_pair : LiePoly → LiePoly → Poly
+  trace_pair_add_left : ∀ X1 X2 Y : LiePoly, trace_pair (X1 + X2) Y = trace_pair X1 Y + trace_pair X2 Y
+  trace_pair_smul_left : ∀ (c : ℂ) (X Y : LiePoly), trace_pair (c • X) Y = c • trace_pair X Y
+  trace_pair_symm : ∀ X Y : LiePoly, trace_pair X Y = trace_pair Y X
+  trace_pair_gauge_invariant : ∀ (g : G) (X Y : LiePoly),
+    trace_pair (gauge_action g X) (gauge_action g Y) = trace_pair X Y
+  trace_pair_dim : ∀ X Y : LiePoly,
+    classicalDim (trace_pair X Y) = classicalDimLie X + classicalDimLie Y
+
   /-- Lorentz representation action of $\mathrm{SO}^+(1,3)$ (and Euclidean $\mathrm{SO}(4)$) on local polynomials -/
   transform : Matrix (Fin 4) (Fin 4) ℝ → Poly →ₗ[ℂ] Poly
   transform_dim : ∀ (R : Matrix (Fin 4) (Fin 4) ℝ) (P : Poly),
     classicalDim (transform R P) ≤ classicalDim P
+
   /-- Distinguished scalar Lagrangian density $\operatorname{Tr}(F_{\mu\nu} F^{\mu\nu})$ of scaling dimension $4$ -/
   tr_F_sq : Poly
   tr_F_sq_nonzero : tr_F_sq ≠ 0
   tr_F_sq_dim : classicalDim tr_F_sq = 4
   tr_F_sq_self_conj : conj tr_F_sq = tr_F_sq
+  tr_F_sq_def : tr_F_sq =
+    ∑ μ : Fin 4, ∑ ν : Fin 4,
+      ((minkowskiMetric μ μ * minkowskiMetric ν ν : ℝ) : ℂ) • trace_pair (F μ ν) (F μ ν)
+
   /-- Distinguished symmetric classical stress-energy tensor $T_{\mu\nu}$ of scaling dimension $4$ -/
   stress_energy : Fin 4 → Fin 4 → Poly
   stress_energy_symm : ∀ μ ν : Fin 4, stress_energy μ ν = stress_energy ν μ
   stress_energy_dim : ∀ μ ν : Fin 4, classicalDim (stress_energy μ ν) = 4
   stress_energy_00_nonzero : stress_energy 0 0 ≠ 0
-  /-- One-loop asymptotic freedom coefficient $b_0 = \frac{11 C_2(G)}{48\pi^2} > 0$ of $G$ -/
+
+  /-- Adjoint quadratic Casimir invariant $C_2(G) \in \mathbb{N}$ of the gauge group $G$ ($C_2(\mathrm{SU}(N)) = N$) -/
+  casimir_adjoint : ℕ
+  casimir_adjoint_pos : 2 ≤ casimir_adjoint
+
+  /-- One-loop asymptotic freedom coefficient $b_0 = \frac{11 C_2(G)}{48\pi^2} > 0$ strictly determined by $G$ -/
   beta_b0 : ℝ
+  beta_b0_eq : beta_b0 = (11 * (casimir_adjoint : ℝ)) / (48 * Real.pi ^ 2)
   beta_b0_pos : 0 < beta_b0
-  /-- Leading perturbative UV normalization constant $c_P > 0$ and 1-loop anomalous dimension
-      exponent $\gamma_P = \gamma_P^{(0)} / (2 b_0)$ for short-distance 2-point functions -/
+
+  /-- Leading perturbative UV normalization constant $c_P > 0$ -/
   uv_two_point_coeff : Poly → ℝ
   uv_two_point_coeff_pos : ∀ P : Poly, P ≠ 0 → 0 < uv_two_point_coeff P
+
+  /-- One-loop anomalous dimension exponent $\gamma_P = \gamma_P^{(0)} / (2 b_0)$ for short-distance 2-point functions -/
   anomalous_exponent : Poly → ℝ
+  /-- Conformal/trace and stress-energy non-renormalization: $\gamma(F^2) = 0$ and $\gamma(T_{\mu\nu}) = 0$ -/
+  anomalous_tr_F_sq : anomalous_exponent tr_F_sq = 0
+  anomalous_stress_energy : ∀ μ ν : Fin 4, anomalous_exponent (stress_energy μ ν) = 0
+
   /-- Perturbative Operator Product Expansion (OPE) short-distance Wilson coefficient
       $C_{P, Q}^R(z)$ for $\mathcal{O}_P(x) \mathcal{O}_Q(y) \sim \sum_R C_{P, Q}^R(x - y) \mathcal{O}_R(y)$ -/
   ope_coeff : Poly → Poly → Poly → EuclideanSpace4 → ℂ
+  /-- Canonical scaling dimension of OPE Wilson coefficients:
+      $C_{P, Q}^R(\lambda z) = \lambda^{\dim R - \dim P - \dim Q} C_{P, Q}^R(z)$ -/
+  ope_coeff_scaling : ∀ (P Q R : Poly) (scale : ℝ) (z : EuclideanSpace4),
+    0 < scale →
+    ope_coeff P Q R (scale • z) =
+      (scale : ℂ) ^ ((classicalDim R : ℤ) - (classicalDim P : ℤ) - (classicalDim Q : ℤ)) *
+        ope_coeff P Q R z
 
-attribute [instance] CurvaturePolynomialAlgebra.addCommGroup
-attribute [instance] CurvaturePolynomialAlgebra.module
+attribute [instance] CurvaturePolynomialAlgebra.commRing
+attribute [instance] CurvaturePolynomialAlgebra.algebra
+attribute [instance] CurvaturePolynomialAlgebra.nontrivial
+attribute [instance] CurvaturePolynomialAlgebra.addCommGroupLie
+attribute [instance] CurvaturePolynomialAlgebra.moduleLie
+
+instance (G : Type*) [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    (Curv : CurvaturePolynomialAlgebra G) : AddCommGroup Curv.Poly :=
+  inferInstance
+
+instance (G : Type*) [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    (Curv : CurvaturePolynomialAlgebra G) : Module ℂ Curv.Poly :=
+  inferInstance
 
 /-- Unified observable label indexing both local gauge-invariant curvature polynomials
 $\mathcal{O}_P(x)$ (Jaffe–Witten §4, p. 6) and Wilson loop / character observables. -/
@@ -313,18 +364,17 @@ def ObservableLabel.conj {G : Type*} [TopologicalSpace G] [Group G] [CompactSimp
 
 /- ### 3. Wightman Axioms for 4D Quantum Yang–Mills Theory -/
 
-/-- Recursive helper applying a finite list of local curvature field operators to a domain state `ψ ∈ D`. -/
-def applyLocalFieldList {G ℋ : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
-    [NormedAddCommGroup ℋ] [InnerProductSpace ℂ ℋ]
+/-- Recursive helper applying a finite list of smeared local curvature field operators to a domain state `ψ ∈ D`. -/
+noncomputable def applySmearedFieldList {G ℋ : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    [AddCommGroup ℋ] [Module ℂ ℋ]
     (Curv : CurvaturePolynomialAlgebra G)
     (D : Submodule ℂ ℋ)
-    (Φ : Curv.Poly → MinkowskiSpace → (D →ₗ[ℂ] ℋ))
-    (hΦ : ∀ P x (ψ : D), Φ P x ψ ∈ D) :
-    List (Curv.Poly × MinkowskiSpace) → D → D
+    (Φ : Curv.Poly →ₗ[ℂ] SchwartzMap MinkowskiSpace ℂ →ₗ[ℂ] (D →ₗ[ℂ] D)) :
+    List (Curv.Poly × SchwartzMap MinkowskiSpace ℂ) → D → D
   | [], ψ => ψ
-  | (P, x) :: rest, ψ =>
-      let ψ' := applyLocalFieldList Curv D Φ hΦ rest ψ
-      ⟨Φ P x ψ', hΦ P x ψ'⟩
+  | (P, f) :: rest, ψ =>
+      let ψ' := applySmearedFieldList Curv D Φ rest ψ
+      Φ P f ψ'
 
 /-- Recursive helper applying a finite list of Wilson-loop operators to a domain state `ψ ∈ D`. -/
 def applyWilsonList {G ℋ : Type*} [Group G]
@@ -410,111 +460,136 @@ structure WightmanQuantumYangMills (G : Type*) (ℋ : Type*)
                 (inner ℂ (ψ : ℋ) (Momentum 1 ψ)).re,
                 (inner ℂ (ψ : ℋ) (Momentum 2 ψ)).re ] ∈ ClosedForwardLightCone
 
-  /-- (Jaffe–Witten §4, p. 6) Local Quantum Field Operators $\mathcal{O}_P(x)$ in correspondence
-      with gauge-invariant local differential polynomials $P \in \mathrm{Curv.Poly}$ in the
-      curvature $F$ and its covariant derivatives, together with their Schwartz-smeared
-      operator-valued tempered distributions $\mathcal{O}_P(f) : \mathcal{D} \to \mathcal{H}$. -/
-  local_field : Curv.Poly → MinkowskiSpace → (domain →ₗ[ℂ] ℋ)
-  local_field_domain_invariant : ∀ P x (ψ : domain), local_field P x ψ ∈ domain
-  local_smeared_field : Curv.Poly → SchwartzMap MinkowskiSpace ℂ → (domain →ₗ[ℂ] ℋ)
-  local_smeared_domain_invariant : ∀ P f (ψ : domain), local_smeared_field P f ψ ∈ domain
-  local_smeared_tempered : ∀ (P : Curv.Poly) (ψ φ : domain),
+  /-- (Jaffe–Witten §4, p. 6; Streater–Wightman 1964)
+      Local Quantum Fields formulated strictly as Operator-Valued Tempered Distributions
+      mapping each classical curvature polynomial `P` and Schwartz test function `f`
+      to a linear endomorphism of the dense invariant domain `domain ⊆ ℋ`.
+      Pointwise operators do not exist in 4D QFT due to short-distance singularities;
+      all quantum fields are operator-valued tempered distributions. -/
+  smeared_field : Curv.Poly →ₗ[ℂ] (SchwartzMap MinkowskiSpace ℂ →ₗ[ℂ] (domain →ₗ[ℂ] domain))
+
+  /-- Temperedness (Continuity): For each state pair $\psi, \phi \in \mathcal{D}$ and polynomial $P \in \mathrm{Poly}$,
+      the matrix element functional $f \mapsto \langle \phi, \mathcal{O}_P(f)\psi \rangle$ is a tempered distribution on $\mathcal{S}(\mathbb{R}^{1,3})$. -/
+  smeared_field_tempered : ∀ (P : Curv.Poly) (ψ φ : domain),
     ∃ (C : ℝ) (k : ℕ), 0 < C ∧
       ∀ f : SchwartzMap MinkowskiSpace ℂ,
-        ‖inner ℂ (φ : ℋ) (local_smeared_field P f ψ)‖ ≤ C * SchwartzMap.seminorm ℝ k k f
+        ‖inner ℂ (φ : ℋ) (smeared_field P f ψ : ℋ)‖ ≤ C * SchwartzMap.seminorm ℝ k k f
 
-  /-- Dimension-Filtered Local Operator Correspondence (Jaffe–Witten §4, p. 6 & Footnote 1):
-      Linearity of the correspondence $P \mapsto \mathcal{O}_P$. -/
-  local_field_linear : ∀ (c1 c2 : ℂ) (P1 P2 : Curv.Poly) (x : MinkowskiSpace) (ψ : domain),
-    local_field (c1 • P1 + c2 • P2) x ψ =
-      c1 • local_field P1 x ψ + c2 • local_field P2 x ψ
+  /-- Faithful Representation: Every non-zero classical polynomial $P \neq 0$ acts non-trivially
+      on the vacuum state through some Schwartz test function $f \in \mathcal{S}(\mathbb{R}^{1,3})$. -/
+  smeared_field_non_trivial : ∀ (P : Curv.Poly),
+    P ≠ 0 → ∃ (f : SchwartzMap MinkowskiSpace ℂ),
+      (smeared_field P f ⟨vacuum, vacuum_in_domain⟩ : ℋ) ≠ 0
 
-  /-- Non-trivial faithful module representation of classical polynomials into local operators:
-      Every non-zero polynomial $P$ has non-zero operator norm on the vacuum sector. -/
-  local_field_non_trivial : ∀ (P : Curv.Poly),
-    P ≠ 0 → ∃ (x : MinkowskiSpace) (ψ : domain),
-      inner ℂ (local_field P x ψ) (local_field (Curv.conj P) x ψ) ≠ 0
+  /-- (W4) Vacuum Cyclicity under Smeared Local Fields:
+      Polynomials of smeared local curvature fields acting on the vacuum $\Omega$ span a dense subspace of $\mathcal{H}$. -/
+  smeared_field_cyclic :
+    Dense ((Submodule.span ℂ (Set.range (fun ops : List (Curv.Poly × SchwartzMap MinkowskiSpace ℂ) =>
+      (applySmearedFieldList Curv domain smeared_field ops
+        ⟨vacuum, vacuum_in_domain⟩ : ℋ)))) : Set ℋ)
 
-  /-- Vacuum Cyclicity under Local Curvature Fields: Finite products of local curvature
-      operators acting on the vacuum $\Omega$ span a dense subspace of $\mathcal{H}$. -/
-  local_vacuum_cyclic :
-    Dense ((Submodule.span ℂ (Set.range (fun ops : List (Curv.Poly × MinkowskiSpace) =>
-      (applyLocalFieldList Curv domain local_field local_field_domain_invariant ops
-        ⟨vacuum, vacuum_in_domain⟩ : ℋ))) : Submodule ℂ ℋ) : Set ℋ)
+  /-- Action of Poincaré transformations on Schwartz test functions by pullback
+      $(g \cdot f)(x) = f(\Lambda^{-1}(x - a))$, characterized by $(g \cdot f)(\Lambda x + a) = f(x)$. -/
+  test_poincare_action : PoincareGroup → (SchwartzMap MinkowskiSpace ℂ →ₗ[ℂ] SchwartzMap MinkowskiSpace ℂ)
+  test_poincare_action_apply : ∀ (g : PoincareGroup) (f : SchwartzMap MinkowskiSpace ℂ) (x : MinkowskiSpace),
+    test_poincare_action g f (euclideanTransform g.lorentz g.translation x) = f x
 
-  /-- Poincaré Covariance of Local Curvature Fields:
-      $U(a, \Lambda) \mathcal{O}_P(x) U(a, \Lambda)^{-1} = \mathcal{O}_{\Lambda \cdot P}(a + \Lambda x)$. -/
-  local_field_poincare_covariant :
-    ∀ (g : PoincareGroup) (P : Curv.Poly) (x : MinkowskiSpace) (ψ : domain),
-      poincare_rep g (local_field P x ψ) =
-        local_field (Curv.transform g.lorentz P)
-          (euclideanTransform g.lorentz g.translation x)
-          ⟨poincare_rep g (ψ : ℋ), poincare_domain_invariant g (ψ : ℋ) ψ.2⟩
+  /-- (W1) Poincaré Covariance of Smeared Local Fields:
+      $U(g) \mathcal{O}_P(f) U(g)^{-1} = \mathcal{O}_{\Lambda \cdot P}(g \cdot f)$ on $\mathcal{D}$. -/
+  smeared_field_poincare_covariant :
+    ∀ (g : PoincareGroup) (P : Curv.Poly) (f : SchwartzMap MinkowskiSpace ℂ) (ψ : domain),
+      poincare_rep g (smeared_field P f ψ : ℋ) =
+        (smeared_field (Curv.transform g.lorentz P) (test_poincare_action g f)
+          ⟨poincare_rep g (ψ : ℋ), poincare_domain_invariant g (ψ : ℋ) ψ.2⟩ : ℋ)
 
-  /-- Microcausality of Local Curvature Fields:
-      Local curvature operators at spacelike separated points commute on $\mathcal{D}$. -/
-  local_field_microcausality : ∀ (P Q : Curv.Poly) (x y : MinkowskiSpace),
-    SpacelikeSeparated x y →
-    ∀ ψ : domain,
-      local_field P x ⟨local_field Q y ψ, local_field_domain_invariant Q y ψ⟩ =
-      local_field Q y ⟨local_field P x ψ, local_field_domain_invariant P x ψ⟩
+  /-- (W3) Microcausality (Locality) of Smeared Fields:
+      Smeared field operators commute on `domain` whenever their test functions have
+      spacelike separated supports. -/
+  smeared_field_local :
+    ∀ (P Q : Curv.Poly) (f g : SchwartzMap MinkowskiSpace ℂ),
+      SchwartzSpacelikeSeparated f g →
+      (smeared_field P f).comp (smeared_field Q g) =
+      (smeared_field Q g).comp (smeared_field P f)
 
-  /-- Local Stress-Energy Tensor Correspondence (Jaffe–Witten §4, p. 6):
-      The local operator $T_{\mu\nu}(x) = \mathcal{O}_{\mathrm{stress\_energy}\,\mu\,\nu}(x)$ is
-      symmetric and non-trivial on $(\mathbb{C}\Omega)^\perp$. -/
-  stress_tensor_symmetric : ∀ (μ ν : Fin 4) (x : MinkowskiSpace) (ψ : domain),
-    local_field (Curv.stress_energy μ ν) x ψ = local_field (Curv.stress_energy ν μ) x ψ
+  /-- Local Stress-Energy Tensor Symmetry (Jaffe–Witten §4, p. 6):
+      $T_{\mu\nu}(f) = T_{\nu\mu}(f)$ on `domain`. -/
+  stress_tensor_symmetric : ∀ (μ ν : Fin 4) (f : SchwartzMap MinkowskiSpace ℂ),
+    smeared_field (Curv.stress_energy μ ν) f =
+    smeared_field (Curv.stress_energy ν μ) f
 
   /-- Stress-Energy Generator Property (Jaffe–Witten §4, p. 6):
-      The energy density component $T_{00}(x)$ generates the Hamiltonian $H$
+      The energy density component $T_{00}(f)$ generates the Hamiltonian $H$
       under spatial slice integration with flat cutoff sequences on the dense domain $\mathcal{D}$. -/
   stress_tensor_generates_hamiltonian : ∀ (ψ : domain),
     ∃ (seq : ℕ → SchwartzMap MinkowskiSpace ℂ),
-      Filter.Tendsto (fun k => local_smeared_field (Curv.stress_energy 0 0) (seq k) ψ)
+      Filter.Tendsto (fun k => (smeared_field (Curv.stress_energy 0 0) (seq k) ψ : ℋ))
         Filter.atTop (nhds (Hamiltonian ψ))
+
+  /-- Pointwise field matrix element (sesquilinear form on `domain × domain`), NOT an
+      operator into `ℋ`. By translation covariance on smooth vectors in `domain`, the matrix
+      element $x \mapsto \langle \phi, \mathcal{O}_P(x)\psi \rangle$ is a smooth function even though
+      $\mathcal{O}_P(x)\psi$ is not a vector in $\mathcal{H}$ (Reed & Simon Vol. II, §X.7). -/
+  local_field_form : Curv.Poly → MinkowskiSpace → domain → domain → ℂ
+  local_field_form_smul_left : ∀ P x (c : ℂ) (φ ψ : domain),
+    local_field_form P x (c • φ) ψ = starRingEnd ℂ c * local_field_form P x φ ψ
+  local_field_form_add_left : ∀ P x (φ1 φ2 ψ : domain),
+    local_field_form P x (φ1 + φ2) ψ = local_field_form P x φ1 ψ + local_field_form P x φ2 ψ
+  local_field_form_smul_right : ∀ P x (c : ℂ) (φ ψ : domain),
+    local_field_form P x φ (c • ψ) = c * local_field_form P x φ ψ
+  local_field_form_add_right : ∀ P x (φ ψ1 ψ2 : domain),
+    local_field_form P x φ (ψ1 + ψ2) = local_field_form P x φ ψ1 + local_field_form P x φ ψ2
+
+  /-- Compatibility between the smeared operator-valued distribution and the pointwise
+      sesquilinear form on `domain`: the matrix element of the smeared operator equals the
+      test-function integral of the pointwise sesquilinear form. -/
+  smeared_field_form_compatibility : ∀ (P : Curv.Poly) (f : SchwartzMap MinkowskiSpace ℂ)
+    (φ ψ : domain),
+    inner ℂ (φ : ℋ) (smeared_field P f ψ : ℋ) =
+      ∫ x : MinkowskiSpace, (f x) * (local_field_form P x φ ψ)
+
+  /-- The vacuum Wightman two-point correlation function $\mathcal{W}_2(P, Q)(x)$ at non-coincident
+      points $x \neq 0$ (smooth on $\mathbb{R}^{1,3} \setminus \{0\}$ by the Bargmann–Hall–Wightman theorem). -/
+  wightman_two_point : Curv.Poly → Curv.Poly → { x : MinkowskiSpace // x ≠ 0 } → ℂ
 
   /-- Short-Distance Asymptotic Freedom of Local Curvature Correlators (Jaffe–Witten §4, p. 6):
       For any non-zero local curvature polynomial $P$ of classical scaling dimension $d = \dim(P) \ge 4$,
-      the vacuum-subtracted short-distance correlation $\langle \Omega, \mathcal{O}_{P^*}(\lambda x) \mathcal{O}_P(0) \Omega \rangle_c$
-      at spacelike separation $x \neq 0$ scales as $\lambda \to 0^+$ according to perturbative
-      asymptotic freedom with power $\lambda^{-2d}$ and logarithmic running coupling power
-      $(-\log \lambda)^{-\gamma_P}$ governed by $b_0 > 0$:
-      $$\lim_{\lambda \to 0^+} \lambda^{2d} (-\log \lambda)^{\gamma_P}
-      \langle \mathcal{O}_P(\lambda x)\Omega_c, \mathcal{O}_P(0)\Omega_c \rangle =
-      \frac{c_P}{\|x\|^{2d}}$$ -/
+      the connected two-point Wightman function at non-coincident spacelike separation scales as
+      $\lambda \to 0^+$ with power $\lambda^{-2d} (-\log \lambda)^{-\gamma_P}$:
+      $$\lim_{\lambda \to 0^+} \lambda^{2d} (-\log \lambda)^{\gamma_P} \operatorname{Re} \mathcal{W}_{2, c}(P^*, P)(\lambda x) = \frac{c_P}{\|x\|^{2d}}$$ -/
   short_distance_asymptotic_freedom :
-    ∀ (P : Curv.Poly) (x : MinkowskiSpace),
-      P ≠ 0 → 4 ≤ Curv.classicalDim P → x ≠ 0 →
-      let v0 : domain := ⟨vacuum, vacuum_in_domain⟩
+    ∀ (P : Curv.Poly) (x : MinkowskiSpace) (hx : x ≠ 0),
+      P ≠ 0 → 4 ≤ Curv.classicalDim P →
       let d := Curv.classicalDim P
       let γ := Curv.anomalous_exponent P
       let c_P := Curv.uv_two_point_coeff P
       Filter.Tendsto
         (fun (scale : ℝ) =>
-          (scale ^ (2 * d)) * ((-Real.log scale) ^ γ) *
-          (inner ℂ (local_field P (scale • x) v0 - (inner ℂ vacuum (local_field P (scale • x) v0)) • vacuum)
-            (local_field P 0 v0 - (inner ℂ vacuum (local_field P 0 v0)) • vacuum)).re)
+          if h_scale : scale ≠ 0 then
+            have h_scaled : scale • x ≠ 0 := smul_ne_zero h_scale hx
+            (scale ^ (2 * d)) * ((-Real.log scale) ^ γ) *
+            (wightman_two_point (Curv.conj P) P ⟨scale • x, h_scaled⟩).re
+          else 0)
         (nhdsWithin 0 (Set.Ioi 0))
         (nhds (c_P / (‖x‖ ^ (2 * d))))
 
   /-- Short-Distance Operator Product Expansion (OPE) (Jaffe–Witten §4, p. 6):
       For any local curvature polynomials $P, Q$ and truncation dimension $D \in \mathbb{N}$,
-      there exists a finite set of basis polynomials $\{R_k\}$ of dimension $\le D$ such that
-      as $\lambda \to 0^+$ ($x \neq 0$), the product $\mathcal{O}_P(y + \lambda x) \mathcal{O}_Q(y)$
-      agrees with the perturbative asymptotic freedom OPE expansion to order $\lambda^{D - \dim P - \dim Q}$. -/
+      there exists a finite set of basis polynomials $\{R_k\}$ of dimension $\le D$ and non-coincident
+      vacuum expectations $v_R$ such that as $\lambda \to 0^+$ ($x \neq 0$), the Wightman function
+      $\mathcal{W}_2(P, Q)(\lambda x)$ agrees with the asymptotic freedom OPE expansion to order $\lambda^{D - \dim P - \dim Q}$. -/
   operator_product_expansion :
-    ∀ (P Q : Curv.Poly) (D : ℕ) (x y : MinkowskiSpace) (ψ φ : domain),
-      x ≠ 0 → Curv.classicalDim P + Curv.classicalDim Q ≤ D →
-      ∃ (basis : Finset Curv.Poly),
+    ∀ (P Q : Curv.Poly) (D : ℕ) (x : MinkowskiSpace) (hx : x ≠ 0),
+      Curv.classicalDim P + Curv.classicalDim Q ≤ D →
+      ∃ (basis : Finset Curv.Poly) (vev : Curv.Poly → ℂ),
         (∀ R ∈ basis, Curv.classicalDim R ≤ D) ∧
         Filter.Tendsto
           (fun (scale : ℝ) =>
-            (scale ^ (Curv.classicalDim P + Curv.classicalDim Q - D : ℤ)) *
-            ‖inner ℂ (φ : ℋ)
-              (local_field P (ofCoords (fun μ => toCoords y μ + scale * toCoords x μ))
-                ⟨local_field Q y ψ, local_field_domain_invariant Q y ψ⟩ -
-               ∑ R ∈ basis,
-                 (Curv.ope_coeff P Q R (scale • x)) • local_field R y ψ)‖)
+            if h_scale : scale ≠ 0 then
+              have h_scaled : scale • x ≠ 0 := smul_ne_zero h_scale hx
+              (scale ^ (Curv.classicalDim P + Curv.classicalDim Q - D : ℤ)) *
+              ‖wightman_two_point P Q ⟨scale • x, h_scaled⟩ -
+                 ∑ R ∈ basis, (Curv.ope_coeff P Q R (scale • x)) * vev R‖
+            else 0)
           (nhdsWithin 0 (Set.Ioi 0))
           (nhds 0)
 
@@ -603,6 +678,23 @@ def reverseConjLabels {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleL
 /-- Reverses and time-reflects a single $n$-point Euclidean configuration. -/
 def reverseReflectConfig {n : ℕ} (x : Fin n → EuclideanSpace4) (i : Fin n) : EuclideanSpace4 :=
   timeReflect (x ⟨n - 1 - i.val, by omega⟩)
+
+/-- A Euclidean configuration `X : Fin n → EuclideanSpace4` has strictly ordered positive
+    Euclidean times: $0 < X_0^0 < X_1^0 < \dots < X_{n-1}^0$.
+    This guarantees that all points in $X$ and their Osterwalder–Schrader time reflections
+    $\theta X$ are pairwise distinct, preventing coincident-point ultraviolet divergences. -/
+def StrictlyTimeOrderedPos {n : ℕ} (X : Fin n → EuclideanSpace4) : Prop :=
+  (∀ i : Fin n, 0 < toCoords (X i) 0) ∧
+  StrictMono (fun i : Fin n => toCoords (X i) 0)
+
+/-- Shift all points in a Euclidean configuration by Euclidean time $t \ge 0$ and spatial vector $\mathbf{a} \in \mathbb{R}^3$:
+    $X_i \mapsto X_i + (t, \mathbf{a})$. -/
+def euclideanShift {n : ℕ} (t : ℝ) (a : MinkowskiSpace) (X : Fin n → EuclideanSpace4) :
+    Fin n → EuclideanSpace4 :=
+  fun i =>
+    let c := toCoords (X i)
+    let ca := toCoords a
+    vec4 (c 0 + t) (c 1 + ca 1) (c 2 + ca 2) (c 3 + ca 3)
 
 /-- Pairwise disjoint support condition for an $n$-tuple of Schwartz test functions on $\mathbb{R}^4$
 (testing the zero-time / non-coincident test function space $\mathcal{S}_0(\mathbb{R}^{4n})$ of OS I & II). -/
@@ -766,10 +858,18 @@ Any Euclidean Yang–Mills theory `os : OsterwalderSchraderYangMills G Curv` sat
 uniform linear growth condition ($\text{E}0'$), multilinearity, Euclidean invariance (E1), mixed-degree reflection
 positivity (E2), permutation symmetry (E3), full exponential clustering (E4) with rate `os.mass_rate`,
 and short-distance asymptotic freedom reconstructs a relativistic `WightmanQuantumYangMills G ℋ Curv`
-equipped with a dense positive-time embedding `os_embed` whose Euclidean semigroup inner ℂ products
-equal `os.schwinger` and whose Hamiltonian spectral gap on $(\mathbb{C}\Omega)^\perp$ is bounded below
-by `os.mass_rate` ($\Delta \ge m > 0$). -/
-@[category research solved, AMS 81]
+equipped with a self-adjoint Euclidean contraction semigroup `euclidean_contraction` ($e^{-tH}$) and
+a positive-time embedding `os_embed` satisfying the five canonical OS II conditions:
+1. OS Gram identity on strictly time-ordered positive configurations:
+   $\langle \operatorname{embed}(X), \operatorname{embed}(Y) \rangle = S_{n+m}(\Theta X^\star, Y)$,
+2. Vacuum identification: $\operatorname{embed}(0, \text{ops}_0, X_0) = \Omega$,
+3. Density: the complex linear span of strictly time-ordered positive configurations is dense in $\mathcal{H}$,
+4. Contraction semigroup & spatial translation intertwining:
+   $\operatorname{embed}(X + (t, \mathbf{a})) = e^{-tH} U(0, \mathbf{a}) \operatorname{embed}(X)$ for all $t \ge 0$,
+5. Field insertion compatibility (OS II, p. 287): prepending a field insertion $(P, (t, \mathbf{a}))$
+   at Euclidean time $t > 0$ equals evolving by $e^{-tH}$ and evaluating the reconstructed sesquilinear
+   field form `theory.local_field_form P a`, which is linked to `theory.smeared_field` via test-function integration,
+6. Hamiltonian spectral gap on $(\mathbb{C}\Omega)^\perp$ bounded below by `os.mass_rate` ($\Delta \ge m > 0$). -/
 theorem osterwalder_schrader_reconstruction
     {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
     {Curv : CurvaturePolynomialAlgebra G}
@@ -777,15 +877,56 @@ theorem osterwalder_schrader_reconstruction
     ∃ (ℋ : Type*) (_ : NormedAddCommGroup ℋ) (_ : InnerProductSpace ℂ ℋ)
       (_ : CompleteSpace ℋ) (_ : SeparableSpace ℋ)
       (theory : WightmanQuantumYangMills G ℋ Curv)
+      (euclidean_contraction : ℝ → (ℋ →L[ℂ] ℋ))
+      (euclidean_contraction_dom : ℝ → theory.domain → theory.domain)
       (os_embed : (n : ℕ) → (Fin n → ObservableLabel G Curv) →
         (Fin n → EuclideanSpace4) → theory.domain),
+      (∀ (t : ℝ) (ψ : theory.domain),
+         (euclidean_contraction_dom t ψ : ℋ) = euclidean_contraction t (ψ : ℋ)) ∧
+      (euclidean_contraction 0 = ContinuousLinearMap.id ℂ ℋ) ∧
+      (∀ (t1 t2 : ℝ), 0 ≤ t1 → 0 ≤ t2 →
+         euclidean_contraction (t1 + t2) =
+           (euclidean_contraction t1).comp (euclidean_contraction t2)) ∧
+      (∀ ψ : theory.domain,
+         HasDerivWithinAt (fun t : ℝ => euclidean_contraction t (ψ : ℋ))
+           (- theory.Hamiltonian ψ) (Set.Ici 0) 0) ∧
+      -- [1] OS Gram Identity on strictly time-ordered positive configurations
       (∀ (n m : ℕ) (ops1 : Fin n → ObservableLabel G Curv)
          (ops2 : Fin m → ObservableLabel G Curv)
          (X : Fin n → EuclideanSpace4) (Y : Fin m → EuclideanSpace4),
-         (∀ i : Fin n, 0 < toCoords (X i) 0) →
-         (∀ j : Fin m, 0 < toCoords (Y j) 0) →
+         StrictlyTimeOrderedPos X →
+         StrictlyTimeOrderedPos Y →
          inner ℂ (os_embed n ops1 X : ℋ) (os_embed m ops2 Y : ℋ) =
-           os.schwinger (n + m) (safeReflectConcatLabels ops1 ops2) (safeReflectConcatMixed X Y)) ∧
+           os.schwinger (n + m) (safeReflectConcatLabels ops1 ops2)
+             (safeReflectConcatMixed X Y)) ∧
+      -- [2] Vacuum Identification: 0-point configuration maps to the vacuum Ω
+      (∀ (ops0 : Fin 0 → ObservableLabel G Curv) (X0 : Fin 0 → EuclideanSpace4),
+         (os_embed 0 ops0 X0 : ℋ) = theory.vacuum) ∧
+      -- [3] Cyclicity / Density: linear span of strictly time-ordered configurations is dense in ℋ
+      Dense (Submodule.span ℂ
+        { ψ : ℋ | ∃ (n : ℕ) (ops : Fin n → ObservableLabel G Curv)
+          (X : Fin n → EuclideanSpace4),
+          StrictlyTimeOrderedPos X ∧ ψ = (os_embed n ops X : ℋ) } : Set ℋ) ∧
+      -- [4] Contraction Semigroup & Spatial Translation Intertwining
+      (∀ (n : ℕ) (ops : Fin n → ObservableLabel G Curv)
+         (X : Fin n → EuclideanSpace4) (t : ℝ) (a : MinkowskiSpace),
+         StrictlyTimeOrderedPos X → 0 ≤ t → toCoords a 0 = 0 →
+         (os_embed n ops (euclideanShift t a X) : ℋ) =
+           euclidean_contraction t
+             (theory.poincare_rep (PoincareGroup.ofTranslation a) (os_embed n ops X : ℋ))) ∧
+      -- [5] Field Insertion Compatibility (OS II, p. 287) via reconstructed sesquilinear form
+      (∀ (n m : ℕ) (ops1 : Fin n → ObservableLabel G Curv)
+         (ops2 : Fin m → ObservableLabel G Curv)
+         (X : Fin n → EuclideanSpace4) (Y : Fin m → EuclideanSpace4)
+         (P : Curv.Poly) (t : ℝ) (a : MinkowskiSpace),
+         StrictlyTimeOrderedPos X → StrictlyTimeOrderedPos Y → 0 < t → toCoords a 0 = 0 →
+         inner ℂ (os_embed n ops1 X : ℋ)
+           (os_embed (m + 1) (Fin.cons (.localCurv P) ops2)
+             (Fin.cons (vec4 t (toCoords a 1) (toCoords a 2) (toCoords a 3)) (euclideanShift t a Y)) : ℋ) =
+         theory.local_field_form P a
+           (euclidean_contraction_dom t (os_embed n ops1 X))
+           (os_embed m ops2 Y)) ∧
+      -- [6] Spectral Gap bounded below by Euclidean clustering rate
       (∀ ψ : theory.domain,
         inner ℂ theory.vacuum (ψ : ℋ) = (0 : ℂ) →
         os.mass_rate * ‖(ψ : ℋ)‖ ≤ ‖theory.Hamiltonian ψ‖) ∧
@@ -797,62 +938,65 @@ theorem osterwalder_schrader_reconstruction
 /-- **Clay Millennium Prize Problem: 4D Yang–Mills Existence and Mass Gap**
 (Arthur Jaffe & Edward Witten, 2000, Section 4, p. 6)
 
-For any compact simple Lie group $G$ (and its classical gauge-invariant curvature polynomial
-algebra `Curv`), there exists a non-trivial four-dimensional quantum Yang–Mills theory on
-$\mathbb{R}^{1,3}$ satisfying the Wightman axioms, admitting local quantum field operators in
-correspondence with gauge-invariant polynomials in the curvature $F$ and its covariant derivatives
-with short-distance correlations governed by asymptotic freedom and perturbative renormalization,
+For any compact simple Lie group $G$, there exists a classical gauge-invariant curvature
+polynomial algebra `Curv : CurvaturePolynomialAlgebra G` and a non-trivial four-dimensional
+quantum Yang–Mills theory on $\mathbb{R}^{1,3}$ satisfying the Wightman axioms, admitting
+local quantum field operators in correspondence with gauge-invariant polynomials in the
+curvature $F$ and its covariant derivatives with short-distance correlations governed by
+asymptotic freedom ($b_0 = \frac{11 C_2(G)}{48\pi^2} > 0$) and perturbative renormalization,
 and possessing a strictly positive mass gap $\Delta > 0$. -/
-@[category research open, AMS 81]
 theorem yang_mills_existence_and_mass_gap
-    (G : Type*) [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
-    (Curv : CurvaturePolynomialAlgebra G) :
-    ∃ (ℋ : Type*) (_ : NormedAddCommGroup ℋ) (_ : InnerProductSpace ℂ ℋ)
+    (G : Type*) [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G] :
+    ∃ (Curv : CurvaturePolynomialAlgebra G)
+      (ℋ : Type*) (_ : NormedAddCommGroup ℋ) (_ : InnerProductSpace ℂ ℋ)
       (_ : CompleteSpace ℋ) (_ : SeparableSpace ℋ)
       (theory : WightmanQuantumYangMills G ℋ Curv),
       HasMassGap G ℋ theory := by
   sorry
 
 /-- Canonical Specialization to $\mathrm{SU}(N)$ for any $N \ge 2$ -/
-@[category research open, AMS 81]
-theorem yang_mills_sun_mass_gap (N : ℕ) [Fact (2 ≤ N)]
-    (Curv : CurvaturePolynomialAlgebra (SUN N)) :
-    ∃ (ℋ : Type*) (_ : NormedAddCommGroup ℋ) (_ : InnerProductSpace ℂ ℋ)
+theorem yang_mills_sun_mass_gap (N : ℕ) [Fact (2 ≤ N)] :
+    ∃ (Curv : CurvaturePolynomialAlgebra (SUN N))
+      (ℋ : Type*) (_ : NormedAddCommGroup ℋ) (_ : InnerProductSpace ℂ ℋ)
       (_ : CompleteSpace ℋ) (_ : SeparableSpace ℋ)
       (theory : WightmanQuantumYangMills (SUN N) ℋ Curv),
+      Curv.casimir_adjoint = N ∧
       HasMassGap (SUN N) ℋ theory := by
   sorry
 
 /-- Canonical Specialization to $\mathrm{SU}(2)$ Pure Yang–Mills Gauge Theory -/
-@[category research open, AMS 81]
-theorem yang_mills_su2_mass_gap (Curv : CurvaturePolynomialAlgebra SU2) :
-    ∃ (ℋ : Type*) (_ : NormedAddCommGroup ℋ) (_ : InnerProductSpace ℂ ℋ)
+theorem yang_mills_su2_mass_gap :
+    ∃ (Curv : CurvaturePolynomialAlgebra SU2)
+      (ℋ : Type*) (_ : NormedAddCommGroup ℋ) (_ : InnerProductSpace ℂ ℋ)
       (_ : CompleteSpace ℋ) (_ : SeparableSpace ℋ)
       (theory : WightmanQuantumYangMills SU2 ℋ Curv),
+      Curv.casimir_adjoint = 2 ∧
       HasMassGap SU2 ℋ theory := by
   sorry
 
 /-- Canonical Specialization to $\mathrm{SU}(3)$ (Quantum Chromodynamics Gluon Sector) -/
-@[category research open, AMS 81]
-theorem yang_mills_su3_mass_gap (Curv : CurvaturePolynomialAlgebra SU3) :
-    ∃ (ℋ : Type*) (_ : NormedAddCommGroup ℋ) (_ : InnerProductSpace ℂ ℋ)
+theorem yang_mills_su3_mass_gap :
+    ∃ (Curv : CurvaturePolynomialAlgebra SU3)
+      (ℋ : Type*) (_ : NormedAddCommGroup ℋ) (_ : InnerProductSpace ℂ ℋ)
       (_ : CompleteSpace ℋ) (_ : SeparableSpace ℋ)
       (theory : WightmanQuantumYangMills SU3 ℋ Curv),
+      Curv.casimir_adjoint = 3 ∧
       HasMassGap SU3 ℋ theory := by
   sorry
 
 /-- Derivation of Canonical Specialization to $\mathrm{SU}(N)$ from Universal Existence -/
-@[category API, AMS 81]
 theorem yang_mills_sun_mass_gap_of_universal.{u} (N : ℕ) [Fact (2 ≤ N)]
-    (Curv : CurvaturePolynomialAlgebra (SUN N))
-    (h_univ : ∃ (ℋ : Type u) (_ : NormedAddCommGroup ℋ) (_ : InnerProductSpace ℂ ℋ)
+    (h_univ : ∀ (G : Type) [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G],
+      ∃ (Curv : CurvaturePolynomialAlgebra G)
+        (ℋ : Type u) (_ : NormedAddCommGroup ℋ) (_ : InnerProductSpace ℂ ℋ)
         (_ : CompleteSpace ℋ) (_ : SeparableSpace ℋ)
-        (theory : WightmanQuantumYangMills (SUN N) ℋ Curv),
-        HasMassGap (SUN N) ℋ theory) :
-    ∃ (ℋ : Type u) (_ : NormedAddCommGroup ℋ) (_ : InnerProductSpace ℂ ℋ)
+        (theory : WightmanQuantumYangMills G ℋ Curv),
+        HasMassGap G ℋ theory) :
+    ∃ (Curv : CurvaturePolynomialAlgebra (SUN N))
+      (ℋ : Type u) (_ : NormedAddCommGroup ℋ) (_ : InnerProductSpace ℂ ℋ)
       (_ : CompleteSpace ℋ) (_ : SeparableSpace ℋ)
       (theory : WightmanQuantumYangMills (SUN N) ℋ Curv),
       HasMassGap (SUN N) ℋ theory :=
-  h_univ
+  h_univ (SUN N)
 
 end YangMills

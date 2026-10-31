@@ -5,7 +5,11 @@ package "yang-mills-lean4" where
   version := v!"0.1.0"
   keywords := #["yang-mills", "mass-gap", "formalization", "lean4"]
 
-require paritas from ".." / "Paritas"
+require mathlib from git
+  "https://github.com/leanprover-community/mathlib4.git" @ "v4.33.1"
+
+lean_lib «MillenniumYangMills» where
+  roots := #[`MillenniumYangMills]
 
 lean_lib «ToposUnifiedYangMills» where
   roots := #[`ToposUnifiedYangMills]
