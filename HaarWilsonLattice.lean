@@ -13,7 +13,7 @@ import ToposUnifiedYangMills
 set_option linter.defProp false
 set_option linter.unusedVariables true
 
-open scoped Real InnerProductSpace Topology Matrix BigOperators ENNReal NNReal ComplexConjugate
+open scoped Real InnerProductSpace Topology Matrix BigOperators ENNReal NNReal ComplexConjugate Classical
 open MeasureTheory
 open TopologicalSpace
 
@@ -523,6 +523,40 @@ noncomputable def su2GaugeCharacter : NormalizedGaugeCharacter YangMills.SU2 whe
     linarith
 
 end ConcreteSU2
+
+/-! ### General SU(N) Fundamental Trace Character Architecture (N ≥ 2) -/
+
+section GeneralSUN
+
+open scoped Matrix
+
+/-- Normalized fundamental trace function `(1 / N) Re Tr(U)` on `SUN N`. -/
+noncomputable def sunFundamentalTrace (N : ℕ) (U : YangMills.SUN N) : ℝ :=
+  (1 / (N : ℝ)) * (Matrix.trace (U.1 : Matrix (Fin N) (Fin N) ℂ)).re
+
+theorem sunFundamentalTrace_one (N : ℕ) [Fact (2 ≤ N)] :
+    sunFundamentalTrace N 1 = 1 := by
+  unfold sunFundamentalTrace
+  have hN : (N : ℝ) ≠ 0 := by
+    have : 2 ≤ N := Fact.out
+    positivity
+  have h_tr : Matrix.trace ((1 : YangMills.SUN N).1 : Matrix (Fin N) (Fin N) ℂ) = (N : ℂ) := by
+    simp [Matrix.trace_one]
+  rw [h_tr, Complex.natCast_re, one_div, inv_mul_cancel₀ hN]
+
+theorem sunFundamentalTrace_conj (N : ℕ) (g h : YangMills.SUN N) :
+    sunFundamentalTrace N (g * h * g⁻¹) = sunFundamentalTrace N h := by
+  unfold sunFundamentalTrace
+  have h_tr : Matrix.trace ((g * h * g⁻¹).1 : Matrix (Fin N) (Fin N) ℂ) =
+      Matrix.trace (h.1 : Matrix (Fin N) (Fin N) ℂ) := by
+    change Matrix.trace (g.1 * h.1 * (g⁻¹).1) = Matrix.trace h.1
+    rw [Matrix.trace_mul_cycle]
+    have h_id : (g⁻¹ * g).1 = (1 : Matrix (Fin N) (Fin N) ℂ) := by simp
+    change Matrix.trace ((g⁻¹ * g).1 * h.1) = Matrix.trace h.1
+    rw [h_id, Matrix.one_mul]
+  rw [h_tr]
+
+end GeneralSUN
 
 /-! ============================================================================
     PART III: WILSON PLAQUETTE WEIGHT & REAL HAAR CHARACTER COEFFICIENTS c₀, c₁/₂
@@ -3321,6 +3355,312 @@ theorem electric_strong_coupling_satisfies_C2
   dsimp only
   intro ψ h_ortho
   have h_gap := electricWilsonTransferOp_spectral_gap C L (h_pos a ha) ψ h_ortho
+  exact h_gap.trans (mul_le_mul_of_nonneg_right (h_rate a ha) (norm_nonneg ψ))
+
+/-! ### 6. Full 4D Osterwalder–Seiler Transfer Operator & Intertwined Ground State Gap -/
+
+theorem spatialMagneticAction_nonneg (C : NormalizedGaugeCharacter G) (L : ℕ)
+    (U : SpatialConfig L G) :
+    0 ≤ spatialMagneticAction C L U := by
+  unfold spatialMagneticAction
+  refine Finset.sum_nonneg fun p _ => ?_
+  have h := C.χ_le_one (spatialPlaquetteHolonomy U p.1 p.2)
+  linarith
+
+theorem magneticHalfWeightMap_le_one (C : NormalizedGaugeCharacter G) (L : ℕ)
+    {β : ℝ} (hβ : 0 ≤ β) (U : SpatialConfig L G) :
+    magneticHalfWeightMap C L β U ≤ 1 := by
+  dsimp [magneticHalfWeightMap]
+  have h_act := spatialMagneticAction_nonneg C L U
+  have h_exp : -(β / 2) * spatialMagneticAction C L U ≤ 0 := by
+    have h_half : 0 ≤ β / 2 := by linarith
+    nlinarith
+  exact Real.exp_le_one_iff.mpr h_exp
+
+theorem magneticHalfWeightMap_pos (C : NormalizedGaugeCharacter G) (L : ℕ)
+    (β : ℝ) (U : SpatialConfig L G) :
+    0 < magneticHalfWeightMap C L β U := by
+  dsimp [magneticHalfWeightMap]
+  exact Real.exp_pos _
+
+theorem magneticHalfWeightOp_norm_le (C : NormalizedGaugeCharacter G) (L : ℕ)
+    {β : ℝ} (hβ : 0 ≤ β) (ψ : SpatialL2 L G) :
+    ‖magneticHalfWeightOp C L β ψ‖ ≤ ‖ψ‖ := by
+  unfold magneticHalfWeightOp
+  have h_ae : ∀ᵐ (U : SpatialConfig L G) ∂(spatialHaar L G),
+      ‖(mulRealCLM L (magneticHalfWeightMap C L β) ψ) U‖ ≤ 1 * ‖ψ U‖ := by
+    filter_upwards [mulRealCLM_coeFn L (magneticHalfWeightMap C L β) ψ] with U hU
+    rw [hU, norm_mul, Complex.norm_real, one_mul]
+    have h_pos := magneticHalfWeightMap_pos C L β U
+    have h_le := magneticHalfWeightMap_le_one C L hβ U
+    rw [Real.norm_eq_abs, abs_of_pos h_pos]
+    exact mul_le_of_le_one_left (norm_nonneg _) h_le
+  have h_norm := Lp.norm_le_mul_norm_of_ae_le_mul h_ae
+  simpa using h_norm
+
+theorem magneticHalfWeightOp_selfAdjoint (C : NormalizedGaugeCharacter G) (L : ℕ) (β : ℝ)
+    (φ ψ : SpatialL2 L G) :
+    inner ℂ (magneticHalfWeightOp C L β φ) ψ = inner ℂ φ (magneticHalfWeightOp C L β ψ) :=
+  mulRealCLM_selfAdjoint L (magneticHalfWeightMap C L β) φ ψ
+
+/-- Interacting bare ground state vector `M_{β/2} Ω₀`. -/
+noncomputable def magneticVacuumVector (C : NormalizedGaugeCharacter G) (L : ℕ) (β : ℝ) :
+    SpatialL2 L G :=
+  magneticHalfWeightOp C L β (vacuumL2 L G)
+
+/-- Normalized true physical lattice ground state `Ω_lat(L, β) = M_{β/2} Ω₀ / ‖M_{β/2} Ω₀‖`. -/
+noncomputable def normalizedMagneticVacuum (C : NormalizedGaugeCharacter G) (L : ℕ) (β : ℝ) :
+    SpatialL2 L G :=
+  if _h : magneticVacuumVector C L β = 0 then
+    vacuumL2 L G
+  else
+    (‖magneticVacuumVector C L β‖⁻¹ : ℂ) • magneticVacuumVector C L β
+
+/-- Inverse half-step magnetic multiplier `exp(+(β/2) S_mag)`. -/
+noncomputable def invMagneticHalfWeightMap (C : NormalizedGaugeCharacter G) (L : ℕ) (β : ℝ) :
+    C(SpatialConfig L G, ℝ) where
+  toFun U := Real.exp ((β / 2) * spatialMagneticAction C L U)
+  continuous_toFun := Real.continuous_exp.comp
+    (continuous_const.mul (spatialMagneticAction_continuous C L))
+
+theorem magneticHalfWeightMap_mul_inv (C : NormalizedGaugeCharacter G) (L : ℕ) (β : ℝ)
+    (U : SpatialConfig L G) :
+    magneticHalfWeightMap C L β U * invMagneticHalfWeightMap C L β U = 1 := by
+  dsimp [magneticHalfWeightMap, invMagneticHalfWeightMap]
+  rw [← Real.exp_add]
+  have : -(β / 2) * spatialMagneticAction C L U + (β / 2) * spatialMagneticAction C L U = 0 := by ring
+  rw [this, Real.exp_zero]
+
+theorem invMagneticHalfWeightMap_mul (C : NormalizedGaugeCharacter G) (L : ℕ) (β : ℝ)
+    (U : SpatialConfig L G) :
+    invMagneticHalfWeightMap C L β U * magneticHalfWeightMap C L β U = 1 := by
+  rw [mul_comm, magneticHalfWeightMap_mul_inv]
+
+theorem magneticHalfWeightOp_mul_inv (C : NormalizedGaugeCharacter G) (L : ℕ) (β : ℝ)
+    (φ : SpatialL2 L G) :
+    magneticHalfWeightOp C L β (mulRealCLM L (invMagneticHalfWeightMap C L β) φ) = φ := by
+  unfold magneticHalfWeightOp
+  rw [Lp.ext_iff]
+  filter_upwards [mulRealCLM_coeFn L (magneticHalfWeightMap C L β)
+      (mulRealCLM L (invMagneticHalfWeightMap C L β) φ),
+    mulRealCLM_coeFn L (invMagneticHalfWeightMap C L β) φ] with U h1 h2
+  rw [h1, h2, ← mul_assoc]
+  have h_mul : ((magneticHalfWeightMap C L β U : ℂ) * (invMagneticHalfWeightMap C L β U : ℂ)) = 1 := by
+    rw [← Complex.ofReal_mul, magneticHalfWeightMap_mul_inv C L β U, Complex.ofReal_one]
+  rw [h_mul, one_mul]
+
+theorem inv_mul_magneticHalfWeightOp (C : NormalizedGaugeCharacter G) (L : ℕ) (β : ℝ)
+    (φ : SpatialL2 L G) :
+    mulRealCLM L (invMagneticHalfWeightMap C L β) (magneticHalfWeightOp C L β φ) = φ := by
+  unfold magneticHalfWeightOp
+  rw [Lp.ext_iff]
+  filter_upwards [mulRealCLM_coeFn L (invMagneticHalfWeightMap C L β)
+      (mulRealCLM L (magneticHalfWeightMap C L β) φ),
+    mulRealCLM_coeFn L (magneticHalfWeightMap C L β) φ] with U h1 h2
+  rw [h1, h2, ← mul_assoc]
+  have h_mul : ((invMagneticHalfWeightMap C L β U : ℂ) * (magneticHalfWeightMap C L β U : ℂ)) = 1 := by
+    rw [← Complex.ofReal_mul, invMagneticHalfWeightMap_mul C L β U, Complex.ofReal_one]
+  rw [h_mul, one_mul]
+
+theorem magneticVacuumVector_ne_zero (C : NormalizedGaugeCharacter G) (L : ℕ) (β : ℝ) :
+    magneticVacuumVector C L β ≠ 0 := by
+  intro h_zero
+  have h_inv := inv_mul_magneticHalfWeightOp C L β (vacuumL2 L G)
+  have h_vac_zero : vacuumL2 L G = 0 := by
+    calc vacuumL2 L G
+        = mulRealCLM L (invMagneticHalfWeightMap C L β) (magneticHalfWeightOp C L β (vacuumL2 L G)) := h_inv.symm
+      _ = mulRealCLM L (invMagneticHalfWeightMap C L β) (magneticVacuumVector C L β) := rfl
+      _ = mulRealCLM L (invMagneticHalfWeightMap C L β) 0 := by rw [h_zero]
+      _ = 0 := map_zero _
+  have h_norm : ‖vacuumL2 L G‖ = 1 := vacuumL2_norm L
+  rw [h_vac_zero, norm_zero] at h_norm
+  exact zero_ne_one h_norm
+
+theorem normalizedMagneticVacuum_norm (C : NormalizedGaugeCharacter G) (L : ℕ) (β : ℝ) :
+    ‖normalizedMagneticVacuum C L β‖ = 1 := by
+  unfold normalizedMagneticVacuum
+  split_ifs with h
+  · exact vacuumL2_norm (G := G) L
+  · rw [norm_smul]
+    have h_pos : 0 < ‖magneticVacuumVector C L β‖ := norm_pos_iff.mpr h
+    rw [norm_inv, Complex.norm_real, Real.norm_of_nonneg (norm_nonneg _), inv_mul_cancel₀ h_pos.ne']
+
+theorem magnetic_half_weight_ortho_bare_vacuum (C : NormalizedGaugeCharacter G) (L : ℕ) (β : ℝ)
+    (ψ : SpatialL2 L G)
+    (h_ortho : inner ℂ (normalizedMagneticVacuum C L β) ψ = 0) :
+    inner ℂ (vacuumL2 L G) (magneticHalfWeightOp C L β ψ) = 0 := by
+  have h_mv : inner ℂ (magneticVacuumVector C L β) ψ = 0 := by
+    by_cases h : magneticVacuumVector C L β = 0
+    · rw [h, inner_zero_left]
+    · have h_norm_def : normalizedMagneticVacuum C L β =
+          (‖magneticVacuumVector C L β‖⁻¹ : ℂ) • magneticVacuumVector C L β := by
+        unfold normalizedMagneticVacuum
+        simp [h]
+      rw [h_norm_def, inner_smul_left] at h_ortho
+      have h_pos : 0 < ‖magneticVacuumVector C L β‖ := norm_pos_iff.mpr h
+      have hc : (↑‖magneticVacuumVector C L β‖)⁻¹ ≠ (0 : ℂ) :=
+        inv_ne_zero (Complex.ofReal_ne_zero.mpr h_pos.ne')
+      have h_star_c : star ((↑‖magneticVacuumVector C L β‖)⁻¹ : ℂ) ≠ 0 :=
+        star_ne_zero.mpr hc
+      exact mul_eq_zero.mp h_ortho |>.resolve_left h_star_c
+  unfold magneticVacuumVector at h_mv
+  rw [magneticHalfWeightOp_selfAdjoint] at h_mv
+  exact h_mv
+
+/-- **Uniform Spectral Gap of the Full 4D Osterwalder–Seiler Transfer Operator**:
+    For every `β > 0` and every state `ψ ⊥ Ω_lat(L, β)` orthogonal to the normalized interacting vacuum,
+    the full 4D transfer operator `T_full(L, β) = M_{β/2} ∘ T_electric ∘ M_{β/2}` satisfies
+      `‖T_full(L, β) ψ‖ ≤ (1 - exp(-2β)) ‖ψ‖`
+    uniformly for ALL spatial volumes `L ∈ ℕ`. -/
+theorem fullWilsonTransferOp_spectral_gap (C : NormalizedGaugeCharacter G)
+    (L : ℕ) {β : ℝ} (hβ : 0 < β)
+    (ψ : SpatialL2 L G)
+    (h_ortho : inner ℂ (normalizedMagneticVacuum C L β) ψ = 0) :
+    ‖fullWilsonTransferOp C L β ψ‖ ≤ (1 - Real.exp (-2 * β)) * ‖ψ‖ := by
+  unfold fullWilsonTransferOp
+  simp only [ContinuousLinearMap.comp_apply]
+  have h_out := magneticHalfWeightOp_norm_le C L hβ.le
+    ((electricWilsonTransferOp C L β) (magneticHalfWeightOp C L β ψ))
+  have h_inner := magnetic_half_weight_ortho_bare_vacuum C L β ψ h_ortho
+  have h_elec := electricWilsonTransferOp_spectral_gap C L hβ
+    (magneticHalfWeightOp C L β ψ) h_inner
+  have h_in := magneticHalfWeightOp_norm_le C L hβ.le ψ
+  have h_pos_gap : 0 ≤ 1 - Real.exp (-2 * β) := by
+    have : Real.exp (-2 * β) < 1 := Real.exp_lt_one_iff.mpr (by linarith)
+    linarith
+  have h_elec_bound :
+      ‖(electricWilsonTransferOp C L β) (magneticHalfWeightOp C L β ψ)‖ ≤
+        (1 - Real.exp (-2 * β)) * ‖ψ‖ :=
+    h_elec.trans (mul_le_mul_of_nonneg_left h_in h_pos_gap)
+  exact h_out.trans h_elec_bound
+
+/-- Exact non-trivial glueball excitation orthogonal to the interacting vacuum:
+    `ψ = M_{-β/2} W_p`. -/
+noncomputable def fullPlaquetteExcitation (C : NormalizedGaugeCharacter G) (L : ℕ) (hL : 2 ≤ L) (β : ℝ) :
+    SpatialL2 L G :=
+  mulRealCLM L (invMagneticHalfWeightMap C L β) (plaquetteGlueballL2 C L hL)
+
+theorem fullPlaquetteExcitation_ortho_vacuum (C : NormalizedGaugeCharacter G) (L : ℕ) (hL : 2 ≤ L) (β : ℝ) :
+    inner ℂ (normalizedMagneticVacuum C L β) (fullPlaquetteExcitation C L hL β) = 0 := by
+  have h_ne := magneticVacuumVector_ne_zero C L β
+  have h_norm_def : normalizedMagneticVacuum C L β =
+      (‖magneticVacuumVector C L β‖⁻¹ : ℂ) • magneticVacuumVector C L β := by
+    unfold normalizedMagneticVacuum
+    simp [h_ne]
+  rw [h_norm_def, inner_smul_left]
+  have h_mv : inner ℂ (magneticVacuumVector C L β) (fullPlaquetteExcitation C L hL β) = 0 := by
+    unfold magneticVacuumVector fullPlaquetteExcitation
+    rw [magneticHalfWeightOp_selfAdjoint, magneticHalfWeightOp_mul_inv]
+    exact plaquetteGlueballL2_ortho_vacuum C L hL
+  rw [h_mv, mul_zero]
+
+theorem fullWilsonTransferOp_excitation_norm_pos
+    (C : NormalizedGaugeCharacter G) (L : ℕ) (hL : 2 ≤ L) {β : ℝ} (hβ : 0 < β) :
+    0 < ‖fullWilsonTransferOp C L β (fullPlaquetteExcitation C L hL β)‖ := by
+  unfold fullWilsonTransferOp
+  simp only [ContinuousLinearMap.comp_apply]
+  unfold fullPlaquetteExcitation
+  rw [magneticHalfWeightOp_mul_inv]
+  rw [electricWilsonTransferOp_plaquetteGlueball_eigenstate C L hL β]
+  rw [map_smul, norm_smul, Complex.norm_real]
+  have h_ratio_pos : 0 < (haarCHalf C β / haarC0 C β) ^ 4 :=
+    pow_pos (div_pos (haarCHalf_pos C hβ) (haarC0_pos C hβ.le)) 4
+  rw [Real.norm_eq_abs, abs_of_pos h_ratio_pos]
+  have h_mw_pos : 0 < ‖magneticHalfWeightOp C L β (plaquetteGlueballL2 C L hL)‖ := by
+    rw [norm_pos_iff]
+    intro h_mw_zero
+    have h_inv := inv_mul_magneticHalfWeightOp C L β (plaquetteGlueballL2 C L hL)
+    have h_w_zero : plaquetteGlueballL2 C L hL = 0 := by
+      calc plaquetteGlueballL2 C L hL
+          = mulRealCLM L (invMagneticHalfWeightMap C L β)
+              (magneticHalfWeightOp C L β (plaquetteGlueballL2 C L hL)) := h_inv.symm
+        _ = mulRealCLM L (invMagneticHalfWeightMap C L β) 0 := by rw [h_mw_zero]
+        _ = 0 := map_zero _
+    have h_norm := plaquetteGlueballL2_norm_pos C L hL
+    rw [h_w_zero, norm_zero] at h_norm
+    exact lt_irrefl 0 h_norm
+  exact mul_pos h_ratio_pos h_mw_pos
+
+/-- **Constructive Full 4D (`β_mag = β > 0`) Wilson Lattice Yang–Mills Instance**:
+    Instantiates `ToposUnifiedYangMills.WilsonLatticeYangMills` with the full 4D Osterwalder–Seiler
+    transfer operator `fullWilsonTransferOp C L β` and normalized interacting vacuum `normalizedMagneticVacuum C L β`,
+    unconditionally in the Lean 4 kernel. -/
+noncomputable def constructiveFullWilsonLattice
+    (Curv : YangMills.CurvaturePolynomialAlgebra G)
+    (C : NormalizedGaugeCharacter G)
+    (beta_lat : ℝ → ℝ) :
+    ToposUnifiedYangMills.WilsonLatticeYangMills G Curv where
+  ℋ_lat L := SpatialL2 L G
+  normed_space _ := inferInstance
+  inner_space _ := inferInstance
+  beta_lat := beta_lat
+  T_wilson L β := fullWilsonTransferOp C L β
+  Ω_lat L β := normalizedMagneticVacuum C L β
+  Ω_norm L β _ _ := normalizedMagneticVacuum_norm C L β
+  T_non_trivial L β hβ hL :=
+    ⟨fullPlaquetteExcitation C L hL β,
+      fullPlaquetteExcitation_ortho_vacuum C L hL β,
+      fullWilsonTransferOp_excitation_norm_pos C L hL hβ⟩
+
+/-- **Target 1 Main Theorem — Full 4D Strong-Coupling Uniform-in-Volume Mass Gap**:
+    At any fixed infrared lattice spacing `a_IR > 0` and bare coupling `β_IR > 0`,
+    the full 4D constructive Osterwalder–Seiler transfer operator `T_wilson L β_IR` on `L²(G^{E(Λ_L)}, μ_Haar)`
+    with spatial magnetic action active (`β_mag = β_IR`) exhibits a strictly positive physical mass gap
+      `m_IR = - log(1 - exp(-2 β_IR)) / a_IR > 0`
+    such that `‖T_wilson L β_IR ψ‖ ≤ exp(-a_IR * m_IR) ‖ψ‖` uniformly for ALL spatial
+    volumes `L ∈ ℕ` (`L → ∞`) and ALL excited states `ψ ⊥ Ω_lat(L, β_IR)`. -/
+theorem full_strong_coupling_uniform_volume_gap
+    (Curv : YangMills.CurvaturePolynomialAlgebra G)
+    (C : NormalizedGaugeCharacter G)
+    (beta_lat : ℝ → ℝ)
+    {a_IR β_IR : ℝ} (ha : 0 < a_IR) (hβ : 0 < β_IR) :
+    let lat := constructiveFullWilsonLattice Curv C beta_lat
+    let m_IR : ℝ := -Real.log (1 - Real.exp (-2 * β_IR)) / a_IR
+    0 < m_IR ∧
+    ∀ (L : ℕ) (ψ : lat.ℋ_lat L),
+      inner ℂ (lat.Ω_lat L β_IR) ψ = (0 : ℂ) →
+      ‖lat.T_wilson L β_IR ψ‖ ≤ Real.exp (-a_IR * m_IR) * ‖ψ‖ := by
+  intro lat m_IR
+  have hexp_lt_one : Real.exp (-2 * β_IR) < 1 :=
+    Real.exp_lt_one_iff.mpr (by linarith)
+  have h1m_pos : 0 < 1 - Real.exp (-2 * β_IR) := by linarith
+  have h1m_lt_one : 1 - Real.exp (-2 * β_IR) < 1 := by
+    have hexp_pos : 0 < Real.exp (-2 * β_IR) := Real.exp_pos _
+    linarith
+  have hlog_neg : Real.log (1 - Real.exp (-2 * β_IR)) < 0 :=
+    Real.log_neg h1m_pos h1m_lt_one
+  have hm_pos : 0 < m_IR := by
+    unfold m_IR
+    exact div_pos (neg_pos.mpr hlog_neg) ha
+  refine ⟨hm_pos, fun L ψ h_ortho => ?_⟩
+  have h_exp_id : Real.exp (-a_IR * m_IR) = 1 - Real.exp (-2 * β_IR) := by
+    unfold m_IR
+    have h_alg : -a_IR * (-Real.log (1 - Real.exp (-2 * β_IR)) / a_IR) =
+        Real.log (1 - Real.exp (-2 * β_IR)) := by
+      field_simp [ha.ne']
+    rw [h_alg, Real.exp_log h1m_pos]
+  rw [h_exp_id]
+  exact fullWilsonTransferOp_spectral_gap C L hβ ψ h_ortho
+
+/-- **Scale-Matched Full 4D (`β_mag = β`) Discharge of `HypothesisC2_UniformLatticeGap`**:
+    Whenever a bare coupling trajectory `beta_lat : ℝ → ℝ` satisfies `0 < beta_lat a` and
+    `1 - exp(-2 * beta_lat a) ≤ exp(-a * m_gap)` for all `a > 0`,
+    the full 4D theory `constructiveFullWilsonLattice` satisfies `HypothesisC2_UniformLatticeGap`
+    unconditionally in the Lean 4 kernel. -/
+theorem full_strong_coupling_satisfies_C2
+    (Curv : YangMills.CurvaturePolynomialAlgebra G)
+    (C : NormalizedGaugeCharacter G)
+    (beta_lat : ℝ → ℝ)
+    (m_gap : ℝ)
+    (h_pos : ∀ a > 0, 0 < beta_lat a)
+    (h_rate : ∀ a > 0, 1 - Real.exp (-2 * beta_lat a) ≤ Real.exp (-a * m_gap)) :
+    ToposUnifiedYangMills.HypothesisC2_UniformLatticeGap G
+      (constructiveFullWilsonLattice Curv C beta_lat) m_gap := by
+  unfold ToposUnifiedYangMills.HypothesisC2_UniformLatticeGap
+  intro L a ha _
+  dsimp only
+  intro ψ h_ortho
+  have h_gap := fullWilsonTransferOp_spectral_gap C L (h_pos a ha) ψ h_ortho
   exact h_gap.trans (mul_le_mul_of_nonneg_right (h_rate a ha) (norm_nonneg ψ))
 
 end Target1StrongCoupling
