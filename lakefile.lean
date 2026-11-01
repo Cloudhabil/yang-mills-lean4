@@ -23,6 +23,9 @@ lean_lib «RGCrossoverCertificate» where
 lean_lib «HaarWilsonLattice» where
   roots := #[`HaarWilsonLattice]
 
+lean_lib «OsterwalderSchraderReconstruction» where
+  roots := #[`OsterwalderSchraderReconstruction]
+
 lean_lib «KervaireMilnor7Sphere» where
   roots := #[`KervaireMilnor7Sphere]
 
