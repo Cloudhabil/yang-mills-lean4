@@ -83,11 +83,13 @@ Multiscale renormalization group flow and polymer non-explosion:
 - **Pure Haar Lattice Bundle**: Binds `pureHaarWilsonLattice.T_wilson` directly to the unmodified `fullWilsonTransferOp` from Target 1 without scalar multiplier cheats, analytically discharging Hypotheses (C1) and (C2).
 
 ### 5. [`OsterwalderSchraderReconstruction.lean`](OsterwalderSchraderReconstruction.lean) *(Target 3)*
-Euclidean-to-Minkowski reconstruction and continuum gap preservation:
+Euclidean-to-Minkowski reconstruction, Bałaban cluster expansions, and continuum gap preservation:
+- **Bałaban Multiscale RG Specification**: See [`Bałaban/COMPUTER_ASSISTED_READ_BLUEPRINT.md`](Bałaban/COMPUTER_ASSISTED_READ_BLUEPRINT.md) for the complete 10-paper Computer-Assisted Read (CAR) formalization blueprint translating Bałaban's constructive RG program (CMP 1984–1989) into Lean 4.
 - **Comprehensive Mathematical Treatise**: See [`OSTERWALDER_SCHRADER_HILBERT_SPACE.md`](OSTERWALDER_SCHRADER_HILBERT_SPACE.md) for an exhaustive, line-by-line derivation of the physical Hilbert space $\mathcal{H} = \overline{\underline{\mathcal{S}}_+ / \mathcal{N}}$, the GNS quotient, the self-adjoint Euclidean semigroup $T(t) = e^{-tH}$, and the relativistic forward lightcone spectral condition from the 26-page paper (OS II, *Commun. Math. Phys.* 42, 1975).
+- **Linear Growth Bound (E0') Discharge**: Formulates `ConstructiveSchwingerHierarchy` and proves `constructive_hierarchy_satisfies_os0_temperedness`, establishing OS II Eq. (4.1) ($\|S_n(f)\| \le \alpha (n!)^\beta \prod \|f_i\|_s$) from Bałaban tree cluster decay with **0 sorry**.
 - **Semigroup Derivative Mass Gap Engine**: Proves $m \|\psi\| \le \|H\psi\|$ for any Euclidean contraction semigroup $T(t) = e^{-tH}$ satisfying $\|T(t)\psi\| \le e^{-mt}\|\psi\|$ directly from Fréchet differentiation `HasDerivAt`, reverse triangle inequality, and `le_of_tendsto_of_tendsto` with **0 spectral measure axioms** and **0 sorry**.
 - **Lattice Reflection Positivity (OS2)**: Proves $\sum_{i,j} \bar{c}_i c_j C(n_i + n_j) \ge 0$ on powers of the self-adjoint lattice transfer operator via `transfer_power_adjoint` and `inner_self_nonneg`.
-- **Weak-* Continuum Limit Gap Preservation**: Proves that squeezing the floor discretization error $t - a_k \le \lfloor t/a_k \rfloor a_k \le t$ preserves the exponential decay rate in the continuum limit via `tendsto_of_tendsto_of_tendsto_of_le_of_le` and `Real.continuous_exp.tendsto`, discharging Hypothesis (C3).
+- **Weak-* Continuum Limit Gap Preservation**: Proves that squeezing the floor discretization error $t - a_k \le \lfloor t/a_k \rfloor a_k \le t$ preserves the exponential decay rate in the continuum limit via `tendsto_of_tendsto_of_tendsto_of_le_of_le` and `Real.continuous_exp.tendsto`, discharging Hypothesis (C3) (`constructive_c3_discharge_from_balaban_hierarchy`).
 - **Master Capstone Theorems**: Unifies Targets 1, 2, and 3 into `master_continuum_wightman_yang_mills_mass_gap` and `master_continuum_wightman_yang_mills_mass_gap_of_os_reconstruction`.
 
 ---
@@ -108,6 +110,9 @@ Every single foundational declaration across Targets 1, 2, and 3 has been inspec
 | **OsterwalderSchrader** | `transfer_power_contraction` | `[propext, Classical.choice, Quot.sound]` | **None** | **0 sorry** |
 | **OsterwalderSchrader** | `continuum_weak_star_limit_preserves_gap` | `[propext, Classical.choice, Quot.sound]` | **None** | **0 sorry** |
 | **OsterwalderSchrader** | `constructive_discharges_C3` | `[propext, Classical.choice, Quot.sound]` | **None** | **0 sorry** |
+| **OsterwalderSchrader** | `constructive_hierarchy_satisfies_os0_temperedness` | `[propext, Classical.choice, Quot.sound]` | **None** | **0 sorry** |
+| **OsterwalderSchrader** | `constructive_os_of_balaban_hierarchy` | `[propext, Classical.choice, Quot.sound]` | **None** | **0 sorry** |
+| **OsterwalderSchrader** | `constructive_c3_discharge_from_balaban_hierarchy` | `[propext, Classical.choice, Quot.sound]` | **None** | **0 sorry** |
 | **OsterwalderSchrader** | `master_continuum_wightman_yang_mills_mass_gap` | `[propext, Classical.choice, Quot.sound]` | **None** | **0 sorry** |
 
 ---
