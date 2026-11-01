@@ -27,6 +27,8 @@ import ToposConstructiveRG
 import RGCrossoverCertificate
 import HaarWilsonLattice
 import OsterwalderSchraderReconstruction
+import BalabanPRT1
+
 
 noncomputable section
 
@@ -153,7 +155,25 @@ theorem greens_bound_strictly_decreasing {L : ℕ} {hL : 2 ≤ L}
     exact mul_lt_mul_of_neg_left h_lt h_coeff
   exact mul_lt_mul_of_pos_left h_exp_lt P.hC0
 
+/-- **Constructive PRT1 Grounding**:
+    The Green's propagator decay structure is constructively instantiated from the
+    lattice spectral gap λ_min(N) and finite-range hopping constant via the Combes–Thomas method
+    in `BalabanPRT1.lean`. -/
+def constructiveGreensDecay (N L : ℕ) (hN : 2 ≤ N) (hL : 2 ≤ L)
+    (C_hop : ℝ) (hC : 0 < C_hop) :
+    GreensPropagatorDecay L hL where
+  C0 := (YangMills.BalabanPRT1.makeLatticeGreensPropagatorDecay N L hN hL C_hop hC).C0
+  delta0 := (YangMills.BalabanPRT1.makeLatticeGreensPropagatorDecay N L hN hL C_hop hC).delta0
+  hC0 := (YangMills.BalabanPRT1.makeLatticeGreensPropagatorDecay N L hN hL C_hop hC).hC0
+  h_delta0 := (YangMills.BalabanPRT1.makeLatticeGreensPropagatorDecay N L hN hL C_hop hC).h_delta0
+
+theorem constructiveGreensDecay_pos (N L : ℕ) (hN : 2 ≤ N) (hL : 2 ≤ L)
+    (C_hop : ℝ) (hC : 0 < C_hop) (dist : ℝ) :
+    0 < (constructiveGreensDecay N L hN hL C_hop hC).bound dist :=
+  greens_bound_pos _ dist
+
 end PRT1
+
 
 /-! ============================================================================
     PAPER 2: PRT2 (CMP 96, 223–250, 1984)

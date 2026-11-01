@@ -36,4 +36,9 @@ lean_lib «OsterwalderSchraderReconstruction» where
 lean_lib «BalabanConstructivePipeline» where
   roots := #[`BalabanConstructivePipeline]
 
+@[default_target]
+lean_lib «BalabanPRT1» where
+  roots := #[`BalabanPRT1]
+
+
 
