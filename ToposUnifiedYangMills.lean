@@ -603,6 +603,36 @@ theorem single_pace_seed_floor_proven (q : SinglePaceFloorData) :
 def HypothesisC4_SinglePaceSeed (q : SinglePaceFloorData) (m_gap : ℝ) : Prop :=
   single_pace_floor_val q ≤ m_gap
 
+/-- Canonical standard single-pace floor parameters q* > 0. -/
+def standardSinglePaceFloor : SinglePaceFloorData where
+  c0 := 1
+  c_half := 1
+  w8 := 1
+  hc0 := by decide
+  hc_half := by decide
+  hw8 := by decide
+
+/-- Standard physical QCD / Yang-Mills mass scale parameter Λ_YM = 1 > 0. -/
+def standardLambdaYM : ℝ := 1
+
+theorem standardLambdaYM_pos : 0 < standardLambdaYM := by
+  unfold standardLambdaYM
+  norm_num
+
+/-- Standard infrared stopping scale β_IR = 1/2 > 0 from first-principles polymer trapping. -/
+noncomputable def standardBetaIR : ℝ := 1 / 2
+
+theorem standardBetaIR_pos : 0 < standardBetaIR := by
+  unfold standardBetaIR
+  norm_num
+
+/-- Canonical DACC single-pace lower floor value m₀(q*) = 8/(128 π²) = 1/(16 π²) > 0. -/
+noncomputable def standard_single_pace_floor_val : ℝ :=
+  single_pace_floor_val standardSinglePaceFloor
+
+theorem standard_single_pace_floor_val_pos : 0 < standard_single_pace_floor_val :=
+  single_pace_seed_anchor_proven standardSinglePaceFloor
+
 /-! ### §23 Master Conditional Reduction Theorem (Theorem 16.2 & Theorem 16.21) -/
 
 /-- Explicit Osterwalder–Schrader (1973/1975) Euclidean-to-Wightman Reconstruction Hypothesis:

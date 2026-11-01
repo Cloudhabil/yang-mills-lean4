@@ -201,6 +201,45 @@ theorem χ_mul_comm (g h : G) : C.χ (g * h) = C.χ (h * g) := by
 
 end NormalizedGaugeCharacter
 
+/-! ### Concrete Zero-`sorry` Topological & Measure Structure for `YangMills.SUN N` -/
+
+section ConcreteSUN
+
+instance (priority := high) sun_isTopologicalGroup (N : ℕ) :
+    IsTopologicalGroup (YangMills.SUN N) where
+  continuous_mul :=
+    continuous_induced_rng.mpr
+      ((continuous_subtype_val.comp continuous_fst).mul
+        (continuous_subtype_val.comp continuous_snd))
+  continuous_inv :=
+    continuous_induced_rng.mpr (continuous_star.comp continuous_subtype_val)
+
+instance matrixN_secondCountableTopology (N : ℕ) :
+    SecondCountableTopology (Matrix (Fin N) (Fin N) ℂ) :=
+  inferInstanceAs (SecondCountableTopology (Fin N → Fin N → ℂ))
+
+instance sun_secondCountableTopology (N : ℕ) :
+    SecondCountableTopology (YangMills.SUN N) :=
+  letI : SecondCountableTopology (Matrix (Fin N) (Fin N) ℂ) := matrixN_secondCountableTopology N
+  (⟨rfl⟩ : Topology.IsInducing
+    (Subtype.val : YangMills.SUN N → Matrix (Fin N) (Fin N) ℂ)).secondCountableTopology
+
+instance sun_t2Space (N : ℕ) : T2Space (YangMills.SUN N) :=
+  inferInstance
+
+noncomputable instance sun_measurableSpace (N : ℕ) : MeasurableSpace (YangMills.SUN N) :=
+  borel (YangMills.SUN N)
+
+instance sun_borelSpace (N : ℕ) : BorelSpace (YangMills.SUN N) :=
+  ⟨rfl⟩
+
+instance (priority := 100) compactSpace_of_compactSimpleLieGroup
+    (G : Type*) [TopologicalSpace G] [Group G] [h : YangMills.CompactSimpleLieGroup G] :
+    CompactSpace G :=
+  isCompact_univ_iff.mp h.is_compact
+
+end ConcreteSUN
+
 /-! ### Concrete Zero-`sorry` Topological & Haar Character Verification for `YangMills.SU2` -/
 
 section ConcreteSU2
@@ -555,6 +594,97 @@ theorem sunFundamentalTrace_conj (N : ℕ) (g h : YangMills.SUN N) :
     change Matrix.trace ((g⁻¹ * g).1 * h.1) = Matrix.trace h.1
     rw [h_id, Matrix.one_mul]
   rw [h_tr]
+
+theorem su2Chi_eq_sunFundamentalTrace (U : YangMills.SU2) :
+    su2Chi U = sunFundamentalTrace 2 U := by
+  unfold su2Chi sunFundamentalTrace
+  simp only [Matrix.trace_fin_two, Complex.add_re]
+  ring
+
+theorem sunFundamentalTrace_continuous (N : ℕ) :
+    Continuous (sunFundamentalTrace N) := by
+  unfold sunFundamentalTrace
+  refine continuous_const.mul (Complex.continuous_re.comp ?_)
+  have h_tr : (fun U : YangMills.SUN N => Matrix.trace (U.1 : Matrix (Fin N) (Fin N) ℂ)) =
+      (fun U : YangMills.SUN N => ∑ i : Fin N, U.1 i i) := by
+    ext U; rfl
+  rw [h_tr]
+  exact continuous_finsetSum Finset.univ (fun i _ =>
+    (continuous_apply i).comp ((continuous_apply i).comp continuous_subtype_val))
+
+/-- Canonical Gauge Character Class for compact gauge groups G. -/
+class StandardGaugeCharacter (G : Type*)
+    [TopologicalSpace G] [Group G] [IsTopologicalGroup G]
+    [CompactSpace G] [T2Space G] [SecondCountableTopology G]
+    [MeasurableSpace G] [BorelSpace G] where
+  standardChar : NormalizedGaugeCharacter G
+
+noncomputable instance : StandardGaugeCharacter YangMills.SU2 where
+  standardChar := su2GaugeCharacter
+
+/-- Haar Schur Orthogonality Data for the Fundamental Trace Character on `SUN N`. -/
+structure SUNSchurOrthogonality (N : ℕ) [Fact (2 ≤ N)] where
+  continuous_trace : Continuous (sunFundamentalTrace N)
+  abs_le_one : ∀ g : YangMills.SUN N, |sunFundamentalTrace N g| ≤ 1
+  inv_eq : ∀ g : YangMills.SUN N, sunFundamentalTrace N g⁻¹ = sunFundamentalTrace N g
+  integral_zero : ∫ g, sunFundamentalTrace N g ∂(haarProb (YangMills.SUN N)) = 0
+  sq_integral_le_half : ∫ g, (sunFundamentalTrace N g) ^ 2 ∂(haarProb (YangMills.SUN N)) ≤ 1 / 2
+  functional_eq : ∀ g h : YangMills.SUN N,
+    ∫ x, sunFundamentalTrace N (g * x * h * x⁻¹) ∂(haarProb (YangMills.SUN N)) =
+      sunFundamentalTrace N g * sunFundamentalTrace N h
+
+/-- Canonical Constructor of `NormalizedGaugeCharacter` for `SUN N` from Schur orthogonality. -/
+noncomputable def sunGaugeCharacterOfSchur (N : ℕ) [Fact (2 ≤ N)]
+    (h_schur : SUNSchurOrthogonality N) :
+    NormalizedGaugeCharacter (YangMills.SUN N) where
+  χ := sunFundamentalTrace N
+  χ_continuous := h_schur.continuous_trace
+  χ_one := sunFundamentalTrace_one N
+  χ_abs_le_one := h_schur.abs_le_one
+  χ_conj := sunFundamentalTrace_conj N
+  χ_inv := h_schur.inv_eq
+  χ_integral_zero := h_schur.integral_zero
+  χ_sq_integral_le_half := h_schur.sq_integral_le_half
+  χ_functional_eq := h_schur.functional_eq
+
+/-- Canonical SU(3) Gauge Character constructor from Schur orthogonality data. -/
+noncomputable def su3GaugeCharacterOfSchur
+    (h_schur : SUNSchurOrthogonality 3) :
+    NormalizedGaugeCharacter YangMills.SU3 :=
+  sunGaugeCharacterOfSchur 3 h_schur
+
+/-- Unconditional Constructive Proof that `SUNSchurOrthogonality 2` is Inhabited (Zero `sorry`). -/
+noncomputable def su2SchurOrthogonality : SUNSchurOrthogonality 2 where
+  continuous_trace := sunFundamentalTrace_continuous 2
+  abs_le_one := fun g => by
+    rw [← su2Chi_eq_sunFundamentalTrace]
+    exact su2GaugeCharacter.χ_abs_le_one g
+  inv_eq := fun g => by
+    rw [← su2Chi_eq_sunFundamentalTrace, ← su2Chi_eq_sunFundamentalTrace]
+    exact su2GaugeCharacter.χ_inv g
+  integral_zero := by
+    have h_eq : (fun g : YangMills.SUN 2 => sunFundamentalTrace 2 g) = su2Chi := by
+      ext g; exact (su2Chi_eq_sunFundamentalTrace g).symm
+    rw [h_eq]
+    exact su2GaugeCharacter.χ_integral_zero
+  sq_integral_le_half := by
+    have h_eq : (fun g : YangMills.SUN 2 => (sunFundamentalTrace 2 g) ^ 2) = (fun g => (su2Chi g) ^ 2) := by
+      ext g; rw [su2Chi_eq_sunFundamentalTrace]
+    rw [h_eq]
+    exact su2GaugeCharacter.χ_sq_integral_le_half
+  functional_eq := fun g h => by
+    have h_eq : (fun x : YangMills.SUN 2 => sunFundamentalTrace 2 (g * x * h * x⁻¹)) =
+        (fun x => su2Chi (g * x * h * x⁻¹)) := by
+      ext x; rw [su2Chi_eq_sunFundamentalTrace]
+    rw [h_eq, ← su2Chi_eq_sunFundamentalTrace g, ← su2Chi_eq_sunFundamentalTrace h]
+    exact su2GaugeCharacter.χ_functional_eq g h
+
+noncomputable instance : Fact (HaarWilsonLattice.SUNSchurOrthogonality 2) :=
+  ⟨su2SchurOrthogonality⟩
+
+noncomputable instance (priority := low) (N : ℕ) [Fact (2 ≤ N)] [h : Fact (SUNSchurOrthogonality N)] :
+    StandardGaugeCharacter (YangMills.SUN N) where
+  standardChar := sunGaugeCharacterOfSchur N h.out
 
 end GeneralSUN
 
