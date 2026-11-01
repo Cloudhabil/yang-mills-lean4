@@ -20,6 +20,9 @@ lean_lib «ToposConstructiveRG» where
 lean_lib «RGCrossoverCertificate» where
   roots := #[`RGCrossoverCertificate]
 
+lean_lib «HaarWilsonLattice» where
+  roots := #[`HaarWilsonLattice]
+
 lean_lib «KervaireMilnor7Sphere» where
   roots := #[`KervaireMilnor7Sphere]
 
