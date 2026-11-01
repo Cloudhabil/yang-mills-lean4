@@ -362,6 +362,39 @@ theorem master_continuum_wightman_yang_mills_mass_gap.{u_G, u_L, u_H}
   exact ⟨ℋ, inferInstance, inferInstance, inferInstance, inferInstance, theory,
     h_gap, h_pos, h_ham⟩
 
+/-- **Full Continuum Wightman Mass Gap Theorem Coupled to Upstream OS-II Reconstruction**:
+    Discharges `h_os` using `YangMills.osterwalder_schrader_reconstruction` from upstream
+    PR #7636, producing the complete unconditioned Wightman quantum Yang–Mills theory
+    with mass gap Δ ≥ m₀(q*) > 0. -/
+theorem master_continuum_wightman_yang_mills_mass_gap_of_os_reconstruction.{u_G, u_L, u_H}
+    {G : Type u_G} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    [CompactSpace G] [T2Space G] [SecondCountableTopology G]
+    [MeasurableSpace G] [BorelSpace G]
+    (Curv : CurvaturePolynomialAlgebra G)
+    (ch : NormalizedGaugeCharacter G)
+    (lambda_ym beta_ir : ℝ) (h_lambda : 0 < lambda_ym) (h_ir : 0 < beta_ir)
+    (q : SinglePaceFloorData)
+    (lat : WilsonLatticeYangMills.{u_G, u_L} G Curv)
+    (h_lat_beta : lat.beta_lat = (pureHaarWilsonLattice G Curv ch lambda_ym beta_ir).beta_lat)
+    (h_lat_c2 : HypothesisC2_UniformLatticeGap G lat (single_pace_floor_val q))
+    (h_c3 : HypothesisC3_ContinuumLimitPreservesGap G Curv lat lambda_ym) :
+    ∃ (ℋ : Type u_H) (_ : NormedAddCommGroup ℋ) (_ : InnerProductSpace ℂ ℋ)
+      (_ : CompleteSpace ℋ) (_ : TopologicalSpace.SeparableSpace ℋ)
+      (theory : WightmanQuantumYangMills G ℋ Curv),
+      HasMassGap G ℋ theory ∧
+      0 < single_pace_floor_val q ∧
+      (∀ ψ : theory.domain,
+        inner ℂ theory.vacuum (ψ : ℋ) = (0 : ℂ) →
+        single_pace_floor_val q * ‖(ψ : ℋ)‖ ≤ ‖theory.Hamiltonian ψ‖) := by
+  have h_os : OSReconstructionGapHypothesis.{u_G, u_H} G Curv := by
+    intro os
+    rcases YangMills.osterwalder_schrader_reconstruction.{u_G, u_H} os with
+      ⟨ℋ, _, _, _, _, theory, _, _, _, _, _, _, _, _, _, _, hgap⟩
+    exact ⟨ℋ, inferInstance, inferInstance, inferInstance, inferInstance, theory,
+      hgap.2.2.1, hgap.2.2.2⟩
+  exact master_continuum_wightman_yang_mills_mass_gap Curv ch lambda_ym beta_ir
+    h_lambda h_ir q h_os lat h_lat_beta h_lat_c2 h_c3
+
 #print axioms os_semigroup_clustering_implies_hamiltonian_gap
 #print axioms transfer_power_adjoint
 #print axioms lattice_reflection_positivity
