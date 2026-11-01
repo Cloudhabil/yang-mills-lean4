@@ -84,6 +84,7 @@ Multiscale renormalization group flow and polymer non-explosion:
 
 ### 5. [`OsterwalderSchraderReconstruction.lean`](OsterwalderSchraderReconstruction.lean) *(Target 3)*
 Euclidean-to-Minkowski reconstruction and continuum gap preservation:
+- **Comprehensive Mathematical Treatise**: See [`OSTERWALDER_SCHRADER_HILBERT_SPACE.md`](OSTERWALDER_SCHRADER_HILBERT_SPACE.md) for an exhaustive, line-by-line derivation of the physical Hilbert space $\mathcal{H} = \overline{\underline{\mathcal{S}}_+ / \mathcal{N}}$, the GNS quotient, the self-adjoint Euclidean semigroup $T(t) = e^{-tH}$, and the relativistic forward lightcone spectral condition from the 26-page paper (OS II, *Commun. Math. Phys.* 42, 1975).
 - **Semigroup Derivative Mass Gap Engine**: Proves $m \|\psi\| \le \|H\psi\|$ for any Euclidean contraction semigroup $T(t) = e^{-tH}$ satisfying $\|T(t)\psi\| \le e^{-mt}\|\psi\|$ directly from Fréchet differentiation `HasDerivAt`, reverse triangle inequality, and `le_of_tendsto_of_tendsto` with **0 spectral measure axioms** and **0 sorry**.
 - **Lattice Reflection Positivity (OS2)**: Proves $\sum_{i,j} \bar{c}_i c_j C(n_i + n_j) \ge 0$ on powers of the self-adjoint lattice transfer operator via `transfer_power_adjoint` and `inner_self_nonneg`.
 - **Weak-* Continuum Limit Gap Preservation**: Proves that squeezing the floor discretization error $t - a_k \le \lfloor t/a_k \rfloor a_k \le t$ preserves the exponential decay rate in the continuum limit via `tendsto_of_tendsto_of_tendsto_of_le_of_le` and `Real.continuous_exp.tendsto`, discharging Hypothesis (C3).
