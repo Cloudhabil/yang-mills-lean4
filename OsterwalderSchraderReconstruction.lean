@@ -417,7 +417,7 @@ abbrev SU2CurvatureAlgebra := SUNCurvatureAlgebra 2
 abbrev SU3CurvatureAlgebra := SUNCurvatureAlgebra 3
 
 /-- Direct constructor of `SUNCurvatureAlgebra N` from curvature algebra and Casimir equality. -/
-def sunCurvatureAlgebraOfCasimir (N : ℕ) [Fact (2 ≤ N)]
+@[instance_reducible] def sunCurvatureAlgebraOfCasimir (N : ℕ) [Fact (2 ≤ N)]
     (Curv : YangMills.CurvaturePolynomialAlgebra (YangMills.SUN N))
     (h_cas : Curv.casimir_adjoint = N) : SUNCurvatureAlgebra N where
   standardCurv := Curv
@@ -516,7 +516,7 @@ def crossover_certificate : YangMills.ConstructiveRG.Certificate.CrossoverWindow
 
 /-- Certified positive mass gap permanence ratio across the crossover window. -/
 theorem gap_permanence_ratio_positive : 0 < (1 : ℚ) - (1 / 2) :=
-  B.cert.gap_strictly_preserved
+  YangMills.ConstructiveRG.Certificate.gap_permanence_ratio_positive
 
 end ConstructiveYangMillsBundle
 
