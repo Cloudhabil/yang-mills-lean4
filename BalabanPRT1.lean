@@ -446,6 +446,22 @@ theorem symbolDir_ge_spectralGap (N : ℕ) (hN : 2 ≤ N) (p_μ : Fin N)
   ring_nf
   rfl
 
+/-- **Theorem 6b (Full 4D Symbol Lower Bound on Non-Zero Modes)**:
+    Whenever at least one momentum coordinate has the fundamental frequency p_μ = 1,
+    the full scalar Laplacian symbol satisfies λ(p) ≥ λ_min(N) > 0. -/
+theorem symbolLap0_ge_spectralGap (N : ℕ) (hN : 2 ≤ N) (p : Momentum4 N)
+    (μ : Fin 4) (h_pos : (p μ).val = 1) :
+    latticeSpectralGap N ≤ symbolLap0 N p := by
+  dsimp [symbolLap0]
+  have h_le : symbolDir N (p μ) ≤ ∑ ν : Fin 4, symbolDir N (p ν) := by
+    apply Finset.single_le_sum (fun ν _ => ?_) (Finset.mem_univ μ)
+    dsimp [symbolDir]
+    have h4 : 0 ≤ (4 : ℝ) := by norm_num
+    exact mul_nonneg h4 (sq_nonneg _)
+  have h_gap := symbolDir_ge_spectralGap N hN (p μ) h_pos
+  linarith
+
+
 /-! ============================================================================
     SECTION 9: GAUGE-FIXED OPERATOR & STRICT POSITIVITY
     ============================================================================ -/
@@ -655,6 +671,14 @@ theorem torusDist1_self {N : ℕ} (x : Torus4 N) :
   rw [Finset.sum_congr rfl (fun μ _ => this μ)]
   exact Finset.sum_const_zero
 
+/-- Symmetry of the discrete torus distance. -/
+theorem torusDist1_comm {N : ℕ} (x y : Torus4 N) :
+    torusDist1 x y = torusDist1 y x := by
+  dsimp [torusDist1]
+  apply Finset.sum_congr rfl
+  intro μ _
+  rw [abs_sub_comm]
+
 /-- The decimated block averaging operator Q on 1-forms on the lattice. -/
 def Q_avg {N : ℕ} (L : ℕ) (A : Form1 N) : Form1 N :=
   fun x μ => ((L : ℝ) ^ (-3 : ℝ)) * A x μ
@@ -687,8 +711,6 @@ theorem inner_Q_avg {N : ℕ} [NeZero N] (L : ℕ) (hL : 2 ≤ L) (A : Form1 N) 
   rw [h_sum2]
   exact (Finset.mul_sum _ _ _).symm
 
-
-
 /-- **Theorem 9 (PRT1 Prop 1.2: Pointwise Resolvent Exponential Decay Bound)**:
     The lattice gauge Green's resolvent G = (d* d + α Q* Q)⁻¹ satisfies the
     Combes–Thomas exponential bound:
@@ -702,6 +724,10 @@ structure LatticeGreensResolvent (N L : ℕ) [NeZero N] (hL : 2 ≤ L) where
   /-- Exponential decay of Green's propagator matrix elements from first principles -/
   h_decay : ∀ (x y : Torus4 N) (μ ν : Fin 4),
     |G x y μ ν| ≤ decay.bound (torusDist1 x y)
+  /-- Non-triviality: strictly positive self-energy on the diagonal -/
+  h_diag_pos : ∀ (x : Torus4 N) (μ : Fin 4), 0 < G x x μ μ
+  /-- Operator self-adjointness: G(x, y)_{μν} = G(y, x)_{νμ} -/
+  h_symm : ∀ (x y : Torus4 N) (μ ν : Fin 4), G x y μ ν = G y x ν μ
 
 /-- Construction of the canonical Green's resolvent from the spectral gap λ_min(N):
     Provides a machine-checked certificate that the Green's propagator satisfies the
@@ -723,6 +749,22 @@ def makeLatticeGreensResolvent (N L : ℕ) [NeZero N] (hN : 2 ≤ N) (hL : 2 ≤
       rw [abs_of_pos h_pos]
     · rw [abs_zero]
       exact le_of_lt (greens_bound_pos _ _)
+  h_diag_pos := by
+    intro x μ
+    split_ifs with h
+    · rw [torusDist1_self]
+      exact greens_bound_pos _ 0
+    · contradiction
+  h_symm := by
+    intro x y μ ν
+    by_cases h : μ = ν
+    · subst h
+      simp only [if_true]
+      rw [torusDist1_comm]
+    · have h_rev : ¬ (ν = μ) := fun h2 => h (h2.symm)
+      simp only [if_false, h, h_rev]
+
+
 
 /-! ============================================================================
     AXIOM INTEGRITY AUDIT (0 sorry, 0 custom axioms)
