@@ -7,3 +7,11 @@
 
 __pycache__/
 *.pyc
+
+# Binary databases and scratch files
+*.db
+*.db-journal
+*.pdf
+*.eml
+scratch/
+test_*.lean

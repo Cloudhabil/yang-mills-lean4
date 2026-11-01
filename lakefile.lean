@@ -8,29 +8,27 @@ package "yang-mills-lean4" where
 require mathlib from git
   "https://github.com/leanprover-community/mathlib4.git" @ "v4.33.1"
 
+@[default_target]
 lean_lib «MillenniumYangMills» where
   roots := #[`MillenniumYangMills]
 
+@[default_target]
 lean_lib «ToposUnifiedYangMills» where
   roots := #[`ToposUnifiedYangMills]
 
+@[default_target]
 lean_lib «ToposConstructiveRG» where
   roots := #[`ToposConstructiveRG]
 
+@[default_target]
 lean_lib «RGCrossoverCertificate» where
   roots := #[`RGCrossoverCertificate]
 
+@[default_target]
 lean_lib «HaarWilsonLattice» where
   roots := #[`HaarWilsonLattice]
 
+@[default_target]
 lean_lib «OsterwalderSchraderReconstruction» where
   roots := #[`OsterwalderSchraderReconstruction]
 
-lean_lib «KervaireMilnor7Sphere» where
-  roots := #[`KervaireMilnor7Sphere]
-
-lean_lib «SmoothPoincareVariants» where
-  roots := #[`SmoothPoincareVariants]
-
-lean_lib «FourManifoldGaugeTopology» where
-  roots := #[`FourManifoldGaugeTopology]
