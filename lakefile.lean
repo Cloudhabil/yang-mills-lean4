@@ -32,3 +32,8 @@ lean_lib «HaarWilsonLattice» where
 lean_lib «OsterwalderSchraderReconstruction» where
   roots := #[`OsterwalderSchraderReconstruction]
 
+@[default_target]
+lean_lib «BalabanConstructivePipeline» where
+  roots := #[`BalabanConstructivePipeline]
+
+
