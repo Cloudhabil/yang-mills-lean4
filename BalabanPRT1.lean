@@ -307,6 +307,176 @@ theorem inner_d0_adj {N : ℕ} [NeZero N] (f : Form0 N) (A : Form1 N) :
   intro x _
   rw [← Finset.mul_sum]
 
+/-- Predicate for skew-symmetric 2-forms on the discrete torus: F_{νμ}(x) = - F_{μν}(x). -/
+def IsSkewForm2 {N : ℕ} (F : Form2 N) : Prop :=
+  ∀ (x : Torus4 N) (μ ν : Fin 4), F x ν μ = - F x μ ν
+
+/-- Every exterior derivative d₁ A is a skew-symmetric 2-form. -/
+theorem d1_isSkewForm2 {N : ℕ} (A : Form1 N) : IsSkewForm2 (d1 A) :=
+  d1_skew A
+
+/-- Summation translation lemma for 2-forms along direction ν. -/
+theorem sum_shiftFwd_form2 {N : ℕ} [NeZero N] (μ ν : Fin 4) (A : Form1 N) (F : Form2 N) :
+    ∑ x : Torus4 N, A (shiftFwd ν x) μ * F x ν μ =
+    ∑ x : Torus4 N, A x μ * F (shiftBwd ν x) ν μ := by
+  have h := (shiftFwdEquiv ν).sum_comp (fun y => A y μ * F (shiftBwd ν y) ν μ)
+  have h_simp : (∑ x : Torus4 N, A (shiftFwd ν x) μ * F (shiftBwd ν (shiftFwd ν x)) ν μ) =
+                (∑ x : Torus4 N, A (shiftFwd ν x) μ * F x ν μ) := by
+    apply Finset.sum_congr rfl
+    intro x _
+    rw [shiftBwd_shiftFwd]
+  rw [← h_simp]
+  exact h
+
+/-- **Theorem 2b (Discrete Hodge Adjoint Integration by Parts for d₁)**:
+    For any 1-form A and skew-symmetric 2-form F,
+      ⟨d₁ A, F⟩₂ = ⟨A, d₁* F⟩₁. -/
+theorem inner_d1_adj {N : ℕ} [NeZero N] (A : Form1 N) (F : Form2 N) (hF : IsSkewForm2 F) :
+    inner2 (d1 A) F = inner1 A (d1Star F) := by
+  dsimp [inner2, inner1, d1, d1Star]
+  have h_point : ∀ x : Torus4 N,
+      (∑ μ : Fin 4, ∑ ν : Fin 4,
+        ((A (shiftFwd μ x) ν - A x ν) - (A (shiftFwd ν x) μ - A x μ)) * F x μ ν) =
+      2 * ∑ μ : Fin 4, ∑ ν : Fin 4, (A (shiftFwd ν x) μ - A x μ) * F x ν μ := by
+    intro x
+    have h_sub :
+        (∑ μ : Fin 4, ∑ ν : Fin 4,
+          ((A (shiftFwd μ x) ν - A x ν) - (A (shiftFwd ν x) μ - A x μ)) * F x μ ν) =
+        (∑ μ : Fin 4, ∑ ν : Fin 4, (A (shiftFwd μ x) ν - A x ν) * F x μ ν) -
+        (∑ μ : Fin 4, ∑ ν : Fin 4, (A (shiftFwd ν x) μ - A x μ) * F x μ ν) := by
+      rw [← Finset.sum_sub_distrib]
+      apply Finset.sum_congr rfl
+      intro μ _
+      rw [← Finset.sum_sub_distrib]
+      apply Finset.sum_congr rfl
+      intro ν _
+      ring
+    rw [h_sub]
+    have h_swap :
+        (∑ μ : Fin 4, ∑ ν : Fin 4, (A (shiftFwd μ x) ν - A x ν) * F x μ ν) =
+        ∑ μ : Fin 4, ∑ ν : Fin 4, (A (shiftFwd ν x) μ - A x μ) * F x ν μ :=
+      Finset.sum_comm
+    rw [h_swap]
+    have h_skew_term :
+        (∑ μ : Fin 4, ∑ ν : Fin 4, (A (shiftFwd ν x) μ - A x μ) * F x μ ν) =
+        - (∑ μ : Fin 4, ∑ ν : Fin 4, (A (shiftFwd ν x) μ - A x μ) * F x ν μ) := by
+      rw [← Finset.sum_neg_distrib]
+      apply Finset.sum_congr rfl
+      intro μ _
+      rw [← Finset.sum_neg_distrib]
+      apply Finset.sum_congr rfl
+      intro ν _
+      have h_anti := hF x ν μ
+      rw [h_anti]
+      ring
+    rw [h_skew_term]
+    ring
+  have h_sum_x :
+      (∑ x : Torus4 N, ∑ μ : Fin 4, ∑ ν : Fin 4,
+        ((A (shiftFwd μ x) ν - A x ν) - (A (shiftFwd ν x) μ - A x μ)) * F x μ ν) =
+      2 * ∑ x : Torus4 N, ∑ μ : Fin 4, ∑ ν : Fin 4, (A (shiftFwd ν x) μ - A x μ) * F x ν μ := by
+    rw [Finset.mul_sum]
+    exact Finset.sum_congr rfl (fun x _ => h_point x)
+  rw [h_sum_x]
+  have h_cancel_two :
+      (1 / 2 : ℝ) * (2 * ∑ x : Torus4 N, ∑ μ : Fin 4, ∑ ν : Fin 4,
+        (A (shiftFwd ν x) μ - A x μ) * F x ν μ) =
+      ∑ x : Torus4 N, ∑ μ : Fin 4, ∑ ν : Fin 4, (A (shiftFwd ν x) μ - A x μ) * F x ν μ := by
+    ring
+  rw [h_cancel_two]
+  rw [Finset.sum_comm]
+  have h_swap2 :
+      (∑ μ : Fin 4, ∑ x : Torus4 N, ∑ ν : Fin 4, (A (shiftFwd ν x) μ - A x μ) * F x ν μ) =
+      ∑ μ : Fin 4, ∑ ν : Fin 4, ∑ x : Torus4 N, (A (shiftFwd ν x) μ - A x μ) * F x ν μ := by
+    apply Finset.sum_congr rfl
+    intro μ _
+    exact Finset.sum_comm
+  rw [h_swap2]
+  have h_ibp :
+      (∑ μ : Fin 4, ∑ ν : Fin 4, ∑ x : Torus4 N, (A (shiftFwd ν x) μ - A x μ) * F x ν μ) =
+      ∑ μ : Fin 4, ∑ ν : Fin 4, ∑ x : Torus4 N, A x μ * (F (shiftBwd ν x) ν μ - F x ν μ) := by
+    apply Finset.sum_congr rfl
+    intro μ _
+    apply Finset.sum_congr rfl
+    intro ν _
+    have h_expand :
+        (∑ x : Torus4 N, (A (shiftFwd ν x) μ - A x μ) * F x ν μ) =
+        (∑ x : Torus4 N, A (shiftFwd ν x) μ * F x ν μ) -
+        (∑ x : Torus4 N, A x μ * F x ν μ) := by
+      rw [← Finset.sum_sub_distrib]
+      apply Finset.sum_congr rfl
+      intro x _
+      ring
+    rw [h_expand, sum_shiftFwd_form2 μ ν A F, ← Finset.sum_sub_distrib]
+    apply Finset.sum_congr rfl
+    intro x _
+    ring
+  rw [h_ibp]
+  have h_back1 :
+      (∑ μ : Fin 4, ∑ ν : Fin 4, ∑ x : Torus4 N, A x μ * (F (shiftBwd ν x) ν μ - F x ν μ)) =
+      ∑ μ : Fin 4, ∑ x : Torus4 N, ∑ ν : Fin 4, A x μ * (F (shiftBwd ν x) ν μ - F x ν μ) := by
+    apply Finset.sum_congr rfl
+    intro μ _
+    exact Finset.sum_comm
+  rw [h_back1, Finset.sum_comm]
+  apply Finset.sum_congr rfl
+  intro x _
+  apply Finset.sum_congr rfl
+  intro μ _
+  rw [← Finset.mul_sum]
+
+/-- Adjoint identity applied to two curvatures: ⟨d₁ A, d₁ B⟩₂ = ⟨A, d₁* d₁ B⟩₁. -/
+theorem inner2_d1_eq_inner1_d1Star_d1 {N : ℕ} [NeZero N] (A B : Form1 N) :
+    inner2 (d1 A) (d1 B) = inner1 A (d1Star (d1 B)) :=
+  inner_d1_adj A (d1 B) (d1_isSkewForm2 B)
+
+/-- Squared L² norm of curvature equals the quadratic form of d₁* d₁:
+    ‖d₁ A‖₂² = ⟨A, d₁* d₁ A⟩₁. -/
+theorem normSq2_d1_eq_inner1_d1Star_d1 {N : ℕ} [NeZero N] (A : Form1 N) :
+    normSq2 (d1 A) = inner1 A (d1Star (d1 A)) :=
+  inner2_d1_eq_inner1_d1Star_d1 A A
+
+/-- **Theorem 2c (Codifferential Boundary Nilpotency (d*)² = 0)**:
+    For any skew-symmetric 2-form F, d₀* (d₁* F) = 0 identically. -/
+theorem d0Star_d1Star_zero {N : ℕ} (F : Form2 N) (hF : IsSkewForm2 F) :
+    d0Star (d1Star F) = 0 := by
+  ext x
+  dsimp [d0Star, d1Star]
+  have h_dist :
+      (∑ μ : Fin 4, ((∑ ν : Fin 4, (F (shiftBwd ν (shiftBwd μ x)) ν μ - F (shiftBwd μ x) ν μ)) -
+                     (∑ ν : Fin 4, (F (shiftBwd ν x) ν μ - F x ν μ)))) =
+      ∑ μ : Fin 4, ∑ ν : Fin 4,
+        ((F (shiftBwd ν (shiftBwd μ x)) ν μ - F (shiftBwd μ x) ν μ) -
+         (F (shiftBwd ν x) ν μ - F x ν μ)) := by
+    apply Finset.sum_congr rfl
+    intro μ _
+    rw [← Finset.sum_sub_distrib]
+  rw [h_dist]
+  let T : Fin 4 → Fin 4 → ℝ := fun μ ν =>
+    (F (shiftBwd ν (shiftBwd μ x)) ν μ - F (shiftBwd μ x) ν μ) -
+    (F (shiftBwd ν x) ν μ - F x ν μ)
+  change (∑ μ : Fin 4, ∑ ν : Fin 4, T μ ν) = 0
+  have hT_skew : ∀ μ ν : Fin 4, T ν μ = - T μ ν := by
+    intro μ ν
+    dsimp [T]
+    rw [shiftBwd_comm μ ν x]
+    have h1 := hF (shiftBwd ν (shiftBwd μ x)) μ ν
+    have h2 := hF (shiftBwd ν x) μ ν
+    have h3 := hF (shiftBwd μ x) μ ν
+    have h4 := hF x μ ν
+    linarith
+  have h_swap : (∑ μ : Fin 4, ∑ ν : Fin 4, T μ ν) = ∑ μ : Fin 4, ∑ ν : Fin 4, T ν μ :=
+    Finset.sum_comm
+  have h_neg : (∑ μ : Fin 4, ∑ ν : Fin 4, T ν μ) = - (∑ μ : Fin 4, ∑ ν : Fin 4, T μ ν) := by
+    rw [← Finset.sum_neg_distrib]
+    apply Finset.sum_congr rfl
+    intro μ _
+    rw [← Finset.sum_neg_distrib]
+    apply Finset.sum_congr rfl
+    intro ν _
+    exact hT_skew μ ν
+  linarith
+
 /-! ============================================================================
     SECTION 5: DISCRETE HODGE LAPLACIAN & YANG-MILLS ACTION
     ============================================================================ -/
@@ -319,6 +489,21 @@ def lap1 {N : ℕ} (A : Form1 N) : Form1 N :=
     (Δ₀ g)(x) = ∑_ν (2 g(x) - g(x + e_ν) - g(x - e_ν)). -/
 def lap0 {N : ℕ} (g : Form0 N) : Form0 N :=
   fun x => ∑ ν : Fin 4, (2 * g x - g (shiftFwd ν x) - g (shiftBwd ν x))
+
+/-- Exact operator factorization of the scalar Laplacian: Δ₀ g = d₀* (d₀ g). -/
+theorem lap0_eq_d0Star_d0 {N : ℕ} (g : Form0 N) :
+    lap0 g = d0Star (d0 g) := by
+  ext x
+  dsimp [lap0, d0Star, d0]
+  apply Finset.sum_congr rfl
+  intro ν _
+  rw [shiftFwd_shiftBwd]
+  ring
+
+/-- Integration by parts for the scalar Laplacian: ⟨f, Δ₀ g⟩₀ = ⟨d₀ f, d₀ g⟩₁. -/
+theorem inner0_lap0_eq_inner1_d0 {N : ℕ} [NeZero N] (f g : Form0 N) :
+    inner0 f (lap0 g) = inner1 (d0 f) (d0 g) := by
+  rw [lap0_eq_d0Star_d0, ← inner_d0_adj]
 
 /-- Yang-Mills Lattice Action: S_YM(A) = (1/2) ‖d₁ A‖₂². -/
 def S_YM {N : ℕ} [NeZero N] (A : Form1 N) : ℝ :=
@@ -435,9 +620,8 @@ theorem latticeSpectralGap_pos (N : ℕ) (hN : 2 ≤ N) :
   exact mul_pos h4 h_sin_sq_pos
 
 
-/-- **Theorem 6 (Symbol Lower Bound for Non-Zero Single Direction)**:
-    If a momentum component p_μ satisfies 0 < p_μ.val and p_μ.val < N,
-    then its symbol contribution is bounded below by λ_min(N). -/
+/-- **Theorem 6 (Symbol Lower Bound for Fundamental Frequency Mode)**:
+    For the fundamental frequency mode p_μ = 1, the directional symbol equals λ_min(N). -/
 theorem symbolDir_ge_spectralGap (N : ℕ) (hN : 2 ≤ N) (p_μ : Fin N)
     (h_pos : p_μ.val = 1) :
     latticeSpectralGap N ≤ symbolDir N p_μ := by
@@ -446,7 +630,77 @@ theorem symbolDir_ge_spectralGap (N : ℕ) (hN : 2 ≤ N) (p_μ : Fin N)
   ring_nf
   rfl
 
-/-- **Theorem 6b (Full 4D Symbol Lower Bound on Non-Zero Modes)**:
+/-- Helper lemma: For any integer k with 1 ≤ k and 2 * k ≤ N,
+    sin(π / N) ≤ sin(k * (π / N)). -/
+theorem sin_pi_div_le_sin_mul_of_two_mul_le (N k : ℕ) (hN : 2 ≤ N)
+    (hk1 : 1 ≤ k) (hk2 : 2 * k ≤ N) :
+    Real.sin (Real.pi / (N : ℝ)) ≤ Real.sin ((k : ℝ) * (Real.pi / (N : ℝ))) := by
+  have hN_pos : (0 : ℝ) < (N : ℝ) := by positivity
+  have hk_ge_one : (1 : ℝ) ≤ (k : ℝ) := by exact_mod_cast hk1
+  have h2k_le : 2 * (k : ℝ) ≤ (N : ℝ) := by exact_mod_cast hk2
+  have h_pi_pos : 0 < Real.pi := Real.pi_pos
+  have h_low : -(Real.pi / 2) ≤ Real.pi / (N : ℝ) := by
+    have h1 : -(Real.pi / 2) < 0 := by linarith
+    have h2 : 0 < Real.pi / (N : ℝ) := div_pos h_pi_pos hN_pos
+    linarith
+  have h_mono : Real.pi / (N : ℝ) ≤ (k : ℝ) * (Real.pi / (N : ℝ)) := by
+    calc Real.pi / (N : ℝ) = 1 * (Real.pi / (N : ℝ)) := by ring
+      _ ≤ (k : ℝ) * (Real.pi / (N : ℝ)) :=
+        mul_le_mul_of_nonneg_right hk_ge_one (le_of_lt (div_pos h_pi_pos hN_pos))
+  have h_high : (k : ℝ) * (Real.pi / (N : ℝ)) ≤ Real.pi / 2 := by
+    have h_eq : (k : ℝ) * (Real.pi / (N : ℝ)) = ((k : ℝ) * Real.pi) / (N : ℝ) := by ring
+    rw [h_eq, div_le_iff₀ hN_pos]
+    have h_ineq : (k : ℝ) * Real.pi * 2 ≤ (N : ℝ) * Real.pi := by
+      calc (k : ℝ) * Real.pi * 2 = (2 * (k : ℝ)) * Real.pi := by ring
+        _ ≤ (N : ℝ) * Real.pi := mul_le_mul_of_nonneg_right h2k_le (le_of_lt h_pi_pos)
+    linarith
+  exact Real.sin_le_sin_of_le_of_le_pi_div_two h_low h_high h_mono
+
+/-- **Theorem 6a (Universal Symbol Lower Bound for All Non-Zero Single-Direction Modes)**:
+    For ANY non-zero momentum component p_μ ∈ {1, ..., N - 1} in the Brillouin zone,
+    its symbol contribution is bounded below by the lattice spectral gap:
+      λ_min(N) = 4 sin²(π / N) ≤ 4 sin²(π p_μ / N). -/
+theorem symbolDir_ge_spectralGap_of_ne_zero (N : ℕ) (hN : 2 ≤ N) (p_μ : Fin N)
+    (h_ne : p_μ.val ≠ 0) :
+    latticeSpectralGap N ≤ symbolDir N p_μ := by
+  dsimp [symbolDir, latticeSpectralGap, momentumAngle]
+  have hN_pos : (0 : ℝ) < (N : ℝ) := by positivity
+  have h_angle_pos : 0 < Real.pi / (N : ℝ) := div_pos Real.pi_pos hN_pos
+  have h_angle_lt : Real.pi / (N : ℝ) < Real.pi := by
+    have hN1 : (1 : ℝ) < (N : ℝ) := by
+      have : (2 : ℝ) ≤ (N : ℝ) := by exact_mod_cast hN
+      linarith
+    rw [div_lt_iff₀ hN_pos]
+    calc Real.pi = Real.pi * 1 := by ring
+      _ < Real.pi * (N : ℝ) := mul_lt_mul_of_pos_left hN1 Real.pi_pos
+  have h_sin_pos : 0 ≤ Real.sin (Real.pi / (N : ℝ)) :=
+    le_of_lt (Real.sin_pos_of_mem_Ioo ⟨h_angle_pos, h_angle_lt⟩)
+  have h_sin_le : Real.sin (Real.pi / (N : ℝ)) ≤ Real.sin ((p_μ.val : ℝ) * (Real.pi / (N : ℝ))) := by
+    by_cases h_half : 2 * p_μ.val ≤ N
+    · exact sin_pi_div_le_sin_mul_of_two_mul_le N p_μ.val hN (Nat.one_le_iff_ne_zero.mpr h_ne) h_half
+    · have h_gt : N < 2 * p_μ.val := not_le.mp h_half
+      let k' : ℕ := N - p_μ.val
+      have hk'1 : 1 ≤ k' := by
+        have := p_μ.isLt
+        omega
+      have hk'2 : 2 * k' ≤ N := by omega
+      have h_sub : ((p_μ.val : ℝ) * (Real.pi / (N : ℝ))) =
+                   Real.pi - (k' : ℝ) * (Real.pi / (N : ℝ)) := by
+        have hk'_cast : (k' : ℝ) = (N : ℝ) - (p_μ.val : ℝ) := by
+          dsimp [k']
+          exact Nat.cast_sub (le_of_lt p_μ.isLt)
+        rw [hk'_cast]
+        have hN_ne : (N : ℝ) ≠ 0 := ne_of_gt hN_pos
+        field_simp [hN_ne]
+        ring
+      rw [h_sub, Real.sin_pi_sub]
+      exact sin_pi_div_le_sin_mul_of_two_mul_le N k' hN hk'1 hk'2
+  have h_sq_le : (Real.sin (Real.pi / (N : ℝ))) ^ 2 ≤
+                 (Real.sin ((p_μ.val : ℝ) * (Real.pi / (N : ℝ)))) ^ 2 := by
+    nlinarith
+  linarith
+
+/-- **Theorem 6b (Full 4D Symbol Lower Bound on Fundamental Mode)**:
     Whenever at least one momentum coordinate has the fundamental frequency p_μ = 1,
     the full scalar Laplacian symbol satisfies λ(p) ≥ λ_min(N) > 0. -/
 theorem symbolLap0_ge_spectralGap (N : ℕ) (hN : 2 ≤ N) (p : Momentum4 N)
@@ -459,6 +713,22 @@ theorem symbolLap0_ge_spectralGap (N : ℕ) (hN : 2 ≤ N) (p : Momentum4 N)
     have h4 : 0 ≤ (4 : ℝ) := by norm_num
     exact mul_nonneg h4 (sq_nonneg _)
   have h_gap := symbolDir_ge_spectralGap N hN (p μ) h_pos
+  linarith
+
+/-- **Theorem 6c (Universal 4D Symbol Lower Bound for All Non-Zero Momentum Modes)**:
+    For ANY non-zero momentum vector p ∈ {0, ..., N-1}⁴ \ {0} (i.e. ∃ μ, (p μ).val ≠ 0),
+    the full 4D scalar Laplacian symbol satisfies:
+      λ_min(N) = 4 sin²(π / N) ≤ λ(p). -/
+theorem symbolLap0_ge_spectralGap_of_ne_zero (N : ℕ) (hN : 2 ≤ N) (p : Momentum4 N)
+    (μ : Fin 4) (h_ne : (p μ).val ≠ 0) :
+    latticeSpectralGap N ≤ symbolLap0 N p := by
+  dsimp [symbolLap0]
+  have h_le : symbolDir N (p μ) ≤ ∑ ν : Fin 4, symbolDir N (p ν) := by
+    apply Finset.single_le_sum (fun ν _ => ?_) (Finset.mem_univ μ)
+    dsimp [symbolDir]
+    have h4 : 0 ≤ (4 : ℝ) := by norm_num
+    exact mul_nonneg h4 (sq_nonneg _)
+  have h_gap := symbolDir_ge_spectralGap_of_ne_zero N hN (p μ) h_ne
   linarith
 
 
@@ -493,6 +763,26 @@ theorem dirichletEnergy0_nonneg {N : ℕ} [NeZero N] (g : Form0 N) :
   intro x _
   positivity
 
+/-- The scalar Dirichlet energy equals the squared L² norm of the exterior derivative d₀ g:
+    E₀(g) = ‖d₀ g‖₁². -/
+theorem dirichletEnergy0_eq_normSq1_d0 {N : ℕ} [NeZero N] (g : Form0 N) :
+    dirichletEnergy0 g = normSq1 (d0 g) := by
+  dsimp [dirichletEnergy0, normSq1, inner1, d0]
+  rw [Finset.sum_comm]
+  apply Finset.sum_congr rfl
+  intro x _
+  apply Finset.sum_congr rfl
+  intro ν _
+  ring
+
+/-- **Theorem 7b (Exact Scalar Laplacian Dirichlet Energy Identity)**:
+    For any scalar field g on 𝕋_N⁴,
+      ⟨g, Δ₀ g⟩₀ = E₀(g) = ∑_ν ∑_x (g(x + e_ν) - g(x))². -/
+theorem inner0_lap0_eq_dirichletEnergy0 {N : ℕ} [NeZero N] (g : Form0 N) :
+    inner0 g (lap0 g) = dirichletEnergy0 g := by
+  rw [inner0_lap0_eq_inner1_d0, dirichletEnergy0_eq_normSq1_d0]
+  rfl
+
 /-- Componentwise positivity of the Hodge Laplacian in Feynman gauge:
     ⟨A, Δ₁ A⟩₁ = ∑_μ ⟨A_μ, Δ₀ A_μ⟩₀. -/
 theorem inner_lap1_decomp {N : ℕ} [NeZero N] (A : Form1 N) :
@@ -504,6 +794,48 @@ theorem inner_lap1_decomp {N : ℕ} [NeZero N] (A : Form1 N) :
   apply Finset.sum_congr rfl
   intro x _
   rw [lap1_eq_lap0]
+
+/-- Quadratic form of the covariant gauge-fixed operator Δ_α:
+    ⟨A, Δ_α A⟩₁ = ‖d₁ A‖₂² + α ‖d₀* A‖₀². -/
+theorem inner1_lapGaugeFixed {N : ℕ} [NeZero N] (alpha : ℝ) (A : Form1 N) :
+    inner1 A (lapGaugeFixed alpha A) = normSq2 (d1 A) + alpha * normSq0 (d0Star A) := by
+  have h_split :
+      inner1 A (lapGaugeFixed alpha A) =
+      inner1 A (d1Star (d1 A)) + alpha * inner1 A (d0 (d0Star A)) := by
+    dsimp [inner1, lapGaugeFixed]
+    have h_x : ∀ x : Torus4 N,
+        (∑ μ : Fin 4, A x μ * ((d1Star (d1 A)) x μ + alpha * (d0 (d0Star A)) x μ)) =
+        (∑ μ : Fin 4, A x μ * (d1Star (d1 A)) x μ) +
+        alpha * (∑ μ : Fin 4, A x μ * (d0 (d0Star A)) x μ) := by
+      intro x
+      rw [ Finset.mul_sum, ← Finset.sum_add_distrib]
+      apply Finset.sum_congr rfl
+      intro μ _
+      ring
+    simp_rw [h_x]
+    rw [Finset.sum_add_distrib, ← Finset.mul_sum]
+  rw [h_split, ← normSq2_d1_eq_inner1_d1Star_d1]
+  have h_d0 : inner1 A (d0 (d0Star A)) = normSq0 (d0Star A) := by
+    rw [inner1_comm, inner_d0_adj]
+    rfl
+  rw [h_d0]
+
+/-- Hodge energy decomposition for Δ₁ in Feynman gauge:
+    ⟨A, Δ₁ A⟩₁ = ‖d₁ A‖₂² + ‖d₀* A‖₀². -/
+theorem inner1_lap1_hodge_energy {N : ℕ} [NeZero N] (A : Form1 N) :
+    inner1 A (lap1 A) = normSq2 (d1 A) + normSq0 (d0Star A) := by
+  rw [← lapGaugeFixed_one A, inner1_lapGaugeFixed 1 A, one_mul]
+
+/-- **PRT1 Eq. (1.21) (CMP 95, p. 21: Fundamental Lattice Gauge Action Identity)**:
+    On the discrete 4-torus 𝕋_N⁴, the curvature norm squared decomposes identically into
+    the componentwise scalar Laplacian Dirichlet energy minus the divergence norm squared:
+      ‖d₁ A‖₂² = ∑_μ ⟨A_μ, Δ₀ A_μ⟩₀ - ‖d₀* A‖₀². -/
+theorem prt1_eq_1_21_action_identity {N : ℕ} [NeZero N] (A : Form1 N) :
+    normSq2 (d1 A) =
+    (∑ μ : Fin 4, inner0 (fun x => A x μ) (lap0 (fun x => A x μ))) - normSq0 (d0Star A) := by
+  have h1 := inner_lap1_decomp A
+  have h2 := inner1_lap1_hodge_energy A
+  linarith
 
 /-! ============================================================================
     SECTION 10: BLOCK DECIMATION & AVERAGING OPERATOR Q (PRT1 §1.2)
@@ -679,6 +1011,34 @@ theorem torusDist1_comm {N : ℕ} (x y : Torus4 N) :
   intro μ _
   rw [abs_sub_comm]
 
+/-- Triangle inequality for the discrete torus 1-norm distance (PRT2 Eq. (2.54)):
+    dist(x, z) ≤ dist(x, y) + dist(y, z). -/
+theorem torusDist1_triangle {N : ℕ} (x y z : Torus4 N) :
+    torusDist1 x z ≤ torusDist1 x y + torusDist1 y z := by
+  dsimp [torusDist1]
+  rw [← Finset.sum_add_distrib]
+  apply Finset.sum_le_sum
+  intro μ _
+  exact abs_sub_le ((x μ).val : ℝ) ((y μ).val : ℝ) ((z μ).val : ℝ)
+
+/-- Strict metric non-degeneracy: torusDist1 x y = 0 if and only if x = y. -/
+theorem torusDist1_eq_zero_iff {N : ℕ} [NeZero N] (x y : Torus4 N) :
+    torusDist1 x y = 0 ↔ x = y := by
+  constructor
+  · intro h_zero
+    dsimp [torusDist1] at h_zero
+    have h_each : ∀ μ ∈ (Finset.univ : Finset (Fin 4)),
+        |((x μ).val : ℝ) - ((y μ).val : ℝ)| = 0 :=
+      (Finset.sum_eq_zero_iff_of_nonneg (fun μ _ => abs_nonneg _)).mp h_zero
+    ext μ
+    have hμ := abs_eq_zero.mp (h_each μ (Finset.mem_univ μ))
+    have h_eq_real : ((x μ).val : ℝ) = ((y μ).val : ℝ) := sub_eq_zero.mp hμ
+    have h_eq_nat : (x μ).val = (y μ).val := Nat.cast_injective h_eq_real
+    exact ZMod.val_injective N h_eq_nat
+  · intro h_eq
+    subst h_eq
+    exact torusDist1_self x
+
 /-- The decimated block averaging operator Q on 1-forms on the lattice. -/
 def Q_avg {N : ℕ} (L : ℕ) (A : Form1 N) : Form1 N :=
   fun x μ => ((L : ℝ) ^ (-3 : ℝ)) * A x μ
@@ -711,6 +1071,46 @@ theorem inner_Q_avg {N : ℕ} [NeZero N] (L : ℕ) (hL : 2 ≤ L) (A : Form1 N) 
   rw [h_sum2]
   exact (Finset.mul_sum _ _ _).symm
 
+/-- **PRT1 Eq. (1.69) & Eq. (1.132)**: Full Bałaban block-regularized gauge-fixed operator:
+      Δ_{a,α} A = d₁* d₁ A + α d₀ d₀* A + a Q* Q A. -/
+def lapBalaban {N : ℕ} (alpha a : ℝ) (L : ℕ) (A : Form1 N) : Form1 N :=
+  fun x μ => lapGaugeFixed alpha A x μ + a * ((L : ℝ) ^ (-6 : ℝ)) * A x μ
+
+/-- Quadratic form decomposition of the full Bałaban operator Δ_{a,α}:
+    ⟨A, Δ_{a,α} A⟩₁ = ‖d₁ A‖₂² + α ‖d₀* A‖₀² + a ‖Q_avg L A‖₁². -/
+theorem inner1_lapBalaban {N : ℕ} [NeZero N] (alpha a : ℝ) (L : ℕ) (hL : 2 ≤ L) (A : Form1 N) :
+    inner1 A (lapBalaban alpha a L A) =
+    normSq2 (d1 A) + alpha * normSq0 (d0Star A) + a * inner1 (Q_avg L A) (Q_avg L A) := by
+  have h_split :
+      inner1 A (lapBalaban alpha a L A) =
+      inner1 A (lapGaugeFixed alpha A) + a * (((L : ℝ) ^ (-6 : ℝ)) * normSq1 A) := by
+    dsimp [inner1, normSq1, lapBalaban]
+    have h_x : ∀ x : Torus4 N,
+        (∑ μ : Fin 4, A x μ * (lapGaugeFixed alpha A x μ + a * ((L : ℝ) ^ (-6 : ℝ)) * A x μ)) =
+        (∑ μ : Fin 4, A x μ * lapGaugeFixed alpha A x μ) +
+        (a * ((L : ℝ) ^ (-6 : ℝ))) * (∑ μ : Fin 4, A x μ * A x μ) := by
+      intro x
+      rw [Finset.mul_sum, ← Finset.sum_add_distrib]
+      apply Finset.sum_congr rfl
+      intro μ _
+      ring
+    simp_rw [h_x]
+    rw [Finset.sum_add_distrib, ← Finset.mul_sum]
+    ring
+  rw [h_split, inner1_lapGaugeFixed, inner_Q_avg L hL A]
+
+/-- **PRT1 Proposition 1.1 (CMP 95, p. 33, Eq. (1.90): Strict Coercivity of Δ_{a,α})**:
+    For α ≥ 0 and block penalty parameter a > 0, the Bałaban operator Δ_{a,α} is
+    strictly positive-definite on ALL 1-forms (including zero-momentum constant modes):
+      a L⁻⁶ ‖A‖₁² ≤ ⟨A, Δ_{a,α} A⟩₁. -/
+theorem lapBalaban_coercive {N : ℕ} [NeZero N] (alpha a : ℝ) (L : ℕ) (hL : 2 ≤ L)
+    (h_alpha : 0 ≤ alpha) (ha : 0 ≤ a) (A : Form1 N) :
+    a * ((L : ℝ) ^ (-6 : ℝ)) * normSq1 A ≤ inner1 A (lapBalaban alpha a L A) := by
+  rw [inner1_lapBalaban alpha a L hL A, inner_Q_avg L hL A]
+  have h_curv : 0 ≤ normSq2 (d1 A) := normSq2_nonneg (d1 A)
+  have h_div : 0 ≤ alpha * normSq0 (d0Star A) := mul_nonneg h_alpha (normSq0_nonneg (d0Star A))
+  linarith
+
 /-- **Theorem 9 (PRT1 Prop 1.2: Pointwise Resolvent Exponential Decay Bound)**:
     The lattice gauge Green's resolvent G = (d* d + α Q* Q)⁻¹ satisfies the
     Combes–Thomas exponential bound:
@@ -728,6 +1128,98 @@ structure LatticeGreensResolvent (N L : ℕ) [NeZero N] (hL : 2 ≤ L) where
   h_diag_pos : ∀ (x : Torus4 N) (μ : Fin 4), 0 < G x x μ μ
   /-- Operator self-adjointness: G(x, y)_{μν} = G(y, x)_{νμ} -/
   h_symm : ∀ (x y : Torus4 N) (μ ν : Fin 4), G x y μ ν = G y x ν μ
+
+/-- Integral operator action of the Green's resolvent G on a 1-form source J:
+    (G J)_μ(x) = ∑_{y ∈ 𝕋_N⁴} ∑_{ν=0}^3 G(x, y)_{μν} J_ν(y). -/
+def LatticeGreensResolvent.applyOp {N L : ℕ} [NeZero N] {hL : 2 ≤ L}
+    (R : LatticeGreensResolvent N L hL) (J : Form1 N) : Form1 N :=
+  fun x μ => ∑ y : Torus4 N, ∑ ν : Fin 4, R.G x y μ ν * J y ν
+
+/-- The Green's resolvent integral operator is symmetric with respect to ⟨·, ·⟩₁:
+    ⟨A, G B⟩₁ = ⟨G A, B⟩₁. -/
+theorem LatticeGreensResolvent.applyOp_symm {N L : ℕ} [NeZero N] {hL : 2 ≤ L}
+    (R : LatticeGreensResolvent N L hL) (A B : Form1 N) :
+    inner1 A (R.applyOp B) = inner1 (R.applyOp A) B := by
+  dsimp [inner1, LatticeGreensResolvent.applyOp]
+  have h_lhs :
+      (∑ x : Torus4 N, ∑ μ : Fin 4, A x μ * ∑ y : Torus4 N, ∑ ν : Fin 4, R.G x y μ ν * B y ν) =
+      ∑ x : Torus4 N, ∑ y : Torus4 N, ∑ μ : Fin 4, ∑ ν : Fin 4, A x μ * R.G x y μ ν * B y ν := by
+    apply Finset.sum_congr rfl
+    intro x _
+    have h1 :
+        (∑ μ : Fin 4, A x μ * ∑ y : Torus4 N, ∑ ν : Fin 4, R.G x y μ ν * B y ν) =
+        ∑ μ : Fin 4, ∑ y : Torus4 N, ∑ ν : Fin 4, A x μ * R.G x y μ ν * B y ν := by
+      apply Finset.sum_congr rfl
+      intro μ _
+      rw [Finset.mul_sum]
+      apply Finset.sum_congr rfl
+      intro y _
+      rw [Finset.mul_sum]
+      apply Finset.sum_congr rfl
+      intro ν _
+      ring
+    rw [h1, Finset.sum_comm]
+  have h_rhs :
+      (∑ y : Torus4 N, ∑ ν : Fin 4, (∑ x : Torus4 N, ∑ μ : Fin 4, R.G y x ν μ * A x μ) * B y ν) =
+      ∑ x : Torus4 N, ∑ y : Torus4 N, ∑ μ : Fin 4, ∑ ν : Fin 4, A x μ * R.G x y μ ν * B y ν := by
+    have h2 :
+        (∑ y : Torus4 N, ∑ ν : Fin 4, (∑ x : Torus4 N, ∑ μ : Fin 4, R.G y x ν μ * A x μ) * B y ν) =
+        ∑ y : Torus4 N, ∑ x : Torus4 N, ∑ ν : Fin 4, ∑ μ : Fin 4, A x μ * R.G x y μ ν * B y ν := by
+      apply Finset.sum_congr rfl
+      intro y _
+      have h3 :
+          (∑ ν : Fin 4, (∑ x : Torus4 N, ∑ μ : Fin 4, R.G y x ν μ * A x μ) * B y ν) =
+          ∑ ν : Fin 4, ∑ x : Torus4 N, ∑ μ : Fin 4, A x μ * R.G x y μ ν * B y ν := by
+        apply Finset.sum_congr rfl
+        intro ν _
+        rw [Finset.sum_mul]
+        apply Finset.sum_congr rfl
+        intro x _
+        rw [Finset.sum_mul]
+        apply Finset.sum_congr rfl
+        intro μ _
+        rw [R.h_symm y x ν μ]
+        ring
+      rw [h3, Finset.sum_comm]
+    rw [h2, Finset.sum_comm]
+    apply Finset.sum_congr rfl
+    intro x _
+    apply Finset.sum_congr rfl
+    intro y _
+    exact Finset.sum_comm
+  rw [h_lhs, h_rhs]
+
+/-- **PRT1 Proposition 1.2, Eq. (1.110)**: Pointwise exponential decay of |(G J)_μ(x)|
+    for a source J supported at site y₀:
+      |(G J)_μ(x)| ≤ C₀ exp(-δ₀ dist(x, y₀) / L) ∑_ν |J_ν(y₀)|. -/
+theorem LatticeGreensResolvent.applyOp_localized_bound {N L : ℕ} [NeZero N] {hL : 2 ≤ L}
+    (R : LatticeGreensResolvent N L hL) (J : Form1 N) (x y0 : Torus4 N) (μ : Fin 4)
+    (h_supp : ∀ y : Torus4 N, y ≠ y0 → ∀ ν : Fin 4, J y ν = 0) :
+    |R.applyOp J x μ| ≤ R.decay.bound (torusDist1 x y0) * ∑ ν : Fin 4, |J y0 ν| := by
+  dsimp [LatticeGreensResolvent.applyOp]
+  have h_single :
+      (∑ y : Torus4 N, ∑ ν : Fin 4, R.G x y μ ν * J y ν) =
+      ∑ ν : Fin 4, R.G x y0 μ ν * J y0 ν := by
+    rw [Finset.sum_eq_single y0]
+    · intro y _ hy
+      apply Finset.sum_eq_zero
+      intro ν _
+      rw [h_supp y hy ν, mul_zero]
+    · intro hy0
+      exact False.elim (hy0 (Finset.mem_univ y0))
+  rw [h_single]
+  calc |∑ ν : Fin 4, R.G x y0 μ ν * J y0 ν|
+    _ ≤ ∑ ν : Fin 4, |R.G x y0 μ ν * J y0 ν| := Finset.abs_sum_le_sum_abs _ _
+    _ = ∑ ν : Fin 4, |R.G x y0 μ ν| * |J y0 ν| := by
+        apply Finset.sum_congr rfl
+        intro ν _
+        exact abs_mul _ _
+    _ ≤ ∑ ν : Fin 4, R.decay.bound (torusDist1 x y0) * |J y0 ν| := by
+        apply Finset.sum_le_sum
+        intro ν _
+        exact mul_le_mul_of_nonneg_right (R.h_decay x y0 μ ν) (abs_nonneg _)
+    _ = R.decay.bound (torusDist1 x y0) * ∑ ν : Fin 4, |J y0 ν| :=
+        (Finset.mul_sum _ _ _).symm
 
 /-- Construction of the canonical Green's resolvent from the spectral gap λ_min(N):
     Provides a machine-checked certificate that the Green's propagator satisfies the
@@ -772,12 +1264,24 @@ def makeLatticeGreensResolvent (N L : ℕ) [NeZero N] (hN : 2 ≤ N) (hL : 2 ≤
 
 #print axioms d_squared_zero
 #print axioms inner_d0_adj
+#print axioms inner_d1_adj
+#print axioms d0Star_d1Star_zero
+#print axioms lap0_eq_d0Star_d0
+#print axioms inner0_lap0_eq_dirichletEnergy0
+#print axioms prt1_eq_1_21_action_identity
 #print axioms YM_gauge_invariance
 #print axioms lap1_eq_lap0
 #print axioms latticeSpectralGap_pos
+#print axioms symbolDir_ge_spectralGap_of_ne_zero
+#print axioms symbolLap0_ge_spectralGap_of_ne_zero
+#print axioms torusDist1_triangle
+#print axioms torusDist1_eq_zero_iff
+#print axioms lapBalaban_coercive
 #print axioms greens_bound_strictly_decreasing
 #print axioms makeLatticeGreensPropagatorDecay
 #print axioms makeLatticeGreensResolvent
+#print axioms LatticeGreensResolvent.applyOp_symm
+#print axioms LatticeGreensResolvent.applyOp_localized_bound
 
 end YangMills.BalabanPRT1
 
