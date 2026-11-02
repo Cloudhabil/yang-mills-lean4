@@ -543,7 +543,7 @@ theorem normSq1_testFluctuation_pos (N : ℕ) [NeZero N] (hN : 2 ≤ N) :
 theorem d1_const_zero {N : ℕ} (c : Fin 4 → ℝ) :
     d1 (fun (_ : Torus4 N) μ => c μ) = 0 := by
   ext x μ ν
-  dsimp [d1, partialFwd]
+  dsimp [d1]
   ring
 
 /-- The test fluctuation has strictly non-zero exterior curvature plaquette at (x=0, μ=0, ν=1):
@@ -552,15 +552,11 @@ theorem d1_const_zero {N : ℕ} (c : Fin 4 → ℝ) :
 theorem d1_testFluctuation_zero_zero_one (N : ℕ) (hN : 2 ≤ N) :
     d1 (testFluctuation N) 0 0 1 = 1 := by
   have : Fact (1 < N) := ⟨by omega⟩
-  have h10 : ((1 : Fin 4) : Fin 4) ≠ (0 : Fin 4) := by decide
-  have h_nu1 : ∀ y : Torus4 N, testFluctuation N y 1 = 0 := by
-    intro y
-    dsimp [testFluctuation]
-    rw [if_neg h10]
+  have h_nu1 : ∀ y : Torus4 N, testFluctuation N y 1 = 0 := fun _ => rfl
   have h_s1_ne_zero : shiftFwd (1 : Fin 4) (0 : Torus4 N) ≠ (0 : Torus4 N) := by
     intro h
     have hc := congr_fun h (1 : Fin 4)
-    dsimp [shiftFwd, e_dir] at hc
+    dsimp [shiftFwd] at hc
     have hv := congr_arg ZMod.val hc
     rw [zero_add, ZMod.val_one, ZMod.val_zero] at hv
     omega
@@ -569,13 +565,12 @@ theorem d1_testFluctuation_zero_zero_one (N : ℕ) (hN : 2 ≤ N) :
     have hc := congr_fun h (0 : Fin 4)
     dsimp [shiftFwd, e_dir] at hc
     have hv := congr_arg ZMod.val hc
-    rw [zero_add, if_neg (by decide : ¬((0 : Fin 4) = (1 : Fin 4))),
-        if_pos (rfl : (0 : Fin 4) = (0 : Fin 4)), ZMod.val_zero, ZMod.val_one] at hv
+    rw [ZMod.val_zero, ZMod.val_one] at hv
     omega
   have h_s1_val : testFluctuation N (shiftFwd 1 0) 0 = 0 := by
     dsimp [testFluctuation]
-    rw [if_pos rfl, if_neg h_s1_ne_zero, if_neg h_s1_ne_e0]
-  dsimp [d1, partialFwd]
+    rw [if_neg h_s1_ne_zero, if_neg h_s1_ne_e0]
+  dsimp [d1]
   rw [h_nu1 (shiftFwd 0 0), h_nu1 0, h_s1_val, testFluctuation_zero_zero N]
   ring
 
@@ -620,9 +615,16 @@ theorem S_YM_testFluctuation_pos (N : ℕ) [NeZero N] (hN : 2 ≤ N) :
   have h := normSq2_d1_testFluctuation_pos N hN
   linarith
 
+/-- Non-negativity of the Yang-Mills action S_YM(A) ≥ 0 for all gauge fields A. -/
+theorem S_YM_nonneg {N : ℕ} [NeZero N] (A : Form1 N) :
+    0 ≤ S_YM A := by
+  dsimp [S_YM]
+  have h_half : 0 ≤ (1 / 2 : ℝ) := by norm_num
+  exact mul_nonneg h_half (normSq2_nonneg (d1 A))
+
 /-- Curvature orthogonality between a constant background field and any fluctuation field:
     ⟨d₁ c, d₁ F⟩₂ = 0. -/
-theorem inner2_d1_const_fluctuation (N : ℕ) (c : Fin 4 → ℝ) (F : Form1 N) :
+theorem inner2_d1_const_fluctuation (N : ℕ) [NeZero N] (c : Fin 4 → ℝ) (F : Form1 N) :
     inner2 (d1 (fun (_ : Torus4 N) μ => c μ)) (d1 F) = 0 := by
   rw [d1_const_zero c]
   dsimp [inner2]
@@ -634,6 +636,7 @@ theorem inner2_d1_const_fluctuation (N : ℕ) (c : Fin 4 → ℝ) (F : Form1 N) 
     intro ν _
     ring
   rw [Finset.sum_congr rfl (fun x _ => h_zero x), Finset.sum_const_zero]
+  ring
 
 /-- **PRT2 Section 2.2**: Background-Field Fluctuation Splitting Structure.
     Decomposes an arbitrary gauge field configuration A on 𝕋_N⁴ into:
@@ -754,7 +757,7 @@ theorem saddle_point_energy_strict_minimal (N k L : ℕ) [NeZero N] (hk : 1 ≤ 
 theorem d1_add_split {N : ℕ} (B C : Form1 N) :
     d1 (fun x μ => B x μ + C x μ) = fun x μ ν => d1 B x μ ν + d1 C x μ ν := by
   ext x μ ν
-  dsimp [d1, partialFwd]
+  dsimp [d1]
   ring
 
 /-- **Theorem 4b (Pythagorean Yang-Mills Curvature Action Splitting - PRT1 Eq. 1.64 & PRT2 Eq. 2.5)**:
@@ -779,38 +782,58 @@ theorem ym_action_pythagorean_split (N k L : ℕ) [NeZero N] (hk : 1 ≤ k) (hL 
   have h_sum1 :
       (∑ x : Torus4 N, ∑ μ : Fin 4, ∑ ν : Fin 4,
         (d1 S.background x μ ν + d1 S.fluctuation x μ ν) * (d1 S.background x μ ν + d1 S.fluctuation x μ ν)) =
+      ∑ x : Torus4 N, ∑ μ : Fin 4, ∑ ν : Fin 4,
+        ((d1 S.background x μ ν * d1 S.background x μ ν + d1 S.fluctuation x μ ν * d1 S.fluctuation x μ ν) +
+         2 * (d1 S.background x μ ν * d1 S.fluctuation x μ ν)) := by
+    apply Finset.sum_congr rfl; intro x _
+    apply Finset.sum_congr rfl; intro μ _
+    apply Finset.sum_congr rfl; intro ν _
+    exact h_pt x μ ν
+  rw [h_sum1]
+  have h_sum2 :
+      (∑ x : Torus4 N, ∑ μ : Fin 4, ∑ ν : Fin 4,
+        ((d1 S.background x μ ν * d1 S.background x μ ν + d1 S.fluctuation x μ ν * d1 S.fluctuation x μ ν) +
+         2 * (d1 S.background x μ ν * d1 S.fluctuation x μ ν))) =
       (∑ x : Torus4 N, ∑ μ : Fin 4, ∑ ν : Fin 4,
         (d1 S.background x μ ν * d1 S.background x μ ν + d1 S.fluctuation x μ ν * d1 S.fluctuation x μ ν)) +
-      2 * (∑ x : Torus4 N, ∑ μ : Fin 4, ∑ ν : Fin 4,
-        d1 S.background x μ ν * d1 S.fluctuation x μ ν) := by
-    trans (∑ x : Torus4 N, ∑ μ : Fin 4, ∑ ν : Fin 4,
-            ((d1 S.background x μ ν * d1 S.background x μ ν + d1 S.fluctuation x μ ν * d1 S.fluctuation x μ ν) +
-             2 * (d1 S.background x μ ν * d1 S.fluctuation x μ ν)))
-    · apply Finset.sum_congr rfl; intro x _
+      ∑ x : Torus4 N, ∑ μ : Fin 4, ∑ ν : Fin 4, 2 * (d1 S.background x μ ν * d1 S.fluctuation x μ ν) := by
+    rw [← Finset.sum_add_distrib]
+    congr 1; ext x
+    rw [← Finset.sum_add_distrib]
+    congr 1; ext μ
+    rw [← Finset.sum_add_distrib]
+  rw [h_sum2]
+  have h_sum3 :
+      (∑ x : Torus4 N, ∑ μ : Fin 4, ∑ ν : Fin 4, 2 * (d1 S.background x μ ν * d1 S.fluctuation x μ ν)) =
+      2 * ∑ x : Torus4 N, ∑ μ : Fin 4, ∑ ν : Fin 4, d1 S.background x μ ν * d1 S.fluctuation x μ ν := by
+    have h1 : (∑ x : Torus4 N, ∑ μ : Fin 4, ∑ ν : Fin 4, 2 * (d1 S.background x μ ν * d1 S.fluctuation x μ ν)) =
+              ∑ x : Torus4 N, ∑ μ : Fin 4, 2 * (∑ ν : Fin 4, d1 S.background x μ ν * d1 S.fluctuation x μ ν) := by
+      apply Finset.sum_congr rfl; intro x _
       apply Finset.sum_congr rfl; intro μ _
-      apply Finset.sum_congr rfl; intro ν _
-      exact h_pt x μ ν
-    · rw [← Finset.sum_add_distrib]
-      congr 1
-      · ext x; rw [← Finset.sum_add_distrib]
-        congr 1; ext μ; rw [← Finset.sum_add_distrib]
-      · trans (∑ x : Torus4 N, ∑ μ : Fin 4, 2 * ∑ ν : Fin 4, d1 S.background x μ ν * d1 S.fluctuation x μ ν)
-        · congr 1; ext x; rw [← Finset.sum_add_distrib]
-          congr 1; ext μ
-          rw [← Finset.sum_add_distrib, ← Finset.mul_sum]
-        · trans (∑ x : Torus4 N, 2 * ∑ μ : Fin 4, ∑ ν : Fin 4, d1 S.background x μ ν * d1 S.fluctuation x μ ν)
-          · congr 1; ext x; rw [← Finset.mul_sum]
-          · rw [← Finset.mul_sum]
-  rw [h_sum1, h_orth, mul_zero, add_zero]
-  have h_sum2 :
+      exact (Finset.mul_sum _ _ _).symm
+    rw [h1]
+    have h2 : (∑ x : Torus4 N, ∑ μ : Fin 4, 2 * (∑ ν : Fin 4, d1 S.background x μ ν * d1 S.fluctuation x μ ν)) =
+              ∑ x : Torus4 N, 2 * (∑ μ : Fin 4, ∑ ν : Fin 4, d1 S.background x μ ν * d1 S.fluctuation x μ ν) := by
+      apply Finset.sum_congr rfl; intro x _
+      exact (Finset.mul_sum _ _ _).symm
+    rw [h2]
+    exact (Finset.mul_sum _ _ _).symm
+  rw [h_sum3]
+  have h_sum4 :
       (∑ x : Torus4 N, ∑ μ : Fin 4, ∑ ν : Fin 4,
         (d1 S.background x μ ν * d1 S.background x μ ν + d1 S.fluctuation x μ ν * d1 S.fluctuation x μ ν)) =
       (∑ x : Torus4 N, ∑ μ : Fin 4, ∑ ν : Fin 4, d1 S.background x μ ν * d1 S.background x μ ν) +
       (∑ x : Torus4 N, ∑ μ : Fin 4, ∑ ν : Fin 4, d1 S.fluctuation x μ ν * d1 S.fluctuation x μ ν) := by
     rw [← Finset.sum_add_distrib]
-    congr 1; ext x; rw [← Finset.sum_add_distrib]
-    congr 1; ext μ; rw [← Finset.sum_add_distrib]
-  rw [h_sum2]
+    congr 1; ext x
+    rw [← Finset.sum_add_distrib]
+    congr 1; ext μ
+    rw [← Finset.sum_add_distrib]
+  rw [h_sum4]
+  have h_orth_zero : (∑ x : Torus4 N, ∑ μ : Fin 4, ∑ ν : Fin 4,
+      d1 S.background x μ ν * d1 S.fluctuation x μ ν) = 0 := by
+    linarith [h_orth]
+  rw [h_orth_zero, mul_zero, add_zero]
   ring
 
 /-- **Theorem 4c (Yang-Mills Curvature Action Variational Minimality - PRT2 §2.2)**:
@@ -1240,6 +1263,21 @@ theorem effectiveMassGap_pos (delta3 : ℝ) (L k : ℕ) (hdelta : 0 < delta3) (h
   have h_eta_pos : 0 < (L : ℝ) ^ (-(k : ℝ)) := Real.rpow_pos_of_pos hL_pos (-(k : ℝ))
   exact mul_pos hdelta h_eta_pos
 
+/-- Canonical embedding of the multiscale compound Green's bound at scale k into
+    the PRT1 single-scale Green's propagator decay structure `GreensPropagatorDecay L hL`.
+    The effective spatial decay rate at scale k is δ₀ = δ₃ L^{-k} · L = δ₃ L^{-(k-1)}. -/
+def makeCompoundGreensPropagatorDecay (Ck delta3 : ℝ) (k L : ℕ)
+    (hCk : 0 < Ck) (hdelta : 0 < delta3) (hL : 2 ≤ L) :
+    GreensPropagatorDecay L hL where
+  C0 := Ck
+  delta0 := delta3 * ((L : ℝ) ^ (-(k : ℝ))) * (L : ℝ)
+  hC0 := hCk
+  h_delta0 := by
+    have hL_pos : 0 < (L : ℝ) := by positivity
+    have h_gap := effectiveMassGap_pos delta3 L k hdelta hL
+    dsimp [effectiveMassGap] at h_gap
+    exact mul_pos h_gap hL_pos
+
 /-- **Cross-Paper Congruence Theorem (PRT1 Prop 1.2 ↔ PRT2 Prop 2.6)**:
     For every scale k ≥ 1, the multiscale bound `compoundGreenBound Ck delta3 k L` in PRT II
     is identically equal to `GreensPropagatorDecay.bound` in PRT I with effective mass gap
@@ -1247,13 +1285,17 @@ theorem effectiveMassGap_pos (delta3 : ℝ) (L k : ℕ) (hdelta : 0 < delta3) (h
 theorem compoundGreenBound_eq_prt1_bound (Ck delta3 : ℝ) (k L : ℕ)
     (hCk : 0 < Ck) (hdelta : 0 < delta3) (hL : 2 ≤ L) (dist : ℝ) :
     compoundGreenBound Ck delta3 k L dist =
-      ({ C_G := Ck
-         m_gap := effectiveMassGap delta3 L k
-         hC := hCk
-         hm := effectiveMassGap_pos delta3 L k hdelta hL } : GreensPropagatorDecay).bound dist := by
-  dsimp [compoundGreenBound, GreensPropagatorDecay.bound, effectiveMassGap]
-  congr 2
-  ring
+      (makeCompoundGreensPropagatorDecay Ck delta3 k L hCk hdelta hL).bound dist := by
+  dsimp [compoundGreenBound, GreensPropagatorDecay.bound, makeCompoundGreensPropagatorDecay]
+  have hL_pos : (L : ℝ) ≠ 0 := by positivity
+  have h_cancel : -(delta3 * (L : ℝ) ^ (-(k : ℝ)) * (L : ℝ)) * dist / (L : ℝ) =
+                  -delta3 * (L : ℝ) ^ (-(k : ℝ)) * dist := by
+    have h1 : -(delta3 * (L : ℝ) ^ (-(k : ℝ)) * (L : ℝ)) * dist / (L : ℝ) =
+              ((-delta3 * (L : ℝ) ^ (-(k : ℝ)) * dist) * (L : ℝ)) / (L : ℝ) := by
+      congr 1
+      ring
+    rw [h1, mul_div_cancel_right₀ _ hL_pos]
+  rw [h_cancel]
 
 /-- Scale step transition for the spatial decay exponent:
     δ₃ L^{-(k+1)} = (δ₃ L^{-k}) / L. -/
@@ -1345,32 +1387,39 @@ theorem MultiscaleGreensResolvent.applyOp_localized_bound {N k L : ℕ} [NeZero 
     |R.applyOp (fun y ν => if y = y0 ∧ ν = ν0 then 1 else 0) x μ| ≤
       compoundGreenBound R.Ck R.delta3 k L (torusDist1 x y0) := by
   dsimp [MultiscaleGreensResolvent.applyOp]
-  have h_eval :
+  have h_single_y :
       (∑ y : Torus4 N, ∑ ν : Fin 4, R.G x y μ ν * (if y = y0 ∧ ν = ν0 then (1 : ℝ) else 0)) =
-      R.G x y0 μ ν0 := by
-    have h_inner : ∀ y : Torus4 N,
-        (∑ ν : Fin 4, R.G x y μ ν * (if y = y0 ∧ ν = ν0 then (1 : ℝ) else 0)) =
-        if y = y0 then R.G x y0 μ ν0 else 0 := by
-      intro y
-      by_cases hy : y = y0
-      · subst hy
-        rw [if_pos rfl]
-        have h_nu : ∀ ν : Fin 4,
-            R.G x y0 μ ν * (if y0 = y0 ∧ ν = ν0 then (1 : ℝ) else 0) =
-            if ν = ν0 then R.G x y0 μ ν0 else 0 := by
-          intro ν
-          by_cases hν : ν = ν0
-          · subst hν; simp
-          · simp [hν]
-        simp_rw [h_nu]
-        simp
-      · rw [if_neg hy]
+      ∑ ν : Fin 4, R.G x y0 μ ν * (if y0 = y0 ∧ ν = ν0 then (1 : ℝ) else 0) := by
+    apply Finset.sum_eq_single y0
+    · intro y _ hy
+      have : ∀ ν : Fin 4, (if y = y0 ∧ ν = ν0 then (1 : ℝ) else 0) = 0 := by
+        intro ν
+        rw [if_neg]
+        intro h_and
+        exact hy h_and.1
+      have h_zero : (∑ ν : Fin 4, R.G x y μ ν * (if y = y0 ∧ ν = ν0 then (1 : ℝ) else 0)) = 0 := by
         apply Finset.sum_eq_zero
         intro ν _
-        simp [hy]
-    simp_rw [h_inner]
-    simp
-  rw [h_eval]
+        rw [this ν, mul_zero]
+      exact h_zero
+    · intro hy0
+      exact False.elim (hy0 (Finset.mem_univ y0))
+  rw [h_single_y]
+  have h_single_ν :
+      (∑ ν : Fin 4, R.G x y0 μ ν * (if y0 = y0 ∧ ν = ν0 then (1 : ℝ) else 0)) =
+      R.G x y0 μ ν0 * (if y0 = y0 ∧ ν0 = ν0 then (1 : ℝ) else 0) := by
+    apply Finset.sum_eq_single ν0
+    · intro ν _ hν
+      have : (if y0 = y0 ∧ ν = ν0 then (1 : ℝ) else 0) = 0 := by
+        rw [if_neg]
+        intro h_and
+        exact hν h_and.2
+      rw [this, mul_zero]
+    · intro hν0
+      exact False.elim (hν0 (Finset.mem_univ ν0))
+  have h_at_ν0 : (if y0 = y0 ∧ ν0 = ν0 then (1 : ℝ) else 0) = 1 := by
+    rw [if_pos ⟨rfl, rfl⟩]
+  rw [h_single_ν, h_at_ν0, mul_one]
   exact R.h_decay x y0 μ ν0
 
 /-- Constructive instantiation of the MultiscaleGreensResolvent from fundamental parameters.
@@ -1454,10 +1503,12 @@ def makeLatticeMultiscaleGreensResolvent (N k L : ℕ) [NeZero N]
     (hN : 2 ≤ N) (hk : 1 ≤ k) (hL : 2 ≤ L) :
     MultiscaleGreensResolvent N k L hk hL :=
   makeMultiscaleGreensResolvent N k L hN hk hL
-    (makeLatticeGreensPropagatorDecay N hN).C_G
-    (makeLatticeGreensPropagatorDecay N hN).m_gap
-    (makeLatticeGreensPropagatorDecay N hN).hC
-    (makeLatticeGreensPropagatorDecay N hN).hm
+    (2 / latticeSpectralGap N)
+    (latticeSpectralGap N)
+    (by
+      have h_two : 0 < (2 : ℝ) := by norm_num
+      exact div_pos h_two (latticeSpectralGap_pos N hN))
+    (latticeSpectralGap_pos N hN)
 
 /-- **Theorem 9 (End-to-End PRT1 → PRT2 Multiscale Grounding Theorem)**:
     For every torus size N ≥ 2, block factor L ≥ 2, and decimation scale k ≥ 1,
