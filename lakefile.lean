@@ -40,5 +40,9 @@ lean_lib «BalabanConstructivePipeline» where
 lean_lib «BalabanPRT1» where
   roots := #[`BalabanPRT1]
 
+@[default_target]
+lean_lib «BalabanPRT2» where
+  roots := #[`BalabanPRT2]
+
 
 
