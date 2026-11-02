@@ -214,6 +214,16 @@ theorem compoundBondKernel_one_eq_prt1 (L : ℕ) (A : Fin 4 → ℝ) :
   have h_exp : -3 * ((1 : ℕ) : ℝ) = (-3 : ℝ) := by norm_num
   rw [h_exp]
 
+/-- Exact congruence with PRT1 block averaging operator Q_avg:
+    For any lattice 1-form A on 𝕋_N⁴, the 1-step compound bond kernel evaluated at x
+    coincides identically with (Q_avg L A)(x). -/
+theorem compoundBondKernel_one_eq_Q_avg {N : ℕ} (L : ℕ) (A : Form1 N) (x : Torus4 N) :
+    compoundBondKernel L 1 (A x) = Q_avg L A x := by
+  ext μ
+  dsimp [compoundBondKernel, Q_avg]
+  have h_exp : -3 * ((1 : ℕ) : ℝ) = (-3 : ℝ) := by norm_num
+  rw [h_exp]
+
 /-- Exact congruence with PRT1 at base scale k = 1 for site averaging weight:
     w_{site}(1) = L^{-4} = siteAveragingWeight L. -/
 theorem site_weight_one_eq_prt1 (L : ℕ) :
@@ -968,7 +978,7 @@ theorem randomWalk_path_step_decay {M : ℕ} (K1 K2 : RandomWalkKernel M)
       (K2.r0 * Real.exp (-K1.delta_R * torusDist1 y1 y')) =
       (K1.r0 * K2.r0) * Real.exp (-K1.delta_R * (torusDist1 y y1 + torusDist1 y1 y')) := by
     rw [mul_mul_mul_comm, ← Real.exp_add]
-    congr 1
+    congr 2
     ring
   rw [h_combine] at h_prod
   have h_tri := torusDist1_triangle y y1 y'
@@ -1297,6 +1307,23 @@ theorem compoundGreenBound_eq_prt1_bound (Ck delta3 : ℝ) (k L : ℕ)
     rw [h1, mul_div_cancel_right₀ _ hL_pos]
   rw [h_cancel]
 
+/-- Exact base-scale k = 1 congruence with PRT1:
+    At decimation scale k = 1, the multiscale compound bound `compoundGreenBound P.C0 P.delta0 1 L dist`
+    coincides with PRT1's single-scale Combes–Thomas bound `P.bound dist` for any propagator decay
+    structure P with amplitude C0 and decay constant delta0. -/
+theorem compoundGreenBound_one_eq_prt1 (L : ℕ) (hL : 2 ≤ L)
+    (P : GreensPropagatorDecay L hL) (dist : ℝ) :
+    compoundGreenBound P.C0 P.delta0 1 L dist = P.bound dist := by
+  dsimp [compoundGreenBound, GreensPropagatorDecay.bound]
+  have hL_pos : 0 < (L : ℝ) := by positivity
+  have h_exp : -((1 : ℕ) : ℝ) = (-1 : ℝ) := by norm_num
+  rw [h_exp]
+  have h_rpow : (L : ℝ) ^ (-1 : ℝ) = (L : ℝ)⁻¹ := by
+    rw [Real.rpow_neg (le_of_lt hL_pos), Real.rpow_one]
+  rw [h_rpow]
+  congr 2
+  ring
+
 /-- Scale step transition for the spatial decay exponent:
     δ₃ L^{-(k+1)} = (δ₃ L^{-k}) / L. -/
 theorem decay_rate_scale_step (L k : ℕ) (delta3 : ℝ) (hL : 2 ≤ L) :
@@ -1495,20 +1522,41 @@ theorem uniform_exponential_decay_all_scales (N L : ℕ) [NeZero N] (hN : 2 ≤ 
   intro k hk
   refine ⟨makeMultiscaleGreensResolvent N k L hN hk hL C0 delta3 hC0 hdelta, rfl⟩
 
+/-- Canonical lattice nearest-neighbor hopping parameter C_hop = 1/2 for the 4D Laplacian. -/
+def canonicalLatticeHop : ℝ := 1 / 2
+
+theorem canonicalLatticeHop_pos : 0 < canonicalLatticeHop := by
+  dsimp [canonicalLatticeHop]
+  norm_num
+
+/-- Canonical embedding of PRT1 lattice Green's decay into PRT2.
+    Constructs the exact single-scale GreensPropagatorDecay from PRT1's makeLatticeGreensPropagatorDecay
+    with canonical hopping constant C_hop = 1/2. -/
+def canonicalPRT1LatticeDecay (N L : ℕ) (hN : 2 ≤ N) (hL : 2 ≤ L) :
+    GreensPropagatorDecay L hL :=
+  makeLatticeGreensPropagatorDecay N L hN hL canonicalLatticeHop canonicalLatticeHop_pos
+
+theorem canonicalPRT1LatticeDecay_C0 (N L : ℕ) (hN : 2 ≤ N) (hL : 2 ≤ L) :
+    (canonicalPRT1LatticeDecay N L hN hL).C0 = 2 / latticeSpectralGap N :=
+  rfl
+
+theorem canonicalPRT1LatticeDecay_delta0 (N L : ℕ) (hN : 2 ≤ N) (hL : 2 ≤ L) :
+    (canonicalPRT1LatticeDecay N L hN hL).delta0 = latticeSpectralGap N := by
+  dsimp [canonicalPRT1LatticeDecay, makeLatticeGreensPropagatorDecay, makeGreensPropagatorDecay, canonicalLatticeHop]
+  ring
+
 /-- **Canonical Spectral-Gap Grounded Multiscale Green's Resolvent (PRT1 + PRT2 Synthesis)**:
     Instantiates `MultiscaleGreensResolvent` across all renormalization scales k ≥ 1 directly
-    from the exact discrete momentum spectral gap `latticeSpectralGap N = 4 sin²(π/N)` and
-    resolvent norm `(latticeSpectralGap N)⁻¹` proved in `BalabanPRT1`. -/
+    from PRT1's `canonicalPRT1LatticeDecay` and the exact discrete momentum spectral gap
+    `latticeSpectralGap N = 4 sin²(π/N)` proved in `BalabanPRT1`. -/
 def makeLatticeMultiscaleGreensResolvent (N k L : ℕ) [NeZero N]
     (hN : 2 ≤ N) (hk : 1 ≤ k) (hL : 2 ≤ L) :
     MultiscaleGreensResolvent N k L hk hL :=
   makeMultiscaleGreensResolvent N k L hN hk hL
-    (2 / latticeSpectralGap N)
-    (latticeSpectralGap N)
-    (by
-      have h_two : 0 < (2 : ℝ) := by norm_num
-      exact div_pos h_two (latticeSpectralGap_pos N hN))
-    (latticeSpectralGap_pos N hN)
+    (canonicalPRT1LatticeDecay N L hN hL).C0
+    (canonicalPRT1LatticeDecay N L hN hL).delta0
+    (canonicalPRT1LatticeDecay N L hN hL).hC0
+    (canonicalPRT1LatticeDecay N L hN hL).h_delta0
 
 /-- **Theorem 9 (End-to-End PRT1 → PRT2 Multiscale Grounding Theorem)**:
     For every torus size N ≥ 2, block factor L ≥ 2, and decimation scale k ≥ 1,
@@ -1520,7 +1568,11 @@ theorem prt1_grounds_prt2_all_scales (N L : ℕ) [NeZero N] (hN : 2 ≤ N) (hL :
       (makeLatticeMultiscaleGreensResolvent N k L hN hk hL).delta3 = latticeSpectralGap N ∧
       0 < effectiveMassGap (makeLatticeMultiscaleGreensResolvent N k L hN hk hL).delta3 L k := by
   intro k hk
-  refine ⟨rfl, ?_⟩
+  have h_delta : (makeLatticeMultiscaleGreensResolvent N k L hN hk hL).delta3 = latticeSpectralGap N := by
+    dsimp [makeLatticeMultiscaleGreensResolvent, makeMultiscaleGreensResolvent]
+    exact canonicalPRT1LatticeDecay_delta0 N L hN hL
+  refine ⟨h_delta, ?_⟩
+  rw [h_delta]
   exact effectiveMassGap_pos (latticeSpectralGap N) L k (latticeSpectralGap_pos N hN) hL
 
 /-! ============================================================================
@@ -1536,6 +1588,7 @@ theorem prt1_grounds_prt2_all_scales (N L : ℕ) [NeZero N] (hN : 2 ≤ N) (hL :
 #print axioms block_vol_step_succ
 #print axioms compound_dimensional_balance
 #print axioms compoundBondKernel_one_eq_prt1
+#print axioms compoundBondKernel_one_eq_Q_avg
 #print axioms site_weight_one_eq_prt1
 #print axioms compoundBondKernel_semigroup
 #print axioms card_local_block_eq_block_vol
@@ -1563,6 +1616,7 @@ theorem prt1_grounds_prt2_all_scales (N L : ℕ) [NeZero N] (hN : 2 ≤ N) (hL :
 #print axioms makeMultiscalePropagatorInversion
 #print axioms compoundGreenBound_strictly_decreasing
 #print axioms compoundGreenBound_eq_prt1_bound
+#print axioms compoundGreenBound_one_eq_prt1
 #print axioms effectiveMassGap_pos
 #print axioms effectiveMassGap_step
 #print axioms MultiscaleGreensResolvent.applyOp_symm
@@ -1570,6 +1624,7 @@ theorem prt1_grounds_prt2_all_scales (N L : ℕ) [NeZero N] (hN : 2 ≤ N) (hL :
 #print axioms makeMultiscaleGreensResolvent
 #print axioms rg_resolvent_step_preserves_delta3
 #print axioms uniform_exponential_decay_all_scales
+#print axioms canonicalPRT1LatticeDecay_delta0
 #print axioms makeLatticeMultiscaleGreensResolvent
 #print axioms prt1_grounds_prt2_all_scales
 
