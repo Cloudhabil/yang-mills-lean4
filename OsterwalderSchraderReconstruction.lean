@@ -375,21 +375,23 @@ structure ConstructiveSchwingerHierarchy
   schwinger_zero : ∀ (ops : Fin 0 → ObservableLabel G Curv) (x : Fin 0 → EuclideanSpace4),
     schwinger 0 ops x = 1
   /-- Bałaban Cluster Smeared Linear Growth Bound (OS II Eq. 4.1):
-      ‖S_n(f)‖ ≤ α (n!)^β ∏_{i=1}^n ‖f_i‖_s -/
-  smeared_cluster_bound : ∀ (n : ℕ) (ops : Fin n → ObservableLabel G Curv)
+      ‖S_n(f)‖ ≤ α^n (n!)^β ∏_{i=1}^n ‖f_i‖_s -/
+  smeared_cluster_bound : ∀ (k : ℕ) (gen : Fin k → ObservableLabel G Curv)
+    (n : ℕ) (idx : Fin n → Fin k)
     (f : Fin n → SchwartzMap EuclideanSpace4 ℂ),
     DisjointSupports f →
-    ‖schwinger_smeared n ops f‖ ≤
-      balaban_param.alpha * ((Nat.factorial n : ℝ) ^ balaban_param.beta) *
+    ‖schwinger_smeared n (fun i => gen (idx i)) f‖ ≤
+      (balaban_param.alpha ^ n) * ((Nat.factorial n : ℝ) ^ balaban_param.beta) *
       ∏ i : Fin n, SchwartzMap.seminorm ℝ balaban_param.s balaban_param.s (f i)
   /-- Bałaban Cluster Pointwise Singularity Bound (OS II Eq. 4.2):
-      ‖S_n(x)‖ ≤ α (n!)^β (1 + ∑ ‖x_i‖²)^{sn} (1 + 1/r)^{sn} -/
-  pointwise_singularity_bound : ∀ (n : ℕ) (ops : Fin n → ObservableLabel G Curv)
+      ‖S_n(x)‖ ≤ α^n (n!)^β (1 + ∑ ‖x_i‖²)^{sn} (1 + 1/r)^{sn} -/
+  pointwise_singularity_bound : ∀ (k : ℕ) (gen : Fin k → ObservableLabel G Curv)
+    (n : ℕ) (idx : Fin n → Fin k)
     (x : Fin n → EuclideanSpace4) (r : ℝ),
     0 < r →
     (∀ i j : Fin n, i ≠ j → r ≤ ‖x i - x j‖) →
-    ‖schwinger n ops x‖ ≤
-      balaban_param.alpha * ((Nat.factorial n : ℝ) ^ balaban_param.beta) *
+    ‖schwinger n (fun i => gen (idx i)) x‖ ≤
+      (balaban_param.alpha ^ n) * ((Nat.factorial n : ℝ) ^ balaban_param.beta) *
       (1 + ∑ i : Fin n, ‖x i‖ ^ 2) ^ (balaban_param.s * n) * (1 + (1 / r)) ^ (balaban_param.s * n)
 
 /-- **Theorem (Bałaban Cluster Expansion Discharges OS0 Linear Growth)**:
@@ -401,23 +403,25 @@ theorem constructive_hierarchy_satisfies_os0_temperedness
     {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
     {Curv : CurvaturePolynomialAlgebra G}
     (H : ConstructiveSchwingerHierarchy G Curv) :
+    ∀ (k : ℕ) (gen : Fin k → ObservableLabel G Curv),
     ∃ (α β : ℝ) (s : ℕ), 0 < α ∧ 0 < β ∧
-      (∀ (n : ℕ) (ops : Fin n → ObservableLabel G Curv)
+      (∀ (n : ℕ) (idx : Fin n → Fin k)
          (f : Fin n → SchwartzMap EuclideanSpace4 ℂ),
          DisjointSupports f →
-         ‖H.schwinger_smeared n ops f‖ ≤
-           α * ((Nat.factorial n : ℝ) ^ β) *
+         ‖H.schwinger_smeared n (fun i => gen (idx i)) f‖ ≤
+           (α ^ n) * ((Nat.factorial n : ℝ) ^ β) *
            ∏ i : Fin n, SchwartzMap.seminorm ℝ s s (f i)) ∧
-      (∀ (n : ℕ) (ops : Fin n → ObservableLabel G Curv)
+      (∀ (n : ℕ) (idx : Fin n → Fin k)
          (x : Fin n → EuclideanSpace4) (r : ℝ),
          0 < r →
          (∀ i j : Fin n, i ≠ j → r ≤ ‖x i - x j‖) →
-         ‖H.schwinger n ops x‖ ≤
-           α * ((Nat.factorial n : ℝ) ^ β) *
+         ‖H.schwinger n (fun i => gen (idx i)) x‖ ≤
+           (α ^ n) * ((Nat.factorial n : ℝ) ^ β) *
            (1 + ∑ i : Fin n, ‖x i‖ ^ 2) ^ (s * n) * (1 + (1 / r)) ^ (s * n)) := by
+  intro k gen
   refine ⟨H.balaban_param.alpha, H.balaban_param.beta, H.balaban_param.s,
           H.balaban_param.h_alpha, H.balaban_param.h_beta,
-          H.smeared_cluster_bound, H.pointwise_singularity_bound⟩
+          H.smeared_cluster_bound k gen, H.pointwise_singularity_bound k gen⟩
 
 /-- **Constructive Osterwalder–Schrader Bundle from Bałaban Hierarchy**:
     Combines the Bałaban cluster expansion hierarchy with Euclidean covariance (OS1),
