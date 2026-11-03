@@ -518,7 +518,7 @@ theorem inner1_const_testFluctuation (N : ℕ) [NeZero N] (hN : 2 ≤ N) (c : Fi
   rw [h_all]
   exact Finset.sum_const_zero
 
-/-- Non-triviality certificate (Bo Cowgill Lens 1):
+/-- Non-triviality certificate (Adversarial Protocol Lens 1):
     The test fluctuation has strictly positive L² energy: ‖C‖₁² > 0.
     Precludes dummy zero witnesses in active code. -/
 theorem normSq1_testFluctuation_pos (N : ℕ) [NeZero N] (hN : 2 ≤ N) :
@@ -584,7 +584,7 @@ theorem d1_testFluctuation_zero_zero_one (N : ℕ) (hN : 2 ≤ N) :
   rw [h_nu1 (shiftFwd 0 0), h_nu1 0, h_s1_val, testFluctuation_zero_zero N]
   ring
 
-/-- Non-trivial curvature energy (Bo Cowgill Lens 1):
+/-- Non-trivial curvature energy (Adversarial Protocol Lens 1):
     The test fluctuation has strictly positive curvature norm squared ‖d₁ C‖₂² > 0. -/
 theorem normSq2_d1_testFluctuation_pos (N : ℕ) [NeZero N] (hN : 2 ≤ N) :
     0 < normSq2 (d1 (testFluctuation N)) := by

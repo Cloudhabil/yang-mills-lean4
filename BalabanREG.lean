@@ -50,7 +50,7 @@ Mathematical Targets & Structure:
    - Bijective isomorphism between regular orbits 𝒪_{reg} and slice configurations 𝒮_{reg}.
    - Factorization of localized gauge group volume Vol(𝒢_{𝔅_k}).
 
-7. Bo Cowgill Audit Protocol Compliance (Lens 1 Anti-Dummy Enforcement):
+7. Adversarial Audit Protocol Compliance (Lens 1 Anti-Dummy Enforcement):
    - Non-trivial regular configuration and slice witnesses (positive curvature, non-zero energy).
    - Non-trivial divergence-free cycle 1-form with (d*)² = 0.
    - Zero `sorry`, zero `opaque`, zero custom axioms.
@@ -854,7 +854,7 @@ structure GaugeOrbitIsomorphism (k N L M1 : ℕ) [NeZero N] (beta0 : ℝ)
   h_vol_pos : 0 < vol_gauge_group
 
 /-! ============================================================================
-    SECTION 7: ANTI-DUMMY ENFORCEMENT & NON-TRIVIAL WITNESSES (BO COWGILL LENS 1)
+    SECTION 7: ANTI-DUMMY ENFORCEMENT & NON-TRIVIAL WITNESSES (ADVERSARIAL PROTOCOL LENS 1)
     ============================================================================ -/
 
 @[simp] theorem d1_zero {N : ℕ} : d1 (fun (_ : Torus4 N) (_ : Fin 4) => (0 : ℝ)) = 0 := by

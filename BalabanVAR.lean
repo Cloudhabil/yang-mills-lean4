@@ -45,7 +45,7 @@ Mathematical Scope & Architectural Layout:
    - Uniform Lipschitz variation bounds ‖A(V₁) - A(V₂)‖ ≤ L_an ‖V₁ - V₂‖.
    - Geometric decay of higher order variations.
 
-7. Bo Cowgill Audit Protocol Compliance & Non-Trivial Witnesses:
+7. Adversarial Audit Protocol Compliance & Non-Trivial Witnesses:
    - Non-trivial coarse boundary condition witness with strictly positive field energy.
    - Non-trivial background minimizer witness with strictly positive action and curvature.
    - Zero `sorry`, zero `opaque`, zero custom axioms.
@@ -801,7 +801,7 @@ structure MinimizerVariationBound (k N : ℕ) (a1 : ℝ) (An : AnalyticMinimizer
   h_lipschitz_bound : ∀ x μ, |A1 x μ - A2 x μ| ≤ An.lipschitz_constant * diff_norm
 
 /-! ============================================================================
-    SECTION 7: BO COWGILL AUDIT COMPLIANCE & NON-TRIVIAL WITNESSES
+    SECTION 7: ADVERSARIAL AUDIT COMPLIANCE & NON-TRIVIAL WITNESSES
     ============================================================================ -/
 
 /-- Constructive canonical coarse boundary condition with zero curvature. -/
