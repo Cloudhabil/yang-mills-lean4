@@ -31,6 +31,7 @@ import BalabanPRT1
 import BalabanPRT2
 import BalabanREG
 import BalabanVAR
+import BalabanPBG
 
 
 noncomputable section
@@ -437,7 +438,7 @@ structure CovariantGreensBound (lap : CovariantLaplacianData) where
   /-- Propagator operator norm is bounded by the inverse coercivity constant -/
   op_norm_bound : ℝ := 1 / lap.lambda_min
   h_op_norm : 0 < op_norm_bound := by
-    unfold op_norm_bound
+    dsimp
     exact one_div_pos.mpr lap.h_lambda_min
 
 def CovariantGreensBound.bound {lap : CovariantLaplacianData}
@@ -459,6 +460,31 @@ theorem covariant_greens_bound_decreasing {lap : CovariantLaplacianData}
     apply Real.exp_lt_exp.mpr
     exact mul_lt_mul_of_neg_left h_lt h_coeff
   exact mul_lt_mul_of_pos_left h_exp_lt G.hB0
+
+/-- **Constructive Grounding to BalabanPBG (CMP 99, 389–434, 1985)**:
+    The covariant background Laplacian Δ_B and scale-independent exponential Green's decay
+    are constructively grounded in `BalabanPBG.lean`. -/
+theorem covariant_greens_propagator_grounded (k N L M1 : ℕ) [NeZero N]
+    (H : YangMills.BalabanREG.DomainHierarchyScale k L M1)
+    (D : YangMills.BalabanREG.NestedSubdomains k N)
+    (C : YangMills.BalabanVAR.MinimizerBoundConstants)
+    (V : YangMills.BalabanVAR.CoarseBoundaryCondition k N C.a1)
+    (hV_zero : V.field = fun _ _ => 0)
+    (lap : YangMills.BalabanPBG.CovariantLaplacianParams) :
+    Nonempty (YangMills.BalabanPBG.CovariantGreensPropagator k N L M1 H D C V lap) :=
+  YangMills.BalabanPBG.covariant_greens_propagator_nonempty k N L M1 H D C V hV_zero lap
+
+/-- Grounding of CovariantGreensBound from BalabanPBG CovariantLaplacianParams -/
+def constructiveCovariantGreensBound (lap : YangMills.BalabanPBG.CovariantLaplacianParams) :
+    CovariantGreensBound ⟨lap.alpha_ax, lap.h_alpha_ax, lap.lambda_min, lap.h_lambda_min⟩ where
+  B0 := lap.B0
+  delta0 := lap.delta0
+  hB0 := lap.h_B0
+  h_delta0 := lap.h_delta0
+  op_norm_bound := 1 / lap.lambda_min
+  h_op_norm := one_div_pos.mpr lap.h_lambda_min
+
+#print axioms covariant_greens_propagator_grounded
 
 end PBG
 

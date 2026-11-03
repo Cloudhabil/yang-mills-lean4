@@ -52,6 +52,10 @@ lean_lib «BalabanREG» where
 lean_lib «BalabanVAR» where
   roots := #[`BalabanVAR]
 
+@[default_target]
+lean_lib «BalabanPBG» where
+  roots := #[`BalabanPBG]
+
 
 
 
