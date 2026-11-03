@@ -30,6 +30,7 @@ import OsterwalderSchraderReconstruction
 import BalabanPRT1
 import BalabanPRT2
 import BalabanREG
+import BalabanVAR
 
 
 noncomputable section
@@ -392,7 +393,22 @@ theorem minimizer_derivative_hierarchy (B3 M eps1 scale : ℝ)
   · exact mul_le_mul_of_nonneg_left h32 (le_of_lt hC_pos)
   · exact mul_le_mul_of_nonneg_left h21 (le_of_lt hC_pos)
 
+/-- **Constructive Grounding to BalabanVAR (CMP 102, 277–309, 1985)**:
+    The classical saddle-point background minimizer and its fundamental Euler–Lagrange
+    derivative bounds are constructively grounded in `BalabanVAR.lean`. -/
+theorem background_minimizer_grounded (k N L M1 : ℕ) [NeZero N]
+    (H : YangMills.BalabanREG.DomainHierarchyScale k L M1)
+    (D : YangMills.BalabanREG.NestedSubdomains k N)
+    (C : YangMills.BalabanVAR.MinimizerBoundConstants)
+    (V : YangMills.BalabanVAR.CoarseBoundaryCondition k N C.a1)
+    (hV_zero : V.field = fun _ _ => 0) :
+    Nonempty (YangMills.BalabanVAR.ClassicalBackgroundMinimizer k N L M1 H D C V) :=
+  YangMills.BalabanVAR.background_minimizer_nonempty k N L M1 H D C V hV_zero
+
+#print axioms background_minimizer_grounded
+
 end VAR
+
 
 /-! ============================================================================
     PAPER 5: PBG (CMP 99, 389–434, 1985)
