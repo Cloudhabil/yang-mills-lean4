@@ -29,6 +29,7 @@ import HaarWilsonLattice
 import OsterwalderSchraderReconstruction
 import BalabanPRT1
 import BalabanPRT2
+import BalabanREG
 
 
 noncomputable section
@@ -325,6 +326,19 @@ structure RegularGaugeSlice (L : ℕ) (_hL : 2 ≤ L) where
   h_lipschitz_pos : 0 < slice_lipschitz := by
     unfold slice_lipschitz
     exact axialFluctuationBound4D_pos alpha_0 c1 h_alpha0 (le_of_lt h_c1)
+
+/-- **Constructive Grounding to BalabanREG (CMP 99, 75–102, 1985)**:
+    The quantitative regular gauge slice is constructively grounded in `BalabanREG.lean`
+    via the canonical regular gauge slice witness and uniqueness theorems (Theorems 2 & 4). -/
+theorem regular_gauge_slice_grounded (k N L M1 : ℕ) [NeZero N] (beta0 : ℝ)
+    (H : YangMills.BalabanREG.DomainHierarchyScale k L M1)
+    (D : YangMills.BalabanREG.NestedSubdomains k N)
+    (C : YangMills.BalabanREG.RegularSliceConstants beta0)
+    (alpha_0 alpha_1 : ℝ) (h0 : 0 ≤ alpha_0) (h1 : 0 ≤ alpha_1) :
+    Nonempty (YangMills.BalabanREG.CanonicalRegularGaugeSlice k N L M1 beta0 H D C alpha_0 alpha_1) :=
+  YangMills.BalabanREG.regular_gauge_slice_nonempty k N L M1 beta0 H D C alpha_0 alpha_1 h0 h1
+
+#print axioms regular_gauge_slice_grounded
 
 end REG
 
