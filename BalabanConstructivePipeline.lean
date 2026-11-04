@@ -682,12 +682,25 @@ theorem rg2_inductive_cluster_bound_polymer_grounded {N : ℕ} {L : ℕ} (hL : 2
     (1 / 2 : ℝ) * P.E0 * Real.exp (-P.kappa * X.diam) :=
   YangMills.BalabanRG2.inductive_effective_action_cluster_bound_polymer hL P X
 
+/-- Certified anti-dummy verification grounded in BalabanRG2. -/
+theorem certified_rg2_anti_dummy (N : ℕ) [NeZero N] (hN : 2 ≤ N) :
+    YangMills.BalabanRG2.CertifiedRG2AntiDummy N hN :=
+  YangMills.BalabanRG2.makeCertifiedRG2AntiDummy N hN
+
+/-- Positivity of the abstract polymer gas partition function grounded in BalabanRG2. -/
+theorem rg2_partition_function_pos_grounded (N M : ℕ) (polymers : Finset (YangMills.BalabanRG2.PolymerDomain N))
+    (H : YangMills.BalabanRG2.PolymerDomain N → ℝ) (hH : ∀ Z, 0 ≤ H Z) :
+    0 < YangMills.BalabanRG2.polymerPartitionFunction M polymers H :=
+  YangMills.BalabanRG2.polymerPartitionFunction_pos M polymers H hH
+
 #print axioms cayley_tree_power_le
 #print axioms factor_pair_ge_n
 #print axioms balaban_rg2_step_grounded
 #print axioms rg2_cluster_energy_grounded
 #print axioms rg2_inductive_cluster_bound_grounded
 #print axioms rg2_inductive_cluster_bound_polymer_grounded
+#print axioms certified_rg2_anti_dummy
+#print axioms rg2_partition_function_pos_grounded
 
 end RG2
 
