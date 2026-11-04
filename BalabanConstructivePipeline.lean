@@ -33,6 +33,7 @@ import BalabanREG
 import BalabanVAR
 import BalabanPBG
 import BalabanRG1
+import BalabanRG2
 
 
 noncomputable section
@@ -640,6 +641,53 @@ structure MayerTreeClusterBound (alpha : ℝ) where
     have h_fac_pos : 0 < (Nat.factorial n : ℝ) := by positivity
     have h_pow_pos : 0 < (Nat.factorial n : ℝ) ^ beta := Real.rpow_pos_of_pos h_fac_pos beta
     exact mul_pos h_alpha h_pow_pos
+
+/-- **Constructive Grounding to BalabanRG2 (CMP 116, 1–22, 1988)**:
+    Polymer gas Mayer cluster expansions, Cayley tree bounds,
+    exponential polymer activity decay (Lemma 3), and inductive effective action
+    cluster stability (Theorem 1.3 / Eq. 2.41) are constructively grounded in `BalabanRG2.lean`. -/
+theorem balaban_rg2_step_grounded (k N L M1 : ℕ) [NeZero N]
+    (hN : 2 ≤ N) (hL : 2 ≤ L)
+    (H : YangMills.BalabanREG.DomainHierarchyScale k L M1)
+    (D : YangMills.BalabanREG.NestedSubdomains k N)
+    (C_const : YangMills.BalabanVAR.MinimizerBoundConstants)
+    (V : YangMills.BalabanVAR.CoarseBoundaryCondition k N C_const.a1)
+    (hV_zero : V.field = fun _ _ => 0)
+    (lap_params : YangMills.BalabanPBG.CovariantLaplacianParams) :
+    Nonempty (YangMills.BalabanRG2.BalabanRG2Step k N L M1 hN hL H D C_const V lap_params) :=
+  YangMills.BalabanRG2.balaban_rg2_step_nonempty k N L M1 hN hL H D C_const V hV_zero lap_params
+
+/-- Certified anti-dummy positivity of the cluster remainder energy on the non-trivial background field. -/
+theorem rg2_cluster_energy_grounded (N : ℕ) [NeZero N] (hN : 2 ≤ N)
+    (eps : ℝ) (heps : 0 < eps) :
+    0 < (YangMills.BalabanRG2.testClusterActionDensity N).E_term
+          (YangMills.BalabanRG2.canonicalPolymerWitness N hN)
+          (YangMills.BalabanVAR.testBackgroundWitness N eps) :=
+  YangMills.BalabanRG2.rg2_cluster_energy_pos N hN eps heps
+
+/-- Certified inductive cluster bound across scales. -/
+theorem rg2_inductive_cluster_bound_grounded {L : ℕ} (hL : 2 ≤ L)
+    (P : YangMills.BalabanRG2.EffectiveClusterBoundParams L hL)
+    (diam : ℝ) (hd : 0 ≤ diam) :
+    P.C_O1 * P.C3 * P.eps1 *
+      Real.exp (-(1 - 10 * P.delta) * (1 / 2 : ℝ) * (L : ℝ) * P.kappa * diam) ≤
+    (1 / 2 : ℝ) * P.E0 * Real.exp (-P.kappa * diam) :=
+  YangMills.BalabanRG2.inductive_effective_action_cluster_bound hL P diam hd
+
+/-- Certified inductive cluster bound across scales on polymer domains. -/
+theorem rg2_inductive_cluster_bound_polymer_grounded {N : ℕ} {L : ℕ} (hL : 2 ≤ L)
+    (P : YangMills.BalabanRG2.EffectiveClusterBoundParams L hL)
+    (X : YangMills.BalabanRG2.PolymerDomain N) :
+    YangMills.BalabanRG2.effectiveClusterBound P X ≤
+    (1 / 2 : ℝ) * P.E0 * Real.exp (-P.kappa * X.diam) :=
+  YangMills.BalabanRG2.inductive_effective_action_cluster_bound_polymer hL P X
+
+#print axioms cayley_tree_power_le
+#print axioms factor_pair_ge_n
+#print axioms balaban_rg2_step_grounded
+#print axioms rg2_cluster_energy_grounded
+#print axioms rg2_inductive_cluster_bound_grounded
+#print axioms rg2_inductive_cluster_bound_polymer_grounded
 
 end RG2
 

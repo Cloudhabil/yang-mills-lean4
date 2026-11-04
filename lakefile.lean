@@ -59,3 +59,8 @@ lean_lib «BalabanPBG» where
 @[default_target]
 lean_lib «BalabanRG1» where
   roots := #[`BalabanRG1]
+
+@[default_target]
+lean_lib «BalabanRG2» where
+  roots := #[`BalabanRG2]
+

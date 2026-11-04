@@ -1,0 +1,850 @@
+=== PAGE 1 ===
+Communications in
+Commun. Math. Phys. 116, 1-22 (1988) Mathematical
+Physics© Springer-Verlag 1988
+Renormalization Group Approach to Lattice
+Gauge Field Theories
+II. Cluster Expansions*
+Tadeusz Balaban
+Department of Mathematics, Boston University, Boston, MA 02215, USA
+Abstract. The fluctuation field integral, constructed in Part I, is represented by
+the exponentiated cluster expansion. It is proved that the terms of the expansion
+satisfy the inductive assumptions. This completes the construction of the
+sequence of effective actions in the small field approximation.
+Introduction
+in the first paper of this series we have considered the fluctuation field integral
+defined by the kth renormalization transformation. We have shown there that the
+fluctuation field effective action is a small perturbation of the basic quadratic form,
+in the small field approximation. This is the main part of the analysis of this
+integral, and it includes the analysis of renormalization. Now it remains to construct
+a localized representation for the new term in the effective action defined by the
+fluctuation field integral. This is done by an application of the exponentiated cluster
+expansion. This expansion is constructed in two steps.
+At first we localize the fluctuation field effective action by a procedure similar
+to a cluster expansion, using the generalized random walk expansions for
+propagators and minimizers occurring in the action. This procedure is described
+in Sect. 1. It yields the integral in the form to which we can apply in a straightforward
+way the exponentiated cluster expansion. This expansion is described in Sect. 2.
+It yields the desired localized expansion of the new effective action. We prove
+also that terms of this expansion satisfy the inductive assumptions formulated in
+the first paper. Thus we complete the proof of Theorem 3 of that paper. The two
+expansions constructed here are quite general, as will become clear from their
+descriptions. They can be, and will be, applied in many other situations, such as
+for the expressions constructed with the help of more general propagators described
+in [13], or for integrals conditioned to subdomains of the lattice.
+* Work supported in part by the Air Force under Grant AFOSR-86-0229 and by the National Science
+Foundation under Grant DMS-86-02207
+
+=== PAGE 2 ===
+2 T. Balaban
+The first paper is referred to as /, so we refer to its sections and formulas by
+writing I before the corresponding numbers, e.g. Sect. 1.3, or the formula (I.LI8).
+We also refer the reader to the list of references at the end of that paper.
+1. Localizations and Bounds of Terms in the Fluctuation Field Action
+In Sects. 1.3-5 we have constructed the expansions of terms in the original fluctuation
+field effective action in (1.2.12). The newly created terms, after the cancellations
+described at the end of Sect. 1.4, satisfy much better bounds of the type (1.0.29),
+bounds assuring convergence of the sum of all these terms. They are analytic and
+nonlocal functions of the configurations U, J, B. The nonlocality is, however, of a
+simple origin, it is introduced by the functions Hy,Hfc, propagators and other
+expressions appearing after the expansions. Analyzing the terms (1.3.7), (1.3.21) or
+(1.3.34), we see that they have the following structure: there exists a function
+E(X,U,J?A) analytic and localized to X in U,J, A, such that a given term is
+obtained substituting a proper nonlocal expression in the place of A, e.g., the
+function Hj(B(t)) + tπδHj in (1.3.7), {tζπ + ίπζπ)Hk{B/) in (1.3.34), and so on.
+Instead of trying to cover all possible cases, let us consider one important and
+typical term, and then discuss necessary changes for other terms. For example let
+us consider the last term on the right-hand side of (1.3.34). We have proved that
+it is an analytic function of U, J5A, for (U, J)eC/£+1(Πo>0 +2/?)αo,(ί + 2j8)αlsα0)
+and A satisfying (1.3.31). Substituting
+A = (tζπ + tDζD)Hk(B') (1.1)
+we introduce, through the function Hk(5'), a dependence on U, J, B on the whole
+lattice. Our problem is to localize the obtained function, more precisely to
+represent it as a sum of terms, which are localized in domains from D/c, and which
+satisfy bounds of the type (1.1.18).
+We construct such an expansion by a procedure similar to decoupling
+procedures in cluster expansions. To this purpose we use extensively the generalized
+random walk expansions for propagators constructed in [13]. The function Hk(B')
+is determined by the propagators through the equations it satisfies. By the results
+of Sect. G [15] this function is given by
+nk(B') = H0B' + Ao - HD(H0B' + Ao), (1.2)
+where the linearizing transformation D(Λf) is a solution of the equation
+D(A') = C(A'-HD(A% (1.3)
+and Ao is a solution of the equation
+Ao + G(J^J V\H0B' + Ao) = 0. (1.4)
+We have suppressed the subscript k in the equations, and also the dependence on
+the variables U, J. The function V(A') is a nonlinear and nonlocal function
+depending on H and D(A'). It is given by the formula (80) [15]. Thus Eqs. (1.3),
+(1.4) are determined by local, analytic functions, and nonlocal propagators H, Ho, G.
+
+=== PAGE 3 ===
+Renormalization Group Approach to Lattice Gauge Field Theory 3
+In these equations we can replace the propagators by arbitrary operators having
+the same regularity properties and satisfying the same bounds. Only these bounds
+were important in the analysis of Sect. C, E [15], hence the solutions D, Ao can be
+considered as functional of these operators, having all the properties proved in [15]
+D(A') = D(H,A'l A0 = A0(H,G,H0B'). (1.5)
+The nonlocality of these solutions is a result of a nonlocality of the operators,
+hence we localize the solutions by localizations of the operators. We start with the
+original propagators, and we decompose them into generalized random walk
+expansions. A propagator is represented by the sum (3.107) [13]
+where ω = ((0,XO)(OL19X1 ),...,(αn,Xn)\X0,Xu...,Xn are simple localization
+domains, unions of connected families containing several cubes from πk(l), i.e. of
+the size M1 instead of M. For more detailed explanations of (1.6) see Sect. C [13].
+Localization properties and bounds are important for us. Each factor in (6.6)
+depends on external gauge field configurations restricted to the corresponding
+domain X*, and its kernel vanishes in a sufficiently thick neighborhood of dXj,
+e.g. in a neighborhood of the width jM2. The term corresponding to a walk ω in
+(1.6) can be bounded, as (3.108) [13], by
+^0d(ω, y,y')\ (1.7)
+where Δ(y\ Δ(yf) are localization cubes of the term. This bound holds for all operator
+norms in formulations of theorems in [13], e.g. in Theorem 3.1. The first two
+factors in (1.7) are used to control the sum over ω, and they determine the constant
+Bo. We will use the remaining two factors to produce exponential bounds for
+localized terms.
+To construct the decoupling we introduce a regular partition σk of the space
+T, in the scale corresponding to the lattice Tη, into cubes Δ of the size R1M1. The
+number R1 is a power of L satisfying the condition RιMιM~1 ^1. For the
+particular example under consideration we take cubes of the size M, which are
+disjoint with the interior of Π4. We denote this family by σ0. To each cube Δ in
+this family we assign a variable s(Δ), and we denote by s the system of all these
+variables. We introduce a dependence on s in propagators in the following way:
+for a random walk ω localized in XQUX5XU ---uX^ we take the {Δ1,...,Δm} of
+all cubes from σ0 which intersect this localization domain, and we multiply the
+term in (1.6) corresponding to ω by ^(ZlJ s^). This way the s-dependent
+propagators H(s\ G(s),H0(s) are defined. They coincide with the original ones for
+s = 1. The symbol B' in (1.1) denotes the local function of B defined by (1.3.2).
+Now let us consider the last term in (1.3.34), or an arbitrary expression obtained
+by the transformations of one of the terms on the right-hand side of (1.3.34). We
+denote the corresponding function of U, A by E(Π0,U,A), hence making the
+substitution (1.1) we have
+(1.8)
+
+=== PAGE 4 ===
+T. Balaban
+To simplify the formulas let us omit the symbols U, J. Now, as in cluster expansions,
+we apply the fundamental theorem of calculus
+= Σ Πί^)^E(Πo>(ίCD + ίDίD^^ (i.9)
+σczσQΔeσ0 OS(Δ)
+Consider a term in the last sum. The set Y(σ) = Π4u(u ΔEσA) is a sum of connected
+components, with the following notion of connectedness. We consider domains Y
+which are unions of subfamilies of σk, and which satisfy one of the following two
+conditions: either Y is disjoint with the cube Π4, or it contains this cube. In the
+first case Y is connected if and only if for any two cubes A, A' a Y there exists a
+sequence Δ,Δ1,...,An,Δ/ of cubes contained in Y and such, that boundaries of
+two successive terms in the sequence have a common d — 1-dimensional wall, and
+there is no cube in Y having this property with respect to Π4 In the second case
+Y is connected if and only if for any cube A c Y there exists a sequence having
+the above property and connecting A with Π4, i.e. the last term in the sequence
+intersects Π4 along a d— 1-dimensional wall. We denote by Yo the connected
+component of the domain Y(σ) containing the cube Π4.
+Consider the function (tζπ + tπζD)Hk(H{s)9G(s)9H0(s)Bf) for s satisfying
+s(σc) = 0. We prove that it depends on B, s is restricted to the component Yo. At
+first we remark that kernels of the operators H(s),G(s),H0(s) vanish, unless both
+arguments are in the interior of one component of Y(σ), in fact with distances to
+the boundary of this component bigger than Mx. Consider Eq. (1.3) with H replaced
+by H(s). By the above remark this equation reduces to the equality D(A') = C(Ά)
+on the neighborhood of Y{σ)\ and to separate equations in components of Y(σ).
+The solution D(H(s),A') restricted to the interior of a component depends on
+A\H(s\ hence s, restricted to this component. This implies that the function
+(δ/δA') V(H(s), Ar) has similar properties, i.e. it coincides with the local function
+(δ/δA')V0(A') on the neighborhood of Y{σ)\ and considered on a component of
+Y(σ) it depends on A\ H(s), s restricted to this component. Thus Eq. (1.4) represents
+a system of separated equations in components of Y(σ). The solution A0(H(s),
+G(s% H0(s)B') is equal to 0 on the neighborhood of Y{σ)\ and again, on a component
+of Y(σ) it depends on the propagators and B' restricted to the component. Finally,
+the function B' defined by (1.3.2) is a local function of B. As a consequence of these
+properties we obtain that the term in the sum on the right-hand side of (1.9),
+corresponding to the set σ, depends on propagators and function B, s restricted to
+the component Yo, the component of Y(σ) containing Π4 If there are other
+components, then the derivatives with respect to s restricted to these components
+render the term equal to 0. This simplifies the sum in (1.9). We can write it as a
+sum over connected domains Yo containing Π4, with parameters s = 0 on Yc0. We
+denote s by s(Y0% hence we have
+= Σ Π }^(^5Όzlcyo\D4O OS(Δ)
+(1.10)
+
+=== PAGE 5 ===
+Renormalization Group Approach to Lattice Gauge Field Theory 5
+In the term corresponding to Yo in the above sum all propagators and the function
+B are restricted to Yo. This implies that this term depends on U, J restricted to
+To estimate a term in the sum (1.10) we use the Cauchy formula, hence we
+have to investigate analyticity properties of the functions E( ) with respect to the
+variables s(Y0). We review successively the functions and the operators in (1.10).
+Let us start with a bound for the function H(s(Y0))X,X is an arbitrary gc-valued
+function on Y(ofe), the parameters s(Y0) are complex valued and satisfy the bound
+\s(Δ)\ rg eKl for A a 70\ Π4, κx is a sufficiently big positive number. Using the bound
+(1.7) we estimate the function by
+B0\X\sup Mϊίβlωl exp(- δod{ω))emκi9 (1.11)
+ω
+where d(ω) is a length of a shortest tree graph intersecting all localization domains
+of ω, m is the number of the parameters s connected with the walk ω. If m is big
+enough, for example m>24, then δod(ω)^δ1mM, for a positive constant δx
+depending on <50 only, and we can bound the expression under the supremum in
+(1.11) by 1, for δίM^κ1. If m ^ 24, then we can have short walks, in fact with
+|ω| = 0, and the expression can be bounded by e16κi only. Thus the function
+H(s(Y0))X is an analytic function of the variables s(Y0) on the domain |s(Y0)| ^ eκ\
+bounded by B0e16κi\X\ in all norms of Theorems 3.1.-3.10 [13].
+Consider the change of variables
+A = A'- H(s(Y0))D(H(s(Y0)\ Ά\ (1.12)
+The function D is the solution of Eq. (1.3) with H(s(Y0)) instead of H. Let us
+introduce an auxiliary constant ε2, an<i consider this equation on the space of
+functions satisfying \Ά\<ε2. Let us recall the most important points from the
+discussion of Sect. C [15]. If we replace the function D in (1.3) by a configuration
+X, then for the complex s(Y0\
+^\X\\ (1.13)
+and for X satisfying \X\ <4C2ε\ ^(4C2B2)e32κi)~1, hence for ε2 satisfying
+4C2B0e16κίε2 ^ 1, the right-hand side above is bounded by 4C2ε2. Thus the
+transformation defined by the function on the left-hand side of (1.13) maps the
+domain {X:|X| <4C2ε\} into itself. We prove similarly that it is contractive on
+this domain, hence the fixed point is an analytic function of A'9s(Y0), bounded by
+4C2ε2. Because ε2 can be chosen arbitrarily close to \A'\, so we have the inequality
+\D(H(s(Y0)\A')\^4C2\A'\2. (1.14)
+It is the same as the inequality (55) [15]. Similarly the other inequalities and
+statements of Sect. C [15] hold in this case, for example the transformation (1.12)
+can be bounded as in (57) [15]: \A\ < ε2 + Boe16κi4C2εl <; 2ε2. This implies that
+the function V(H(s(Y0))9 Ά\ defined by (80) [15] with the help of the transformation
+(1.12), is an analytic function of A\s(Y0)> and Proposition 4 [15] holds for it (with
+ε3 replaced by ε2). Consider now Eq. (1.4) with the above function F, and with
+G,H0 replaced by G(s(Y0)),H0(s(Y0)). The last propagators are analytic functions
+of s(Y0), and they have the same bound (1.11) as H(s(Y0)), hence their norms are
+
+=== PAGE 6 ===
+6 T. Balaban
+bounded by B0e16κ\ Using this, and the inequality (98) in Proposition 4 [15], we
+obtain
+\G(S(YO))(~V\H(S(YO)IHO(S(YO))B' + A)\
+(1.15)
+and if \B'\ < ε3, where ε3 is another auxiliary constant. The last inequality holds
+if 4C4Bl\e32κίε3 ^ 1. The norm of the function H0(s(Y0))B' + A is bounded by
+B0eίβKίε3 + 4C4(Boe16κi)3ε2 ^ 2BoeίβKlε3,
+and we assume that 2Boe16κίε3 rgε2, so the function satisfies the assumption of
+Proposition 4 in this case. The inequality (1.15) holds for all admissible norms. It
+implies that the fixed point, i.e. the solution of Eq. (1.4), is an analytic function
+of B\ s(Y0) on the considered domains, it satisfies the bound
+\A0(s(Y0\H0(s(Y0))B>)\^4C4(B0e16^)3\B'\2
+< 4C4(Boe16κi)3ε23 ^ B0e16κiε3 ^ |ε2? (1.16)
+and the same bound for the other norms. This finally implies the desired result
+for the function
+Hk(s(Y0)9ff) = H0(s(Y0))B' + A0(s(Y0),H0{s(Y0))Bt)
+- H(s(Y0))D(H(s(Y0)l H0(s(Y0)Y + A0(s(Yo), H0(s(Y0))B')).
+(1.17)
+It is an analytic function of s(Y0),B', satisfying the bound
+\Hk(s(YolBΊ\S4Boel6κi\B'\<4Boe16κiε3^2ε2, (1.18)
+and the same bound for all admissible norms. Let us recall that all the considered
+functions and operators are analytic functions of the configurations U, J in a
+domain given by the conditions I.(i)-(iii) with some αΌ,αΊ, and all the bounds
+above are uniform on the domain.
+We have to consider the function B' yet. Notice that in the preceding
+considerations B' was a variable field. The function is given by the formula
+B' = gkCB-hD(gkCB). (1.19)
+It satisfies the bound
+B| + 4C2(O(l)gk\B\)2 S ClQk\B\ <C,εu (1.20)
+where Cx is an absolute constant, and gk\B\<ε1.
+Gathering together the above statements and estimates we obtain that
+Hk(s{Y0),B')) is an analytic function oϊs(Y0\B, for \s(Y0)\^eKl and gk\B\<ε1. It
+
+=== PAGE 7 ===
+Renormalization Group Approach to Lattice Gauge Field Theory
+has the estimate
+1e16^gk\B\<4BoC1e16κίεu (1.21)
+and the same for all admissible norms, if e32κi εί is smaller than an absolute constant.
+This constant can be easily obtained by inspection of all the above conditions. We
+have yet another condition for the function Hfe in (1.21), namely this function
+multiplied by tζu + tuζΏ has to satisfy the bounds (1.3.31). We assume that
+4B0 C1 e16κίε1 ^ £α2, and this implies that the product with tζD satisfies (1.3.31) with
+\a2. The product with ζ0 has the norms in (1.3.31) bounded by 4B0C1eίβκlgk\B\ <
+4B0C1e16κιε1, and we extend the expression in (1.10) analytically with respect to
+tπ satisfying \tΏ\4B0C1eί6κigk\B\ ^α2. Taking tπ for which the equality holds,
+we get
+^ 1gk\B\<SB0Cιe16κ^21ε1. (1.22)
+Let us come back to the expansion (1.10). We differentiate it with respect to
+ίD, at ίD = 0, and we represent all derivatives by the Cauchy formula. The term
+in (1.10) corresponding to a domain 70 is represented as
+(1.23)
+where the tπ -integration is over the circle (1.22), and the σ(zl)-integrations are over
+the circles \σ(Δ)\ --=eKi. We were doing all the considerations for the last term in
+(1.3.34), hence we estimate the above expression using (1.3.54). We get
+Y0\Π*\)exp(-κdj{X)). (1.24)
+Adding and subtracting sKιdk(\Z}0) under the first exponential above, we can
+bound it by
+^i4|yo\Π4|), 0-25)
+where 7 = 70 u Πo. Of course Y is a localization domain form Όk. The inequality
+(1.24) supplemented by the above bound is enough to control the sum over all
+terms (1.23) having a common localization domain Y. Before considering such a
+sum we have to take a common domain of analyticity for all terms in it. From
+the results of Sect. 1.3 it follows that the term (1.23) is an analytic function of
+configurations U, J, defined on the space \Jk + 1(Γ]0,(\ + 2/J)αo,(l -f 2/?)α1>α0). By
+the construction it depends on U, J restricted to 70u Do = ^ an^ ^e conditions
+outside Y are unessential. Thus we consider this space defined by the conditions
+I.(i)-(iii) on the domain Y, and we take its subspace U|+1 (7,(1 -f/?)αo,(l +/?)αlJα0).
+All terms (1.23) with the localization domain 7 are defined and analytic on this
+space.
+Now we consider the sum of all terms (1.23) having the same localization
+domain 7. It is a sum over all admissible Πo? ^o? j an<3 X- The expression defined
+
+=== PAGE 8 ===
+8 T. Balaban
+by this sum can be bounded using (1.24), (1.25). At first we consider the sum over
+X. We take XGΌJ,X C Q2. This sum can be bounded by two sums, the first is
+over Π'eπy, •' c Π2. This sum can be bounded by two sums, the first is over
+D'eπ;, D' <= D2, the second over XEΌJ such that Π' aX. For the second sum
+we have
+X exp(-κdj(X))^O(l\ (1.26)
+XeΌj,X ^ •'
+for K sufficiently large. The number 0(1) is in fact small, because we sum over X
+with dj(X) Φ 0, as it follows from our inductive construction. This inequality was
+used many times in convergence proofs for cluster expansions, for example see
+[48,50,40,26,3]. To bound the first sum, over •' c Π2, we use the factor (Ljη)5
+in (1.24). This yields (βLj^Uη, and the sum over j is bounded by 2(6L)4. The sum
+over Yo is simply a sum over subsets of the family of cubes Δ contained in Πo\ Π4.
+The number of terms in this sum is an absolute number, but we get a better bound
+using the last term under the exponential in (1.25). The sum is bounded by
+exp(8 123 exp( - i(κx - 1))) ^ e (1.27)
+for κ1 sufficiently large. Finally, the sum over Do can be bounded by
+M"4| Y\ £ 3 23dk(Y) ^ exp^Oq - 2)dk(Y). (1.28)
+Gathering together the above bounds we obtain
+IΣ(1.23)| £ E.ε, O(M*)exp 0(1)^ exp( - ±Kldk{Y)\ (1.29)
+with absolute constants 0(1), q. The constant q is a small, nonnegative integer,
+which can be easily calculated from the conditions on ax, α2, α3. Another possibility
+is to use the expression gk\B\ instead of ε^ It gives a better bound, but the above
+is simpler.
+These considerations and bounds were done on the example of the last term
+on the right-hand side of (1.3.34), but almost all of them are quite general and can
+be applied to all terms in the fluctuation field action. Let us discuss the other terms
+briefly. The simplest situation is for the remaining terms on the right-hand side of
+(1.3.34), or rather for expressions obtained by the transformations described in
+Sect. 1.4. We apply the expansion (1.10) to them, and the terms in this expansion
+can be bounded similarly as in (1.24), using the inequalities (1.4.5), (1.4.22), (1.4.36),
+(1.5.44), and other inequalities mentioned in the previous sections. The summation
+over all possible choices of Πo> YoJ>X yields an expression satisfying (1.29).
+Consider now the expression (1.3.7), or rather its analytic extension (1.3.15). It
+is determined by the functions H^ (δ/δB)Hjf besides the function Hfc, and it depends
+on the first two functions restricted to X. We introduce the parameters s in the
+same way as before, only the family σ0 is different. It is defined now as the family
+of all cubes Δ disjoint with the interior of Xo, where Xo is the smallest localization
+domain from Όk containing X. We apply the expansion (1.10). Terms in this
+expansion can be bounded using the inequalities (1.3.17), (1.21), and we obtain the
+bound
+
+=== PAGE 9 ===
+Renormalization Group Approach to Lattice Gauge Field Theory
+i (1.30)
+By the definition of the linear size functions they satisfy the following fundamental
+scaling inequality
+'dk(X0). (1.31)
+It implies that the last two exponentials in (1.30) can be bounded by
+exp( - (1 - δ)κdk{Y) - δκdj{X)), (1.32)
+if \(κλ — 1)^(1 — δ)κ,0<δ< 1. Now we sum all the terms having the same
+localization domain Y. At first we notice that each term is defined and analytic on
+the corresponding space (1.3.16) restricted to the domain Y. All these spaces contain
+the subspace U£ + 1(Y,(1 -b β)αo,(l +j5)αl5α0), and all the terms are defined and
+analytic on it. The summation over X is controlled in several steps. We fix a cube
+•'eπ, such, that Π'<=X, dist(ξ)(^, D) = dist(^(Π', D), and we sum over X
+containing •', using the second exponential in (1.32)? and the inequality (1.26) for
+δK sufficiently large. Next we sum over the cubes Π'? and this sum is controlled
+by the first exponential in (1.30). The first term under the exponential gives also
+the factor Ljη, which controls the sum over j. Finally, the sum over all possible
+cubes • can be bounded by
+M~4\ Y\ ^ 3 234(7) ^ Qxpδκdk(Y).
+These estimates yield again a bound of the form (1.29) for the considered sum,
+with the last exponential replaced by exp(-(l -2δ)κdk(Y)). We assume that
+(γβ)κ1 ^ (1 — 2δ)κ, hence we can bound both sums by the above exponential.
+The expression in (1.3.21), given by the last integral, is expanded and analyzed
+in almost the same way as the last term in (1.3.34), so we do not repeat these
+considerations.
+The results obtained for the expression in the curly bracket {•••} can be
+summarized as follows.
+Lemma 1. The second expression in the fluctuation field action in (1.2.13) is
+represented as the sum
+Ek(Uk(expiB'VW))-Ek(Uk(VM))= £ V'k(Y, Uk+i,B). (1.33)
+YeΌk
+For each term in the sum there exists a function Y'k(Yy\J,J,B), defined and analytic
+on the space
+Wk+ί(Y,(\+β)ao,(l+β)a1,«o)x{B:\B\<ειgk-1 on Y}, (1.34)
+i.e. it depends on configurations U, J, B restricted to the interior of Y, and such that
+\'k(Y,Uk+ι,B) = Yk(Y,Uk+ι,Jk+ι,B). (1.35)
+There exist absolute constants C1,C2,q, for which
+|Vi(y,U,J,B)|gJBoe1C1MίexpC2κ1exp(-(l-2δ)κdt(y)). (1.36)
+We would like to prove a similar result for the first term in the fluctuation field
+
+=== PAGE 10 ===
+10 T, Balaban
+action in (1.2.13). It is the function F{k)(gk,Uk + 1,B) and, as we have remarked
+already at the beginning of Sect. 1.3, this problem is much simpler for it, because
+of good regularity and boundedness properties on the unit lattice T{P. Nevertheless,
+there is one aspect of the problem which we have to discuss here. It is connected
+with the factor \jgl at many terms in this function. We have to cancel this factor,
+and this implies that we can get a bounded polynomial in B only, not the absolute
+bound of the type (1.36). Let us discuss it on the most important example of the
+expression (l/gl)V(H1B')9 where B' is given by (1.3.2). The function V is given by
+the formula (80) [15], which comes from the expansion (41) [15] of the Wilson
+action by the change of variables (47). In this function, as in all other terms, we
+replace the configurations Uk + ί9 Jk+ί by the variable U, J. We obtain an analytic
+function on the space U^+^T^α'o,^), with αJ^αΊ much bigger than oco,(xί. Let us
+recall that it is the space of U, J satisfying the conditions I. (i)-(iii) on the whole
+lattice Tη. The function V can have a natural localization connected with the sum
+over plaquettes in the Wilson action. We take the decomposition of unity 1 = ΣCΠ
+D
+constructed in Sect. 1.3. This decomposition is introduced into the sum over
+plaquettes, and we obtain
+V{H1B') = ΣVΏ{HιB'\ (1.37)
+G
+where in each term the sum over plaquettes is localized by the function ζ. Now
+we apply the decomposition (1.10) to each term in the sum (1.37). For a fixed cube
+• we take σ0 as the family of all cubes A disjoint with the interior of •• From
+the definition (80) [15] it follows that the sum in the decomposition is over all
+localization domains YczΌk containing the cube •• The term corresponding to
+a domain Y is represented as
+^^ (L38)
+The above expression is localized in the interior of Y, with respect to U, 3,Bf or
+B. It is an analytic function of (U, J) in the space UJ^ x (Tη, α'o, αΊ), and of B' in the
+domain {B':elβκi\B'\^a1 on Y}, as it follows from the considerations of the
+beginning of the section. The underintegral expression is analytic in σ(Y) on the
+polydisc \σ(Y)\Seκι. The estimates (33),(37),(55),(57),(58) [15] imply the bound
+|(1.38)| ^C3(e16κi|5Ί)3M4exp(-(/c1-l)M-4|7\ΠI), (1.39)
+where C3 is an absolute constant. To cancel the factor \jg\ we expand (1.38) with
+respect to B' up to the second order. The terms of zeroth and first order vanish,
+and the second order term is written as a quadratic form with coefficients given
+by second order derivatives of the function (1.38). The coefficients satisfy the bound
+~ O75rτ4^(( .38) with B' replaced by tB')dB'μ(x)dB'v(y)
+|7|), (1.40)
+if έ?16κi|B'|^30i- Taking B' as in (1.19) we obtain the above bound with |B'|
+
+=== PAGE 11 ===
+Renormalization Group Approach to Lattice Gauge Field Theory 11
+replaced by C1 εx. We fix a localization domain Y and we sum up all the expressions
+(1.38) with the domain Y, i.e. we sum over all admissible • c Y. This yields an
+expression satisfying the bounds (1.39), (1.40) with the additional factor M~4| Y\ ^
+expM"4|Y|.
+The above analysis was done on the example of the expression (l/gkz)V(H1Bf%
+but it can be done in the same way for all terms in F{k)(gk,\J, J,£), and we obtain
+the same decompositions and bounds, possibly with other absolute constants. In
+fact many of these terms are much simpler, and the above results can be obtained
+applying the generalized random walk expansions directly, or even more elementary
+means. Our last step is to sum up all the expressions with the same localization
+domain. The constructions and the results of this section are gathered together in
+the folloiwng lemma.
+Lemma 2. The fluctuation field action is represented as the sum
+P«\gk,Uk+ι,B) + {-..}= Σ Vk(Y,Uk + ι,B). (1.41)
+YeΌk
+For each term in the sum there exists a function Vk(Y,U, J,£), defined and analytic
+on the space (1.34), and satisfying the corresponding equality (1.35). This function is
+a sum of two terms
+\B,B)+Y'aYiB). (1.42)
+The matrix elements of the operator of the quadratic form satisfy the bound
+(1.43)
+and the function Y'k'(Y,B) satisfies the bound (1.36). The functions V^U, J,B), and
+both terms in (1.42), are gauge invariant with respect to the simultaneous gauge
+transformations (1.3.29), for Gc-valued transformations u in a sufficiently small
+neighborhood of all G-valued transformations.
+Let us remark that the last statement is a simple consequence of the statement
+in Sect. 1.3, in the paragraph containing (1.3.29), and of the fact that the operations
+in this section preserve the gauge invariance.
+2. A Final Localization by a Cluster Expansion. Analyticity Properties and
+Bounds for Terms in the Effective Action
+In the last section we have represented the fluctuation field action in the form
+(1.1.7) for j = k + 1, with the analyticity properties and bounds slightly better than
+demanded by the inductive assumption. Thus we have prepared the integral in
+(1.2.12), or (1.2.13), to the last step in our construction, to a cluster expansion
+yielding the decomposition (1.1.7). Let us suppress the dependence on the external
+gauge fields in the formulas below. We consider the integral in (1.2.13), with the
+fluctuation field action represented by (1.41). The first step is the Mayer expansion
+of the action density
+
+=== PAGE 12 ===
+T. Balaban
+= Σ n\dt(Y)jdμcίk)(B)χkexp\Σt(Y)\k(Y,B)]γ\Yk(Y,B). (2.1)
+DcDfc7eDθ \_YeΌ jYeΌ
+Each term in the sum over subfamilies D has the underintegral expression localized
+in the domain
+Y0={jY (2.2)
+YeD
+Next, for a fixed domain Yo we define the set of bonds YQ = {beTik)\b c
+Yo}\{feo(c):ce^(fc+1)}? and we take the following decomposition of the character-
+istic functions χk:
+Xk = Xk,Y0Xkjc0= Σ (-1)|/VYOXM» (2 3)
+gk
+Here the symbol | P | means the number of bonds in the set P. For a given set P
+we take the smallest localization domain ZoeΌk containing Yo and P. Let us stress
+that bonds of P have to be contained in the interior of Zo, they cannot intersect
+the boundary dZ0. We insert the decompositions (2.3) into the integrals in (2.1),
+and we write the sums over D and P as a sum over localization domains Zo,
+resumming all terms with D and P determining a given domain Zo. Let us denote
+by F(Z0,B) the resummed underintegral expression corresponding to the domain
+(2.1)= Σ \dμc«,(B)F(Z0,B). (2.4)
+The integrals above are represented in a similar way to (2.28) [6], namely as
+conditioning on Z%. Thus, we write the term corresponding to a domain Zo as
+|<5, C*ΔkCB))F(Z0,B) = jdμcw{B')
+jdB\Zoexp(-(Z<bB',C*ΔkCZ0B}-±(ZoB,C*ΔkCZ0B))F(Z0,B)
+β). (2.5)
+In the integral with respect to B' we make the linear change of variables
+B' = {C{kψ2X. This yields
+.dX{b)e 'll2Wbf
+• exp( - K C*Δ kCZc0(Ok))1/2X, 0k\ZQ)C*Δ kCZco{C(k))υ2X))
+
+=== PAGE 13 ===
+Renormalization Group Approach to Lattice Gauge Field Theory 13
+μUCk))1'2,Δk), (2.6)
+where the last equality is a definition of the function G, and the measure dμ0.
+The above expression depends yet on the external gauge field configurations
+on the whole lattice Tη, through the propagators and the operator in the definition
+of the function G. We localize it again by the method used in Sect. 1, introducing
+the parameters s and differentiating. There is a difference in comparison with the
+construction of Sect. 1, we take cubes from πk + 1, i.e. cubes of the size LM in the
+scale corresponding to the lattice Tψ We define σ0 as the family of such cubes A
+disjoint with the interior of Zo, or with the interior of Z'o, where Z'o is a union of
+the smallest family of such cubes containing Zo. The parameters s(Δ),Δeσ0, are
+introduced into the operators as before, but the generalized random expansions
+are constructed now in a slightly different way. We use the possibility mentioned
+in Sect. C [13], that the localization domains in expansions can be chosen to a
+large extent arbitrarily, they have to be only unions of connected families of
+Mi-cubes. We choose Zo as one of the domains, more exactly we take a domain
+Xo such, that X$ = Zo (let us notice the inconsistency in the notation, the tilde
+over Xo means that M1 -cubes are adjoined, and the tilde over Zo concerns
+M-cubes). Other localization domains X are chosen as in Sect. C [13], i.e.
+they are unions of small, connected families of Mj-cubes, and we assume
+that dist(X, Zo) > §M. For this class of localization domains we construct the
+generalized random walk expansions. This construction was discussed in [13] for
+all operators determining Δk, and for C(fe)(Z0), but not for (C(/c))1/2. To expand the
+last operator we use a method similar to the method of Sect. C [16]. There it was
+applied to expand the determinant of this operator, see (63) [16]. Now we can
+simplify it a bit using a better decay property of an underintegral function, and
+we have
+=-? dxx'll2(xl + CΔ.Cy1
+π o
+Expanding the operator Δk into the generalized random walks, we obtain
+an expansion of the series above, if yx is sufficiently large. The resolvent
+(xl 4- C^ΔkC)~1 has a representation similar to (C*ΔkC)~1. More exactly, the
+operator C{xl + C*ΔkC]~ιC* is representated by the integral (3.185) [13] with
+the additional term —%x\\χ*(QA + Dμ(QA))\\2 under the exponential function,
+where χ* is the characteristic function of the set of bonds T{]c)\{b0(c)'.ceT{k + 1)}.
+This term determines a nonnegative, bounded and almost local operator. The
+integral yields the representation (3.185) [13], with the operator G2 replaced by
+G3(x), which is defined as G2, but with this additional operator. The operator
+G3 (x) has the same properties as G2, especially it can be expanded into a generalized
+random walk expansion. This yields an expansion of the integral above, hence an
+expansion of (C(k))1/2 also.
+Using these expansions we introduce the parameters 5, and we apply the
+
+=== PAGE 14 ===
+14 T. Balaban
+decomposition (1.10),
+,Δk) = Σ Π \ds(Λ
+•μμ0(X)G(Z0,X,C(kHZ0,s(Z)),(Okψ>2(s(Z)),Δk(s(Zm
+0). (2.8)
+The sums are over Z such, that each connected component of Z contains a
+component of Z'o. The equalities (2.4), (2.6), (2.8) imply
+(2.1) = £ff(Z), where H(Z)= £ H(Z9Z0). (2.9)
+z zo zoc=z
+This is the desired expansion into localized quantities. The function H(Z) is localized
+in the interior of Z with respect to the external gauge fields. From the definition
+of H(Z) it is also clear, that if Z = Zγ u u Zπ, where Z{ is a connected component
+of Z, then
+(2.10)
+Thus finally we obtain the polymer expansion
+(2.1)- £ H(Z1)..-H(ZII)=1+ Σπ" Σ Π
+(2.11)
+where the function ζ(Z, Z') is defined by the condition: ((Z, Z') — 0 if Z n Z' contains
+a cube, or a wall of a cube, and ζ(Z,Z') = 1 otherwise.
+If the activities H(Z) of the above polymer expansion are sufficiently small, then
+the polymer expansion can be exponentiated according to the well-known formula,
+see [36,60,26,25,67,50]. We obtain by (1.2.13), (1.41), (2.11)
+E(k+1)=£A Σ PΓ(Z1,...,Zπ)H(Zι)...H(ZB), (2.12)
+where pτ(Z)= 1, and
+PΓ(Z1,...,ZB)= Σ Π (αz^z^-i),
+Cπ is the set of connected graphs on the set {!,...,n}. The representation (1.1.7)
+for E(/c + 1) is constructed by taking
+oo 1
+E<*+1>p0=£- X pτ(Zι,...,Zn)H(Z1)-H(Zn), (2.13)
+"=1 W (Z1; ...Zn) C/Zj = Z
+where IeDfc + 1. To end the proof of the first part of Theorem 3 we have to prove
+the bounds (1.1.18). We also need bounds to prove a convergence of (2.12), (2.13).
+In the rest of this section we will prove bounds and discuss analyticity properties
+of the functions (2.13).
+We start with a discussion of analyticity properties of (2.13). The activities H(Z)
+are sums of many terms, more exactly the sums in (2.9),(2.1), (2.3) over Z0,D, P.
+
+=== PAGE 15 ===
+Renormalization Group Approach to Lattice Gauge Field Theory 15
+The subfamily D is important for the analyticity properties, because it determines
+the potentials Vk(Y, B). They can be extended to functions of (U,J), analytic on
+the space U£+1(y,(l+β)α0,(l +jS)αlJα0). Of course 7ciZ0? and Zo c Z c X for
+the activities in (2.13). The potentials are also analytic functions on the subspace
+U£ +! (X, α0, αj). The quadratic forms and covariances in H(Z) are analytic functions
+on the space of configurations (U, J) satisfying the conditions I.(i)-(iii) on the domain
+Z, with constants OL'o,a\ much bigger than αo,αt, therefore we can restrict them,
+as analytic functions, to the above subspace. Thus the activities in (2.13), and the
+whole sum E(/c + 1)(X), are analytic functions of (U, J), on the space Uck+1(X, αO'αi)
+This is the analyticity statement in the inductive assumptions.
+To get a bound for H(Z) we consider a term in the sum over D, P. This term
+can be written in the following form:
+- (B,Γk(Z0,σ(Z))Xy)
+•(- lf]Xk.γQ(B)ύAB)exp\ Σ τ(Y)Vk(Y,B)\ (2.14)
+LY^D J
+where
+Γk(Z0,σ(Z)) = C*Δk(σ(Z))CZc0(C(k))ι/2(σ(Z)).
+We consider it as an analytic function of (U, J) in the space U£+1(.AΓ,α0,α1), and
+of the complex parameters σ(Z\ τ. This complicates estimates of this expression,
+because the operators in it are not symmetric, and the second measure is complex.
+We use the fact that, by the definition of the space, the configuration U can be
+written as U = U'U.U' = expiL~~1ηA\ and Ά',J have values in gc, but they are
+small. More precisely we have |X"|,|V£~lηA'\ < cq, |J| < α0. For the pair
+(ί/,0) the operators are symmetric, and the measure is positive, and then the
+estimates are simpler. The general case is handled by a perturbative argument.
+The first estimate is
+det(Re C(ft)(Z0,
+(2.15)
+In the expression on the right-hand side we replace the operators by the
+corresponding operators with σ(Z) = 0, U = U, J = 0, and we estimate the error.
+For the quadratic form in the first exponential the difference is a quadratic form
+
+=== PAGE 16 ===
+16 T. Balaban
+%(X,RiXy, with matrix elements satisfying the bound
+IKα(&,&')I ^(0(l)β-1/3^M + 0(oίo + α1))exp(-^0|b_-&/_ |). (2.16)
+We have assumed, as in Sect. 1, that M is much bigger than κl9 especially that
+e-i/3<5oMgi6κi < i jfoQ determinants in the next factor are equal for the new
+operators, hence this factor can be estimated by
+exp((O(l)<Γ1/3δoM + O(α0 + α1))|Z0|). (2.17)
+Similarly, the next Gaussian measure is replaced by the measure with the new
+covariance, multiplied by a quotient of determinants, which can be estimated by
+(2.17), and by the function exp£<5, JR2J3> with R2 satisfying (2.16). In the second
+exponential the difference between the new bilinear form and the form in (2.15) is
+a bilinear from — (B,R3X) with R3 satisfying (2.16). The expression in the last
+exponential can be estimated using (1.42), and the inequalities (1.43), (1.36). We
+take a small, positive number α4, to be chosen later, and
+^ (2.18)
+We assume that ^(κ1 — 1) ^ (1 — 3δ)κ9 C3 ^ £0Cl5 and q ^ 8. The quadratic form
+in (1.42), after multiplication by |τ(Y)|, can be bounded by
+* b,b' cz Y
+(2.19)
+The sum of these quadratic forms over YGD is bounded by a quadratic form with
+the above matrix elements resummed over all YeΏk containing, for example, the
+point fe_. We use the first exponential factor in (2.19) to bound the sum, and this
+yields a constant 0(1). In fact the constant is small for κ1 large, hence we can
+bound it by 1. Using (1.28) we obtain
+£ \B(b)\2
+Yε?Ό b^Y0
++ 0(l)α4M-4|Y0|. (2.20)
+The other quadratic forms, i.e. the forms Rl9R2,R3, can be bounded in a similar
+way using (2.16), by the forms
+Finally we estimate
+(^4\ (2.22)24lll72ll
+^ 9k
+where y2 is a small, positive constant. Applying the above estimates to the
+
+=== PAGE 17 ===
+Renormalization Group Approach to Lattice Gauge Field Theory 17
+expressions under the integral in (2.15), we obtain the following integral:
+ίdμo(X)|zexp(-|<Γ,(Zθ50)X?C(fe)(Zo,0)Γ,(Zo?0)Z>+iα5||ZX||2)
+iα5||Z0β||2)? (2.23)
+where α5 - 0(l)e~lf3δoM + O(α0 + αx) + 0(l)α4 + y2. It is a Gaussian integral, and
+can be easily calculated. At first we calculate the integral with respect to B, including
+the last two quadratic forms under the exponential into the Gaussian measure. It is
+equal to
+det(C(fc)(Z0,OΓ 1/2
+det(C(/c)(2:0?0)-1-α5/)
+(2.24)
+Of course we have assumed that α5 is sufficiently small, e.g. α51| CW(ZO, 0)|| <\.
+The factor with the determinants can be estimated by expO(l)α5|Z0|. The
+quadratic form under the exponential is expanded with respect to α5, and the
+zeroth order term cancels the first quadratic form under the first exponential in
+(2.23). The remainder can be estimated by ^0(α5) || ZX ||2. In fact a better bound can
+be proved using localizations and the exponential decay of operators in the above
+expressions, but we do not need such a bound. These calculations and estimates
+yield the following integral
+j^0(^)|zexpiO(α5)!|ZX||2 = Π(l-C>(α5))1/2'<(g)^exp(O(α5)|Z|). (2.25)
+beZ
+This ends the estimate of the expression (2.14). Gathering together all the bounds
+we get
+(-(fc1 - l)(LMΓ4|Z\Z'0|)
+^ 9k
+expO(l)α5|Z|. (2.26)
+As we have remarked already it is possible to get a better bound, e.g. with \Z0
+instead of \Z\ in the last exponential, by more careful estimates of the quadratic
+forms.
+To get a bound for H(Z) we have to perform the resummation of the terms
+(2.14) over D,P and Zo. We do it in the following order. For a fixed Yo we sum
+over all D satisfying (2.2). Next, we sum over Y0,P determining a fixed Zo. Further,
+for a fixed Z'o, we sum over all possible Zo determining this fixed Z'o. Finally we
+sum over all Z'o cz Z. To bound H(Z) we use the estimate (2.26) for terms of these
+sums, and we bound the sums using the factors on the right-hand side of (2.26).
+Let us start with the sum over D satisfying (2.2) with a fixed Yo. The set 70 is
+a union of its connected components, Yo = (J Yh and this decomposition induces
+the decomposition of the families D, D = (J Dί5 Dt satisfy (J Y = Yf. The sum over
+D factorizes into independent sums over Όh similarly the product over YeΌ in
+
+=== PAGE 18 ===
+18 T. Balaban
+(2.26) factorizes into products over 7ED;. For simplicity let us denote by Yo one
+of the components. Consider the product over YEΌ in (2.26). We extract the
+expression α6 exp( — δκdk(Y)) from each factor in it, where α6 is a sufficiently small,
+positive constant. Because (J Y = Yo and Yo is a connected domain, hence the
+YeΌ
+definition of dk(Y) implies the inequality
+X(4(7) + 5)^4(70) + 5. (2.27)
+YeΌ
+Assuming 2£oε] C1 a~4 xa^λMqexp C2κί exp 5κ ^ 1, we have
+Π •••(in (2.26)) :g Π *bexp(-δκdk{Y))
+YeD YεΌ
+-lEoB^^^a^ι Mq exp C2κιexp{- (1 ~ 4δ)κdk{Y0)). (2.28)
+Now we estimate the sum over D satisfying (2.2). We use the product on the
+right-hand side above. For K sufficiently large and α6 sufficiently small we have
+L (2.29)
+D YeΌ
+Inequalities of this type were proved many times, the above can be proved, for
+example, by a simple modification of the argument in [26]. In connection with
+this notice the following useful inequality
+(3 23Γ XM~4| Y\ g dk(Y) ^ AT4| Y\ - 1 (230)
+holding for localization domains YeΌk. The inequalities (2.28), (2.29) yield a bound
+of the sum over D.
+Now we consider the sum over Y0,P, with fixed Zo. It is controlled by the
+exponential factor with |P| in (2.26). The definition of Zo yields |P|^M~4|Z0\70|,
+because one bond in P may connect two cubes in Z0\70. We decompose the
+exponential factor into a product of five equal factors. Four of them are bounded
+using the above inequality, the fifth is used to bound the sum over P, with a fixed
+Yo. We have
+{[|(-ly2|)]}^l (2.31)
+for g%, i.e. y2 sufficiently small, depending on M and K. In general the set Zo is a
+union of connected components. Let us denote one of the components by Zo. It
+contains Yo = \J y.. By a simple geometric argument we have
+"\Z0\Y0\^dk(Z0). (2.32)
+Assuming
+20y2i-20y2?-4fC'
+
+=== PAGE 19 ===
+Renormalization Group Approach to Lattice Gauge Field Theory 19
+and denoting ε2 = 2Eoε1C1a^xi^ 1Mqεxp C2κ1, we obtain
+Z0)). (2.33)
+We have used the assumption ε2 ^ 1, and the fact that if Yo is empty, then we have
+the exponential factor. For simplicity let us assume that
+expl -
+Finally, we have the sum over 70 czZ0, or over Zo\ Yo. The remaining factor is
+used to bound this sum
+Σ expf ~^724M~4lzo\^ol)^exp(exp(-^y24)M--4iZo|). (2.34)
+zo\yo \ zu βk ) \ \ zu y ) j
+The exponential on the right-hand side multiplied by exp( — δκdk(Z0)) can be
+estimated by 1.
+Let us write the inequality we have obtained for the partially resummed terms
+(2.14). The set Zo is a union of connected components, Zo = [jZh and we have
+^exp(-(κ1-l)(LM)-4|Z\Z/0|)
+Ό,P
+|Z|. (2.35)
+The next step is to bound the sum over Zo, with Z'o fixed. Again the set Z;o is
+a union of connected components, which are localization domains from Dfe+1, and
+we denote by Z'o one of the components. The set Zo determining it is a union of
+connected components, Zo = (JZί5 and we denote by Z the smallest localization
+domain from Dfc + 1 containing Zt. The sum over Zo is decomposed into several
+sums. For each Z we sum over all possible components of Zo determining this
+Z . The we sum over all families of domains Z such, that (JZ = Z'o. Consider the
+sum over the components with a fixed ZJ. We extract exp( — δκdk(Zi)) from each
+exponential in (2.35), corresponding to one of these components. The remaining
+exponential is bounded using the following inequality:
+2dk(Zi)^Ldk+1(Z'i). (2.36)
+This inequality can be obtained by simple, but awkward, geometric and combi-
+natoric considerations. It follows by considering locally many possible cases. Now,
+the sum over the components can be decomposed into a sum over one component,
+plus a sum over two components, and so on. A sum over n components is
+estimated by a product of n sums, each of them is a sum over independently
+changing components. The last sum is estimated using (1.28), with K replaced
+by δκ> and with an additional sum over (L + 2)4 cubes •' from πk9 the cubes
+
+=== PAGE 20 ===
+20 T. Balaban
+touching a fixed LM-cube in Z\. This yields a bound similar to (2.35), with ε2
+replaced by (L + 2)40(l)ε2, and (1 — 5δ)κdk(Zι) in the exponentials replaced by
+(1 — 6δ)^Lκdk+ι(Z/i). For n > 1 we leave only one exponential, estimating by 1 the
+remaining ones with the same domain Z\. The sum over n ^ 1 is now bounded by
+2(L + 2)4<9(l)ε2, assuming that (L + 2)40(l)ε2 ^ \. Finally, the sum over all families
+of different localization domains Z from Ώk+ί, satisfying the condition [j Z = Z'o,
+is estimated using (2.29). We have δ^Lκdk + 1(Z[) instead of δκdk(Y\ but the
+inequality (2.29) is valid for all k. The inequality (2.27) is used for the remaining
+exponential factors. Assuming that 2(L + 2)4O(l)ε2 exp 5κ ^ 1, we obtain for a fixed
+Z'o,
+Σ (2 14)D,P,Z0
+Γ Ί• f|2(L+ 2)4O(l)ε2exp( — (1 — Ίδ)^Lκdk+1(ZΊ)) expO(l)α5|Z|?
+L i J
+(2.37)
+where now Z\ denote connected components of Z'o.
+The last sum to estimate is the sum over Z'o, or over Z\Z'O. Using the
+inequality (2.32), properly adapted to the new situation, we bound the exponential
+factors in the square bracket above, and half of the first exponential factor, by
+exp( — (1 — lδ)\Lκdk + 1 (Z)). Of course, we assume that \{κx — 1) §: 2Lκ. The sum
+over Z\Z'O is bounded, using the remaining factor and an inequality similar to
+(2.34), by exp(exp( — \{κx — 1))(LM)~4|Z|). This exponential is of the same type as
+the last exponential in (2.37), which can be written as expO(l)(LM)4α5(LM)~4|Z|.
+Let us recall the definition of the constant α5:
+α5 = O(l)e~1/3δoM + O(ao + OLX) + 0(l)α4 + y2.
+We assume that (LM)4α0, (LM)4α1? (LM)4α4,(LM)4y2 are bounded by a constant
+independent of M, for example by 1. Then 0(l)(LM)4α5 + exp( — ^(κ1 — 1)) is
+bounded by an absolute constant. We use the factor exp( — δ\Lκdk+γ(Z)\ and
+the inequality (2.30), to bound the exponentials by 1. We leave one factor
+2(L + 2)4O(l)ε2, and the remaining factors are estimated by 1. We define the
+constant C3 = 2(L + 2)40{l)2E0C1otϊ1oL(;1 MqexpC2κ1.
+Thus we have finished the estimate of the resummed terms (2.14). The sum
+defines the activity H(Z), and we have proved the following lemma.
+Lemma 3. Under all the above restrictions on the constants M, K, κ;l5αo,α1,α4,α6,
+72,y,εl5 the activity H(Z) for a localization domain ZeΌk + 1 satisfies the inequality
+\H(Z)\ S C3ε1 exp( — (1 — Sδ)^Lκdk+ί(Z)). (2.38)
+The above lemma implies that sufficient conditions for convergence of the series
+(2.12), (2.13) are satisfied, see [26,67,25,50]. We want to prove the inequality (1.1.18)
+for E{k+1)(X). The series (2.13), defining Έ{k+1)(X\ is estimated in the standard
+way, each factor \H(Z)\ is replaced by the right-hand side of (2.38) in the bound.
+Consider a term in the sum. We have a product of n exponentials from (2.38). We
+
+=== PAGE 21 ===
+Renormalization Group Approach to Lattice Gauge Field Theory 21
+extract the exponential exp( — δ^Lκdk + 1(Zi)) from the z-th factor, and the
+remaining product is estimated using (2.27), and the condition u Zf = X, X is a
+connected domain. This yields
+•Σπ Σ \pτ{Zl9...9Zn)\f\C3ε1exp5κexp(-δ$Lκdk+1(Zi)).
+n=ln (Zί,...,Zn):uZi = X ΐ=l
+(2.39)
+To the above sum we can repeat all the considerations and bounds of the paper
+[26], for K sufficiently large, and ε1 sufficiently small. We obtain
+ZczX
+(2.40)
+The last sum is bounded by C3ε1 exp5κO(l)(LM)~4\X\ <; C3ε1 exp5?cθ(l)
+exp(LM)~4|X|, and the last exponential multiplied by Qxp( — ^δLκdk + 1(X)) is
+bounded by 1. This yields
+\^k + 1)(X)\^O(l)C3εlQχp(-(l-10δ)^Lκdk+1(X)). (2.41)
+Now we make our last assumptions. At first we assume that (1 — 10<5)^L= 1, or
+<5 = γfr(l — 2L"1). Next, we assume that O(l)C3ε1 ^jE0. In fact this assumption
+is unessential, because the constant C3ε1 is small anyway, and we can take Eo
+such, that the assumption is satisfied. The assumptions allow finally us to fix all
+the constants, or rather bounds on these constants.
+The inequality (2.41) and the assumptions imply the inequality (1.1.18), with
+jE0 instead of Eo, for the terms of the effective action E{k + l) in (1.1.3). The effective
+action in (1.1.6) is obtained by adding to the above action the expression
+PogZ<*>(C/k+1)-logZ<k>(l)].
+For this expression we construct the representation (1.1.7) using the generalized
+random walk expansion for Zik)(Uk+1). The expansion was constructed in [16],
+see the formula (63) there, and the discussion after it. We gather all terms in the
+expansions, localized in X, and we extend them to analytic functions of U, J. The
+expression localized in X satisfies the bound (1.1.18) with K replaced by <50M, and
+with an absolute constant instead of Eo. We define \EQ as equal to this constant,
+and we take M sufficiently large, so that δ0M ^ K. This yields the bounds (1.1.18)
+for terms of the effective action in the representation (1.1.6) also.
+Let us make a last remark about the expressions (2.14). By Lemma 2, and the
+transformation properties of the operators in (2.14) with respect to gauge
+transformations, e.g. see (3.28)—(3.34) [13], the expressions (2.14) are gauge invariant
+with respect to all G-valued transformations. The expressions are analytic functions
+of (U,J), hence the invariance can be extended, by the analyticity, to Gc-valued
+gauge transformations in a small neighborhood of the space of G-valued ones.
+This means that the expressions are constant on intersections of orbits with the
+
+=== PAGE 22 ===
+22 T. Balaban
+corresponding space of configurations (U, J) satisfying the conditions I.(i)-(iv). We
+extend them to constant functions on whole orbits having non-empty intersections
+with the space.
+The above remark completes the proof of the inductive assumptions for the
+action Λk+ί, hence the proof of Theorem 1.3.
+References
+1. Balaban, T.: Renormalization group approach to lattice gauge field theoreis. I. Generation of effective
+actions in a small field approximation and a coupling constant renormalization in four dimensions.
+Commun. Math. Phys. 109, 249-301 (1987) and references therein.
+Communicated by A. Jaffe
+Received September 23, 1985; in revised form October 5, 1987
+
