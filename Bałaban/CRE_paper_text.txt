@@ -1,0 +1,1650 @@
+=== PAGE 1 ===
+Communications in
+Commun. Math. Phys. 119, 243-285 (1988) Mathematical
+Physics
+© Springer-Verlag 1988
+Convergent Renormalization Expansions
+for Lattice Gauge Theories
+T. Balaban*
+Department of Mathematics, Boston University, Boston, MA 02215, USA
+Abstract. In this paper we introduce an inductive description of the complete
+effective densities including large field domains, and we show that the
+renormalization transformations preserve the form of the densities. This
+completes the renormalization group analysis for superrenormalizable models
+and yields convergent expansions in this case.
+0. Introduction
+In this paper we continue our study of the renormalization group analysis of the
+non-Abelian lattice gauge field theories. In the previous papers, referred to as [I, II],
+we have analyzed the renormalization transformations in the small field regions.
+The basic goal here is to do such an analysis for the complete model, without any
+restrictions on field variables, i.e. including all large field regions. Thus we study the
+complete renormalization transformations Γ, without any restrictions on integra-
+tion variables. Let us recall that they are of the form
+(Tρ)(V) = μUδ(OV-1)ρ(U) , (0.1)
+where ρ(U) is a function of the gauge field variables ί/ona lattice T, 0 is the
+averaged field on the lattice Γ(1), and Fis a new gauge field on the lattice Γ(1). The
+averaging operation is defined by the formula (0.4), or (0.12) in [I], but we may take
+any averaging operation satisfying several general properties, analogous to the
+properties (0.5)-(0.9) [I]. We have to apply an additional operation after each
+renormalization transformation T. This operation is denoted by R, and it changes
+effective densities on large field regions. Thus, we construct a sequence of effective
+densities {ρk} by applying successively the operations R71 to the initial density
+ρo = exp [ — (l/gl)A —E], where A is the Wilson action, and E is a normalization
+* Research supported in part by the Air Force under Grant AFOSR-86-0229 and by the National
+Science Foundation under Grant DMS-86-02207
+
+=== PAGE 2 ===
+244 T. Baίaban
+constant. We have
+Qk — **--LQk — i—v *--' ) Qo ' \y ^)
+and we finish the inductive procedure when we reach the unit lattice. All the details
+of the procedure, in particular all geometric definitions, are summarized in the
+Introduction in [I], and in previous papers, references to which can be found in [I].
+To describe the effective densities ρk, and to understand their properties, we apply a
+combination of the methods and the representations of the papers [16], [I]. The
+numbers here mean the numbers in the references to [I]. Basic aspects of the
+procedure are the same as in the paper [16], i.e., we do the integration, and all the
+other operations, in the small field regions only, but there are two fundamental
+differences. The first is, that now we are interested not in bounds, but in a precise
+description of the effective densities in the form of convergent expansions, so we
+apply the whole analysis of the paper [I] to expressions in the small field regions.
+The second difference is that we apply the additional operation R, which changes
+expressions connected with the large field regions. Let us explain briefly why it
+is necessary to make such changes, or why it is necessary to renormalize the large
+field expressions, and what is the general structure of the operation R. Consider a
+large plaquette variable in the first step. The restrictions on these variables are the
+same as in [16], so we have \U(dp) — l\^gopo(go) for a plaquette peTί9 where
+p0(g0) = A0(\oggQ2)Po with a positive integer p0. The term in the Wilson action,
+corresponding to the plaquette /?, gives the estiomate
+exp Γ -1 [1 - Retr U(dp){\ ^ exp ( - ^ Pi (do)) ύ ΰo°
+For d<4 we have go = gε1/2(4~d\ and the bound above can be estimated by an
+arbitrarily large power of ε. This is enough to control expressions arising in the large
+field regions surrounding the plaquette/? for all steps of the procedure, i.e., until we
+reach the unit lattice. For d=4 the bare coupling constant behaves asymptotically
+as (a + blogε'1)'112, for ε->0, with some positive constants a, b, hence the bound
+does not give any positive power of ε. It is still small for ε small, and it controls a
+large number of steps, but this number is a small fraction of the total number of
+steps. Thus, for some large field regions there is a difficulty in continuing the
+procedure of [16], the small factor arising from large fields in this region does not
+control further steps. In such situations we have to change the procedure in order to
+improve the small factor, i.e., we have to be able to renormalize the expression
+corresponding to the large field region.
+The operation R serves this purpose. We will not describe it here, we will only
+assume that it has some properties incorporated in the inductive description of the
+effective actions.
+Let us explain now what is the basic result of this paper. We give a detailed and
+precise description of the effective densities ρk in terms of convergent expansions,
+and we show that Tρk satisfy the same assumptions. This description is quite
+complicated and technical, and it occupies all of Sect. 2, so here we can formulate
+only a theorem, or rather an idea of a theorem, referring to the later description.
+Thus we have
+
+=== PAGE 3 ===
+Convergent Renormalization Expansions for Lattice Gauge Theories 245
+Theorem. Ifρk satisfies the assumptions described in detail in Sect. 2, then Tρk satis-
+fies also the corresponding assumptions.
+This whole paper gives a proof of this, and related theorems. Let us make few
+comments about the proof, and the presentation. We apply the rule that if some
+aspect of the procedure is discussed in one situation, this discussion is not repeated
+in other situations, only changes and modifications. For example, in paper [I] we
+have discussed in detail the renormalization of the effective actions, and the
+localization operation for terms of the actions. Here we do not repeat these
+discussions although we need the results of the operations in many places, we
+describe only in each case necessary changes. Generally, we discuss in this paper new
+issues only thus we describe in detail all operations connected with introductions of
+characteristic functions for field variables. Many new characteristic functions
+appear in connection with large field regions, and they play an important, although
+quite technical, role in the procedure.
+Thus, the papers [I, II] are an essential part of the whole analysis, and the results
+obtained here are based on the results of those papers. In fact, the analysis of
+expressions connected with small field regions is the most important part of the
+method, and even analyzing the ^-operations in the future we will consider only
+small field parts of the corresponding large field regions, and we perform operations
+in this part only.
+1. The First Renormalization Transformation
+We analyze the integral defining the first renormalization transformation (0.1),
+mainly to understand some basic features of the inductive assumption which will be
+formulated in the next section. Many of the operations described here are common
+for all steps of the renormalization procedure, and we will mention them only briefly
+in the sequel.
+At first we introduce two additional partitions of the lattice Tγ into large cubes.
+The first is a partition into cubes of the size MR0, where Ro is the smallest power of
+L such that R0^(\oggQ2)r, r^2, and M=Lm is sufficiently large. The second is a
+partition into cubes of the size LM2 Ro, where M2 = Lm2, and Mί < M2 < M. Let us
+recall that Mγ is the size of large cubes for which all the theorems of the previous
+papers, especially those concerning the variational problem, are valid. We fix M2
+not too much larger that Mγ, e.g., we can take M2 = L2M1, and M will be chosen
+much larger than M2. The choice will be dictated by many conditions involving this
+constant. The above partitions have to be compatible, and compatible with the
+partition π0 as well, and with other partitions introduced later. The cubes of the
+second partition are denoted by •• The operation ~ applied to these cubes means
+adding one layer of M2 Ro -cubes touching Q Usually this operation applied to other
+sets means adding one layer of cubes taken from this family of cubes, in terms of
+which the sets are defined.
+Now we introduce the decomposition of unity, similar to the decomposition (7)
+in [16]:
+
+=== PAGE 4 ===
+246 T. Baίaban
+1=Σ Π zfjsup \U(dp)-l\<εo\) Π xfjsup \U(dp)-l\^ε0
+where the sum is over sets Po, which are unions of the cubes of the second partition
+introduced above, i.e., unions of the LM2R0-cubes. There are two convenient
+choices of the positive constant ε0. The first is the same as in [16], i.e., in the first
+step we take εo = gopo(go), po(Qo) = AoQ°^do2)P^ A>^5r and Λ is a sufficiently
+large constant. The second is obtained by replacing g^1 in the logarithmic factor
+P(QO) by its upper bound coming from the inequality (0.33) [I], i.e., we take ε0
+= g0A0(\ogyQ2)Po, 7Q"2 = y~2 + jSlogε"1, β,y>0. The first choice is simpler, and
+more convenient to study connections with perturbation expansions. The second
+choice is more convenient in some nonperturbative aspects of the procedure, but it is
+technically more difficult and we assume here that ε0 is given by the first formula. If
+a plaquette// is contained in CPQ)(1), then Proposition 1 [12] implies that the new
+field Vsatisfies the bound \V{dp')~ 1| <2L2ε0. We introduce stronger restrictions
+on Kby a next decomposition of unity. We introduce the next two partitions of the
+lattice 7j. The first is into cubes of the size LMRγ, where Rγ is the smallest power of
+L such, that R1 Ξ>(logg1~~2)'\ The second is into cubes of the size LLM2Rι. For the
+more natural scale L"1 these are partitions of the lattice TL-ι into MR1 -cubes and
+LM2R1 -cubes correspondingly. Denote by PQ the union of the LMRX-cubes
+intersecting Po, and take PQ~ (the operation ~ is determined by the LMRX-cubes).
+For every L2M2i?rcube Π' contained in (Pό~)c we construct the function Uί Ώ>{V)
+as
+j D'~4),M"(βfK)) , (1.2)
+where B1(Π'~4) is the minimal determining set based on Π'~4, and Qf4V was
+introduced in (4.5.3) [18]. Let us recall the definition
+(Q V(c) for beB(c) = {b:b.eB(c_),b+eB(c + )} , ceTω .
+(1.3)
+The function in (1.2) depends on the field V restricted to Π'~4. Now, the next
+decomposition of unity is
+1=Σ Π X[< supPi D'CPf \(j>CD'~
+• π xffsup \uuπ,(v,dp)-i\^ε1L-2\)=Σχί(Pί)χci(Pi) , (1.4)G'CP1 \lpCO'~ )) Pi
+where the sum is over sets Px CZ(PQ~)C, which are unions of the L2M2R1 -cubes, P{
+denotes the complement to (Pό~)c> and ^i =0iA)(0i)
+Denote by P{ the union of the LMRγ -cubes intersecting Pί9 and denote P{
+K(ΛΓ)C^(Λ) )c)(1) In blocks of B(P{) we introduce the axial gauge fixing
+expression, the same as in (0.16) [I]. Thus we use the identity
+
+=== PAGE 5 ===
+Convergent Renormalization Expansions for Lattice Gauge Theories 247
+1= Π Π ί^W-χ({|t/"(>',x)-l|<βo})expΓ—ί[l-Retrt/"(>',x)]l ,
+yeP\ xeB(y) Z L #0 J
+z*y
+(1.5)
+where U(y,x) are the variables introduced by (0.11) [I]. We insert it under the
+integral, and we apply the Faddeev-Popov procedure. This yields the equality
+-expl -\ G(Pl,U)-\ A(U)-(L*-l)\Pl\logz-E\ , (1.6)
+L 9o #o J
+where
+G(Pί,£/)=Σ Σ [1-Retr [/(>•, x)] . (1.7)
+yeP\ xeB(y)
+x*y
+Let us make a remark about the gauge fixing. The main point in introducing it in
+the form (1.5) is to preserve the Euclidean invariance, but this can be done also with
+the gauge fixing defined by the ^-functions of the contour variables U(Γy x), as in
+[16] and in the previous papers. For a chosen coordinate system in a block we fix the
+gauge introducing the (5-functions, as in (9), (10) [16], and we average over the
+Euclidean transformations of the lattice, leaving the center of the block invariant.
+This definition has all the properties necessary for the method presented in this
+paper, in particular it is localizable in subdomains of the lattice, so it can be an
+alternative to the above definition.
+Trying to imitate the procedure in the paper [I] as closely as possible we should
+introduce now restrictions on a fluctuation field. This field is not defined yet,
+therefore we introduce restrictions on an approximate fluctuation field. A good
+approximation on a cube Π'c5(?ί) is given by UU^,, where UUΏ. is taken in
+the axial gauge. It is easy to see, by the same reasoning as in the proof of Lemma 1
+[14], that |[/[/-^-l|<0(L2)εo on Π'~2. A domain of this type, with 0{L2)
+replaced by a small constant, is also contained in the domain of integration in (1.6).
+These remarks serve as a justification of the following decomposition of unity:
+1=Σ Π x(\ sup
+l \(j(D'~2)*
+sup \U(b)U1-1π,(b)-l\^2δΛ] = Σxo(Qί)Xo(Qi) , (1.8)
+Π2* ))
+where the sum is over sets Qx d{B(P\)Y~ι =((B(Pl)c)~)c, which are unions of the
+L2M2Rί-cubes, and δo = goA1po(go) = (AJA0)ε0. We assume that the constant Ao is
+much larger than Aί. The superscript * used in (1.8) means that we take the set of all
+bonds with at least one end-point belonging to D'~2, except the bonds bo(c) for c,
+such that at least one end-point belongs to (D'~2)(1). More generally, for a set X,
+which is a union of unit blocks, we define
+X* = X\{bo(c):ceX<1)} . (1.9)
+
+=== PAGE 6 ===
+248 T. Balaban
+We take Q[ again as the union of LMR1 -cubes which intersect Qί, and we surround
+the sets Q[,(B(P\)C)~ by two layers of LMT^-cubes. Denote
+Ω^iQr^iBiPDT^^iQr'r^BiPDy-3 , (l.io)
+thus Ωx is a union of LMRX -cubes, and a distance between Ωγ and the union of the
+large field regions is at least 2LMR1. On the set Ω^ we have only the small field
+characteristic functions, and it is easy to see that the functions χ0, χAx localized in
+Ωi are equal to 1, if Ao is sufficiently larger than Aγ. We drop these functions from
+the integrals in (1.6).
+We fix Ω1 and we do the resummation with respect to P0,Pί,Q1, as in (8) [16].
+This yields the equality
+Qi(V) = Σ ZiΦi) ί
+(1.11)
+Here the factor ζ(Ω{) is defined by all characteristic functions and gauge fixing
+exponential factors localized in Ω[, and resummed over all admissible Po, Pί9 Qγ.
+The next step is again the same as in Sect. A of [16], we make the translation U
+= U'Uι in the integral in (1.11). Let us denote by Vo the integration variables
+localized in Ω[, i. e. Vo = U\Ωc. The configuration Ux, or more precisely U1 (Ω±, V), is
+defined as the critical point of the functional
+U) for U:U=V0 on Ω{ , Ό=V on
+(1.12)
+It is equal to the critical point of the action A(U) only, on the subspace of
+configurations satisfying the above conditions and the axial gauge conditions
+U(y,x) = l for xeB(y), xή=y, yeΩ^K By Theorem 1 [15] there exists exactly one
+critical point of (1.12) in the domain of integration in (1.11), for ε0 sufficiently small.
+It is a minimum of (1.12), with a strictly positive second order differential. The field
+U' is small, because U'= UU[ι =(UUΓ,h )(Ui,π'Ui'1\ and both fields in tne
+parenthesis on the right-hand side of this equality are small. We denote
+A'=-\ogU' , or U' = expiA' , (1.13)
+and we call A' a fluctuation field.
+Now we expand the expressions in the integral (1.11) with respect to the fields A'.
+This expansion was investigated in [15], see Sect. B. The formula (26) there gives an
+expansion of the action, see also (1.2.7). An expansion of the gauge fixing terms is
+given by (I.I .8). For the expressions under the (5-functions we have (14)—(16) [16], or
+(1.1.6), (1.1.7) restricted to Ω[1]. We linearize these expressions by the transfor-
+mations analyzed between (16)—(18) [16], or between (1.1.8)—(1.1.9) [I]. These
+
+=== PAGE 7 ===
+Convergent Renormalization Expansions for Lattice Gauge Theories 249
+operations yield
+Γ—iL #o
+•exp
++ Trlog( I-h[ —
+(1.14)
+Let us recall that the linearizing transformation is different from the identity only on
+bonds {bo(c): ceΩ{1}}, hence the characteristic function χά(Ωi), defined in (1.8), is
+unchanged under the transformation. The number |Ω*| is the number of bonds
+belonging to Ωi minus the number of bonds in the set {bo(c) ceΩ^}. Also, let us
+recall that the functions and operators on the right-hand side of (1.14) depend on the
+configuration U1. Now we perform the scaling transformation A=g0A' in the
+integral with respect to variables A, and we remove the ^-functions under the
+integral solving the equations (QA')(c) = 0 on Ω[1]. The equation determines the
+variable A'(bo(c)) as a linear function of the remaining variables A'(b),
+baB(c_)vB(c + ), b^bo(c). We denote this function by C, and we denote by A the
+integration variables restricted to bonds ί21* = ί21\{Z?0(c) ceΩ^}. Hence Af = CA
+are solutions of the above equations and we have QCA = 0. After these operations
+we obtain
+i) ί dVΛafδiVoV-'
+-A- V(g0CA)\ ,βo J
+(1.15)
+where
+(1.16)
+and v(A), V{A) have the same meaning as in (27) [16], i.e. v(A)is the sum of the first
+two terms under the second exponential in (1.15), and V(A) is the sum of the
+remaining terms of the order higher than 2. The factor z(0) is obtained by integrating
+the ^-functions with respect to the variables A(bo(c)), c
+
+=== PAGE 8 ===
+250 T. Balaban
+Let us remark that it is very important for our method, as it was in [16,1], that we
+expand in (1.14) around the critical point, so the potentially dangerous linear term
+(l/#o) <^> Λ> vanishes on the domain of integration. Another important remark is
+connected with gauge invariance. As in all previous papers the ex-
+pressions in (1.14)—(1.16), except the characteristic function #o(^iX are invariant
+with respect to the simultaneous gauge transformations
+where u is a G-valued function defined on sites of the lattice T. The characteristic
+function is invariant with respect to gauge transformations of the new field
+V: V-* Vυ, v is a G-valued function defined on sites of the new lattice T{1\ Such a
+transformation υ determines the gauge transformation u0, u0 (x) = v (y) for x e B(y),
+and the field Uo constructed in (1.6) transforms by u0 : U0^>UQ°. This implies that
+the characteristic function χ'o {Qx) is invariant if the field variables A are transformed
+by the adjoint representation A-^R(uo)A. In the future we will use both invariance
+properties: the invariance of all the expressions determining the density with respect
+to the gauge transformations of the new field, and the invariance of the effective
+action with respect to the gauge transformations (1.17). To get this invariance for
+the last integral in (1.16) we have to replace the characteristic function χό^) by
+functions depending on A only. We introduce a new decomposition of unity in the
+domain Ω± ~1 = ((Ω[) ~ )c:
+1=Σ Π x(\ supR1 D'CRC \(j(D'~2
+sup μ(ό)|^^o-Moj) = Σχ^(^)Z(O)c(^i) (1.18)
+(D'~2) )) Rl
+Here the summation is over sets R1 a Q^ ~1,which are unions of L2M2 Rx -cubes, and
+Rl means the complement to Ω^ ~1. Consider a cube •' c R£. For this cube we now
+have the product of the two characteristic functions,
+sup ^ M^Ktfo1^
+sup |expiflfo^(6)C/1(A)^1-;J].(6)-l|<25oH • (L19)
+The cube Π'^4 is contained in Ωl9 and both configurations t/1? UltΠ, are deter-
+mined by the same configuration V on D'~3, hence on D'~2 the difference
+between these configurations is very small. More precisely | U1 U[^ — 11 < 0(1)B3
+• exp (— δLM2R1)ε1, and the bound can be made much smaller than δ0, if M2Rί is
+large enough. Thus the second function in the product (1.19) is equal to 1, and we
+can omit it. These functions remain only for Π'^(Ω1\Ω{'~1)uR1, more precisely
+they are the only functions for •' c Ω1\Ω1~ ~ί, and for Π' <= Ri they are multiplied by
+the corresponding large field characteristic function in (1.18). We denote again by
+
+=== PAGE 9 ===
+Convergent Renormalization Expansions for Lattice Gauge Theories 251
+R{ the union of LMT^-cubes intersecting the set R1, and we introduce the sets
+2 1 . (1.20)
+On the set A± we have only the small fluctuation field characteristic functions from
+(1.18). We make an additional small modification of the domain Aγ. The
+complement A[ is a union of connected components, and some of them may be
+relatively small. We distinguish components which are contained in cubes of sizes
+smaller than 100 LMRl9 and we replace such components by the smallest
+rectangular parallelepipeds containing them. Such a rectangular parallelepiped is
+the smallest convex domain, which is a union of LMRλ -cubes, containing a given
+component. This change is insignificant from the point of view of bounds, but it
+simplifies some geometric aspects of the large field problem, and the R-opera-
+tion. This domain A1 is the final small field domain, and we will perform the con-
+ditional integration in the integral (1.15) with respect to the fluctuation field A
+restricted to Ax.
+The characteristic functions connected with S1 involve the onfiguration C/l5
+therefore they depend on the new field Fon the whole small field domain Λί. This is
+an undesirable situation for the next renormalization step, and now we will remove
+this dependence. Introduce the function U1 (Ωx c\A{, V), which is determined by the
+same conditions on the domain (Λ^)c as the function Uί (Ωx, F), and on the domain
+A^\A1 it is determined by the set Bx (A{) and the configuration Qf V. This function
+depends on V restricted to Ω1nA[. We have
+(1.21)
+where the function H1>Ax depends on its argument restricted to a small neighbor-
+hood of dAί (in fact one layer of Mγ -cubes touching dΛί and contained in Λ{). The
+dependence is analytic, and the function t^ Ax has the exponential decay property.
+It was formulated in (190) Sect. G of [15] for the Landau gauge, but on the unit
+lattice it holds for any gauge, for which propagators are exponentially decaying,
+hence for the axial gauge too. This implies that the function H1>Ax is very small on
+D', for •' cz Sj, because the distance between •' and the support of the argument is
+greater than MR1. More precisely, we have \HltAx\<O(\)B3Qxp( — δMR1)ε1, and
+the bound is much smaller than δ0, for MR1 large enough. Now we make a change
+of variables for each bond variable A(b), beSf. There are two forms of this
+change of variables. For be(Rf2nS1)*, we take
+A(b)=—logexpig0A'(b)exp(-ig(A'(b))HltΛx(b))
+Wo
+= A'{b)-—g{A'{b))HlιAx(b)-—Έ{g0A'{b),
+9o do
+-g(A'(b))HlιAx(b)) . (1.22)
+
+=== PAGE 10 ===
+252 T. Balaban
+Here g is a C00-function defined on the Lie algebra g,Q^g(A')^l, g(A') = 0 on
+{A'eg .lA'l^Λβg^δo}, g(A') = l on {A'eg: \expig0A'-l\^5/3δ0}. The con-
+figuration U1 {Ω-^nAl) ί/i~Q' is very small on Π'~2 in this case, hence g(A ') = ! on a
+neighborhood of [A' e g : |exp ig0A'U1 (Ω1 nA{) U^Q> — 11 ^2δ0}. The function F is
+defined as a sum of terms of orders higher than 1 in the Baker-Campbell-Haussdorf
+formula (see (29) in [12]). It is at least linear in g0A'(b), hence the factor g^1 is
+cancelled. In the second term on the right-hand side of (1.22) the factor g^1 is
+suppressed by the bounds on Hlji4x. These changes of variables do not change the
+functions χ(0), and they transform the function χ(0)c(D')xά(tΓ) into the function
+sup \A
+sup
+(1.23)
+For beS?\(R^2)* we make a simpler change of variables; we take (1.22) with the
+function g(A (b)) replaced by 1. These changes of variables transform the function
+Xo(Π') into the second factor in the product (1.23). For simplicity we denote the new
+characteristic functions in the same way as the old ones, and the new variables A' by
+A. After these changes of variables the characteristic functions depend on the new
+variables V restricted to the large field domain A[. It is the desired localization
+property.
+The change of variables produces new terms in the effective action in (1.15).
+The Jacobians of the transformations (1.22) can be exponentiated, as in (20) [16],
+and they yield the expression
+] •«••••>)] • (124)
+Expanding the terms of the effective action in the second exponential in (1.15) with
+respect to the last two perturbative terms in (1.22) up to the first order, we obtain a
+new expression V{0\Sι,A,ΊΆ1 Ax). Because of the almost local character of the
+action in (1.15), it is a sum over bonds beS1 of the expressions which depend on
+A,HltAx almost locally. The dependence on Hx Ax is analytic, and the expressions
+are small, i.e., they can be bounded by any positive power of gf0.
+After the change of variables we obtain an expansion of the form (1.15), but with
+the additional sum over Ao, the characteristic function χό(^i) replaced by
+Σ Z(0)(^i)z(0)(Λfn/lf)χ(0)e(i«1)χi(51) , (1.25)
+and with the additional term F^CSJ in the effective action. For each term in this
+expansion consider the conditional integral with respect to the variables A restricted
+to A1. This integral is equal to the corresponding conditional integral in the case
+analyzed in [I], i.e. where there are no large field regions, but with a different
+
+=== PAGE 11 ===
+Convergent Renormalization Expansions for Lattice Gauge Theories 253
+background field. It is given by
++ v(g0CA)~\ V(g0CA)
+d
+expllogZ{0)(A1)+~(AίA,C*AίCC{0)(A1)C*AίCAc1A)
+(1.26)
+The above equalities define the functions V(0) and E(1). Let us recall that all the
+above expressions depend on the configuration U1. Of course the main problem is
+how to represent the function E(1). We use the exponentiated cluster expansion of
+[I], but changed properly to yield the more detailed representation we need now, as
+it was explained in the introductory section. Especially we separate the clusters with
+localization domains close to A{, e. g., within the distance MRγ to Λ[, and we denote
+the sum of these terms, and the expanded ^(SJ, by B(1)(^i, Λ{A, SJ. This is the
+boundary term, and it can be bounded by 0(1) l^ nΛl\; therefore it is controlled by
+the large field estimates, and does not need to be renormalized. This will be
+discussed thoroughly in the next section.
+The final step is renormalization of the effective action. We renormahze it in the
+region /L1 subtracting the values at U1 = 1, and the counterterm β1(g0)A(φ1, Uλ),
+where β1 (g0) was defined in [I] by the formulas (1.41)-(1.43), φλ e Q0 (ΛJ, φx = 1
+on Λ±~x. The symbol A(φx, U^) means that we multiply the term in the Wilson
+action corresponding to a plaquette p by φί(x(p)), x(p) is the initial point of dp
+[i.e.,/? =pμv(x) for some μ < v]. Let us write the first renormalization group equation
+(1.27)
+The difference in comparison with Eq. (1.0.20) is that here we have functions on the
+lattice T instead of the constants there, but on Λ^"1 we have the same equation,
+which defines the same coupling constant gγ.
+To write the final form of the expansion obtained after all these steps, we
+introduce some new notations. Notice that the set S1 determines the set Rx, and
+denote the product of all the characteristic functions in (1.25) localized in Ω1 nΛ{ by
+χ(Ω1nΛ{,S1). Now we can write
+βi00= Σ ZiCfii^CίO^^exp^f-i,^) , (1.28)
+
+=== PAGE 12 ===
+254 T. Balaban
+where Tx is the integral operation defined by the integration
+-l-(A,C*ΔγCA}
+I
+-~ {A,C*Δ1CC(0)(Λ1)C*A1CA} \ , (1.29)
+and the effective action Ax has the form
+/ \9i
+-β1(g0)Λ(φ1,U1)}+Ba)(U1,A,S1)-Eί . (1.30)
+Here we have combined the term log Z(0){A^) with the part of the previous function
+E(1) in (1.26), to define the new function E(1) above. It coincides with the
+corresponding function constructed in [I], if the last is suitably restricted to the
+domain Λ1. This is the reason why we can renormalize it by the same counterterm as
+in [I], only localized properly. The boundary term B(1) was described before. The
+constant Eί is obtained from E by subtraction of all the constants which have
+appeared in the procedure, i.e., the constants in the first exponential in (1.15), and
+the constant E(1)(^t1,gf0,1). Thus E1 depends on Ωί,Λ1.
+The representation (1.28)—(1.30) will be generalized in the next section to an
+inductive description of the k-th effective density, with some modifications
+connected with new terms obtained by the R-operations.
+2. The Inductive Assumption and Formulations of Results
+We write the inductive assumption for the density obtained after k renormalization
+transformations. It is written explicitly, as in (1.28)—(1.30) for the first step, except
+that the operations corresponding to the operation Tx in (1.29) are left undefined,
+only their basic general properties are formulated. Their inductive definition will
+follow successively from the constructions of the subsequent section and forth-
+coming papers.
+The fc-th density ρk(Vk) is a function of the new field Vk on the lattice T{k\ It is
+represented by an expansion generalizing the expansion (1.28) in the first step.
+Terms of this expansion are parametrized by sequences of domains in Γ, of the type
+described already several times in previous papers, e.g. in (1.3)—(1.6) [14], or (38),
+(39) [16]. Let us start with the description of this geometric setting. We consider
+sequences of localization domains {Ωj}, j=l,2,....,k, ΩJEΌJ, such that
+Ω1Dβ2D.1..DΩk. For such a sequence we consider sequences of localization
+domains {Λj}, ΛJEΌJ, such that
+. (2.1)
+We consider also a third family of sequences {Sj},j =1,2,....,/:, where Sj <= ΩjΠΛj,
+and Sj is either empty, or it is a union of LM2Rj -cubes in the lattice TLJ. For the
+
+=== PAGE 13 ===
+Convergent Renormalization Expansions for Lattice Gauge Theories 255
+domains in (2.1) we admit the possibility that Λj = Ωj for some indices/ Such a
+situation may arise as a result of an R-operation. If ΩjnΛj is nonempty, then Sj is
+nonempty too; in fact it contains ΩjXΩf'1 = Ω7 n(Ωj)~. There is a characteristic
+function χ(ΩjΓιΛj,Sj) associated with these domains, which includes a large
+fluctuation field characteristic function associated with the set R. = 5J \(ΩJ n(Ωj)~).
+There is also a function ζ(Ωj), which includes summations over other large field
+characteristic functions. These functions were defined in the first step, and their
+inductive definition will be given in the next section describing the fc + l-st
+renormalization step.
+For a sequence {Ωj, where Ωj are considered as subsets of Tη, we denote
+k , and B=U Γj
+j=o
+This definition is meant for sets of points, bonds and plaquettes, with the
+convention described in Sect. 0 [I]. The set B determines the sequence {Ωj}, and is
+called the determining set. The domain Ωι, or rather a small neighborhood of Ωx
+including a layer of Mγ-cubes (M^-cubes in the ^-lattice), is called its support. We
+denote further
+ZJ = Λ'J . (2.3)
+These large field regions satisfy the following condition: if a component of Z7 is
+contained in a cube of the size 100 MRj (in the ZΓJ-lattice), then it is a rectangular
+parallelepiped.
+Now let us define numbers describing sizes of domains and restrictions on fields.
+We define
+j jy° = gjpQ(<gj) ; (2.4)
+Rj is the smallest number of the form U such, that
+R^oggj2)1- . (2.5)
+The coupling constants g-} satisfy the inequalities
+β0)gn , (2.6)
+where n>m, and βo>0 can be chosen arbitrarily small, if g is sufficiently small. The
+inequalities follow from the renormalization group equations (0.20) [I], and from
+the properties of the ^-functions. They imply the following inequalities:
+(2.7)
+
+=== PAGE 14 ===
+256 T. Baίaban
+where p is a positive integer. From the above inequalities we obtain
+and
+εmfί(l+βo)(ί+g2j'(n-m))l>°εn
+^(\+βo)2{n-mγ°εn , (2.8)
+(2.9)
+Similar inequalities hold for other constants, which will be introduced later.
+The domains Ωj,Λj, which are determined by hey-th renormalization trans-
+formation, but not by the R-operation, are unions of MRj-cubes in the lattice TL-3.
+They satisfy also other conditions, e.g., the distance between their boundaries is at
+least equal to 2MRj, which will be determined inductively by the operations in the
+fc + l-st step.
+In the first step the integration with respect to the variables U\Ω^ = VQ was left
+unchanged. Similarly in the next steps there are integrations with respect to
+variables on large field regions left. Iny-th step the region is Ωj, and gauge field
+variables Vj_1 are defined on bonds of Ωjj~1)c. Obviously Γj_1dΩijj~1)c, and we
+assume that the field Vj__ί is regular on Γj_ι in the sense that \dVj^1—1|
+<0{L2)&j^1. The fields Vj determine the field V defined on B:
+V=Vj on/} , y = 0,l,....,£ . (2.10)
+It is convenient also to introduce the averaging operation MB associated with a
+determining set B. It transforms a gauge field U on the lattice Tη into the gauge field
+MB(U) defined on the set B by the equalities
+MYί(U) = Mj(U) onΓJ5 j = O,l,....,A:. (2.11)
+A regular configuration Von B determines the minimal orbit, i. e., the set of minima,
+of the functional
+U-+A\U) on U:U regular and MB(C/)=K. (2.12)
+For precise definitions and the theory of this variational problem see [15]. A mini-
+mal configuration, i.e., an element of the unique minimal orbit, is denoted by
+UB(V), or Uk(V), or simply Uk9 if there is no misunderstanding about the determin-
+ing set B, or the configuration V. These configurations, and their properties, pro-
+vide crucial technical tools in our method, and we will use all the results of [15].
+In constructions of this and subsequent sections and papers we will have to
+localize gauge field configurations, especially solutions of the variational problems,
+so it is convenient to describe some standard constructions, and to introduce some
+new notations. Consider a domain Ω such that it is a union of Mγ-cubes in the lattice
+Tξ,ξ = L~j. For this domain we build a minimal determining set with a support in β,
+or a sequence of maximal domains Ω = ΩODΩ1D....DΩJ such that Ωn is a union of
+LnξM1 -cubes, and ά\^ί{Ωn,Ωcn_1)^LnξM1, n = l,....,j (the distance is for the
+lattice Tξ). It is easy to see that dist(Ωj,Oc)^2M1, or Ω~~2czΩj, where the
+operation ~ is taken for Mx-cubes. We denote this determining set by Bj(Ω), and the
+
+=== PAGE 15 ===
+Convergent Renormalization Expansions for Lattice Gauge Theories 257
+corresponding minimal configurations by
+U(Bj(Ω\') = UlΩ( ) . (2.13)
+Later we will introduce simplified notations for some special cases. If we are given a
+determining set B, and the corresponding function £/B, then it is frequently
+necessary to localize them to a domain Ω. Assume that dΩczΩj\Ωj+1 , that Ω is a
+union of M1 -cubes in the lattice Tξ, and that the distance between dΩ and this
+boundary of Ωj9 Ωj+ί, which is contained in Ω, is greater than, or equal to 2Mγ.
+Take the set B }(Ω\ and form a new determining set by
+J J~2)) . (2.14)
+The corresponding function is denoted by
+(2.15)
+We can also have a more complicated situation, in which the boundary dΩ is
+contained in several different domains Ωj\Ωj+1. Then we construct the correspond-
+ing determining sets restricted to the domains, and we define the set BuB(ί2) by
+(2.14), with the right-hand side summed up over the domains. The function
+determined by this set is denoted again by (2.15).
+We consider the partition of the lattice Tη into LM2 /?fc-cubes, compatible with
+the other partitions, and for each cube • of this partition we define the function
+Uk,π(Vk)by
+where QkVk is defined as in (1.3), only 1-blocks are replaced by fc-blocks. The
+notation in (2.16) is a slightly different, simplified version of the notation in (2.13).
+Let us write now a general form of the expansion of the density ρk. At first we
+define
+= Π XN sup \UktΠ(Vk9dp)-ί\<skη2\ , (2.17)
+where the cubes D belong to the partition of the lattice Tη into cubes of the size
+LM2Rk. This partition is compatible with all other partitions of this lattice. The
+density ρk(Vk) can be represented as
+(^9 Uk) , (2.18)
+/
+where the summation is over the admissible sequences of domains. Summation over
+the sequences {Sj} is included in the operation Tk, and the effective action Ak
+depends on the sequences {ΩJ},{ΛJ},{SJ}. We suppress this dependence in our
+notation, so we will write simply Ύk,Ak.
+At first we describe in general the operation Tk. It was described in detail in the
+first step, and the complete inductive definition will follow from constructions of the
+subsequent sections. Basically this operation is a composition of integrations
+restricted to large field regions in successive scales, and multiplications by
+characteristic functions, (5-functions defining renormalization transformations,
+
+=== PAGE 16 ===
+258 T. Balaban
+and gauge fixing expressions. We start the general description with factorization
+properties. The last large field region is Zk, and Tk is supported in it, in the sense
+that it involves integrations and variables restricted to this region. If Zk is
+represented as a union of disjoint regions, e.g. as a union of connected components,
+Zfc = Z1u....uArnJ XtnXj = 0 for iφj, then
+τfc(zk)=πτfc(jri) . (2.19)i = l
+The operations corresponding to disjoint regions commute, i.e., Ύk(Xi)Ύk(Xj)
+= Ύk(Xj)Ύk(Xi). For a given large field region X the operation Ύk(X) can be
+factorized into a product of one-step operations, and has the form
+Tk(*)= Π Ύ^(ZJ+1nX) . (2.20)
+j = k-l
+This is an ordered product, the order indicated in the product symbol. The
+operation T(7) involves integration with respect to the gauge field variables Vj on
+Ωj+1 nX, and with respect to the fluctuation field variables Aj on Zj+1nΩj+ι nX, if
+the last set is nonempty. This operation comes from the renormalization
+transformation T in they + 1-st step, and if it is not changed by an R-operation, then
+it has the form
+R
+>]• (2.21)
+More precisely, the quadratic form in the exponential couples only the fields Aj in
+the same component of ZJ + 1nί2J + 1. The other terms of this quadratic form are
+included into the effective action into B-terms. If the operation To) is changed by an
+R-operation, then the general form (2.21) is preserved, but the characteristic
+functions are changed, and the domain Zj+ιnΩj+1nXmay be empty. We will use
+the factorization (2.20) in the form
+Ύk(X)= Π T(^(Zj+1nI)Tm(ZmnI) , (2.22)
+and in the case where the last k—m operations have the form (2.21).
+Now we describe the effective actions Ak. This is the most important part of the
+inductive assumption. The action Ak is determined by the three sequences of sets,
+and it depends on the gauge field variable V, given by (2.10), through the
+background field Uk(V). This field is determined by the sequence {Ωj}, or rather its
+determining set B. Let us denote the system of the fluctuation fields {^--i} by A.
+The effective action Ak has the following general form:
+\, Uk)= -A(\, Uk) + Ek(Uk) + Rk(Uk) + Bk(Uk,A)-Ek . (2.23)
+9 \9k J
+
+=== PAGE 17 ===
+Convergent Renormalization Expansions for Lattice Gauge Theories 259
+All the expressions above depend on the sequences {Ωj}, {Aj}, the expression Bk
+depends also on the sequence {Sj}. Before we describe them in detail let us ex-
+plain briefly their meaining. The term Ek is the regular part of the action. It has the
+same properties as the effective action constructed in [I] for the small field
+approximation, but localized properly in different scales to domains determined by
+{Aj}. This expression is fully renormalized, i.e. vacuum energy and coupling
+constant renormalization counterterms are included into it. The term Rfc arises as
+the effect of the R-operations, and has localization properties similar to those of the
+term Ek. For this term we perform the vacuum energy renormalization only. The
+term Bk includes various expressions localized closely to large field regions. It does
+not require any renormalization.
+We start the detailed description of the terms in the effective action (2.23) with
+the definition of the function g\{x). It is defined by the sequence of the
+renormalization group equations generalzing Eqs. (1.0.20) and (1.27):
+2 , ^-T7^ + /?;0?/-iW*) (2 24)
+Here the coupling constants gj_ί are defined as in (1.0.20), and φ^e C0°°(/ly), φj= 1
+on ΛJ ~ι. Thus gj (x) = gj on the last domain.
+The term Ek has the representation (1.1.7), but localized properly:
+j
+(2.25)
+Localization properties of E0) are crucial for our analysis. We need a different, more
+detailed description than the one in (1.1.27), because now we must obtain more
+information about bounds for (2.25), and for localized expressions. Let us denote by
+Λ® the set which is obtained by removing one layer of the MRj-cubes from
+Ajj) a T[j\ The following representations hold:
+Έ,(J)(Λj9Uk,z) , (2.26)
+j Σ EU)W Uk,z) , (2.27)
+XBZ
+where the last sum is over localization domains Xe Dy contained in A^Xa Λj. The
+term E0^, Uk, z) of the last sum has the following properties: (i) it depends on Uk
+restricted to X; (ίi) there exists an analytic function E(j)(X, (U, J), z) of the variables
+(U, J) e Uj(X, αo>J , oiίfJ), which is an extension of this term, i.e., the equality (I.I .9) is
+satisfied; (iii) the extended function is invariant with respect to the gauge
+transformations (1.1.10) (iv) it satisfies the inequality (1.1.18). These properties are
+the same as in [I.I]. The numbers α0J, 0Lίfj in the symbol of the space are given by
+otOJ = gjC0(\ogg;2y° , a^gjC^oggJ2)** , (2.28)
+where q0, qx are integers greater than 1, Co, Cx are sufficiently large positive
+numbers.
+
+=== PAGE 18 ===
+260 T. Balaban
+The last important property is the Euclidean covariance. We have it only for
+functions Έij)(Uj, z) defined by the equality (2.27) with the unrestricted summation,
+i.e., with the sum over all Xe Όj containing the point z. These functions satisfy the
+equality
+E^(rUj,rz) = E^(Upz) (2.29)
+for arbitrary Euclidean transformations r of the lattice Tij\ and for regular
+configurations Uy This implies that the function EiS)(Uj9 z) is invariant with respect
+to the Euclidean transformations of Uj leaving the point z invariant.
+The term Rk has the renormalization similar to (2.25):
+Rk(Uk)= Σ [R{j\Λp Uk) -Ru\Λp 1)] . (2.30)
+j = i
+Each function Rij)(Λj,Uk) has the localized renormalization of the form (1.1.7),
+but with the summation over localization domains Xe Όj contained in
+Λf ~1, Xcz Λj~ ~1, which are unions of the MRj-cubQs in the lattice Tξ. Terms of this
+representation have the properties (i)-(iii) formulated above, after (2.27). The
+property (iv) is different now; we assume that the following stronger inequality
+holds:
+|R^(Z,(U,J))|^^°exp(-^.(X)) . (2.31)
+Here κ0 can be chosen arbitrarily large, similarly as K, if the other parameters are
+fixed properly, as in [I]. The above inequality is connected with the fact that the
+terms are defined by integrals including large field domains of integrations. It
+explains why coupling constant renormalization counterterms are not needed in
+(2.30). After the vacuum energy renormalization we obtain a sum of marginal
+terms, i.e., terms with bounds O(l)(Ljη)4g1j°exp( — κdj(X)). The sum over X is
+controlled by the exponential factor, and by the factor (Lίηf. The sum over j is
+controlled by gψ.
+The functions R{j)(X, Uj) have the Euclidean covariance property
+RU)(rX, rUj) = Rij)(X, Uj) (2.32)
+holding for these Euclidean transformations r, which leave the partition of the
+lattice Tξ in M^ -cubes invariant. The above property will follow immediately from
+the construction of the R-terms given in the next paper. If we sum up all these terms
+over all the admissible domains X in Tξ, we get a Euclidean invariant function
+R{j)(Uj), i.e.,
+? where RW(ί/.) = ^R(i)(l,[/.) , (2.33)
+x
+and the transformations r are as above.
+The term Bk is the simplest term from the point of view of the renormalization, it
+does not need any renormalization, but it has the most complicated structure and
+properties. It is a sum of small, or at least bounded, localized terms, with
+localizations close to large field regions.
+The terms of Bk are analytic functions of the variables (U, J) introduced in the
+same way as in the regular cases before. The analyticity domains are spaces defined
+
+=== PAGE 19 ===
+Convergent Renormalization Expansions for Lattice Gauge Theories 261
+similarly as in (1.1.11 )-(1.1.16), but now we must take into account the existence of
+many different scales. We introduce the following definition.
+The space Uj(X, α0, oq) for Xe Ώj is the set of configurations (U, J) defined on X
+and satisfying the three conditions below.
+(i) U= U'U, U has values in the group G, and the configurations
+U, U, UPiX(M p{}lpPt
+satisfy the bounds
+^)22 , (2.34)
+-n-2 , (2.35)
+, (2.36)
+-β(ί -2-^^))(xOinLn-^^(LnL-η-3 , (2.37)
+on Xn(Ωn\Ωn + 1) for n = l,....j — l, or on XnΩj for n=j.
+(ii) For each cube Π^Ωn\Ωn+2, Dn£^+1=#0, n = l,....,j — l, of the size
+CMLnξ, orΠc Ωj and of the size CM, there exists a gauge transformation u defined
+on ΠnX and such, that
+Uu = QxpiξA9Lnξ\A\,(Lnξf\VξA\<BCMoίθ9n (2.38)
+on Dπl, with an absolute constant B.
+(iii) Ur = QxpiξAf, A' has values in the algebra gc,
+xUn (2.39)
+on Xn(Ωn\Ωn + 1) for « = l,....,y —1, or on XnΩj for n=j.
+The number β is a small positive constant, but not too small, e.g., we can take
+/? = l/4. The spaces defined above are invariant with respect to G-valued gauge
+transformations. This definition gives a more detailed and precise form, suitable for
+our inductive constructions, of the regularity conditions for background fields,
+introduced in [13-15].
+Now we can write the form of Bk. It is given by the sum
+Σ BW(Uk9A,{Si}) , (2.40)
+J = I
+and a term in this sum has the localized representation
+(2.41)
+where the sum is over domains XeΌj such, that XnΩyφ0, and XnZJ +0. The
+localized term in the sum on the right-hand side above has the following properties:
+(i) it depends onUk,A restricted to X; (ii) it has an extension to an analytic function
+on the space Uj(X, α0, Si); (iii) the extended function is invariant with respect to
+(G-valued) gauge transformations of U, J, A (the variables J, A are transformed by
+the adjoint representation of the gauge transformations); (iv) it satisfies the bound
+\B(j)(X, (υ,JlA,{SinX})\<Boεxp(-κdj(X)) . (2.42)
+
+=== PAGE 20 ===
+262 T. Balaban
+The terms have a bit more precise localization property. Denote Ωo = Ω± , and
+consider XnΩ0. It is a union of components. If a component does not connect to Ωj9
+i.e., if the intersection of this component with Ωj is empty, then the functions does
+not depend on the fields (U, J), A restricted to this component.
+There are other possible forms of the inductive assumptions for the boundary
+terms. For example, we may resum all the terms with localization domains
+intersecting a given component of the large field region. This gives sum (2.41), with
+the summation over domains Xe Dy such that Neither contains a component of the
+large field region Z7 , or is disjoint with it. Resumming we lose a part of the
+exponential factor in (2.42), connected with the region Z; ; hence for the new terms
+we obtain the bound (2.42) with dj(X) replaced by dj(X\Zj). All constructions and
+proofs of the procedure can be carried on with these inductive assumptions. We
+have chosen the ones above, because they agree with the assumptions for E-terms
+and R-terms.
+The constant Ek (depending on {Ωj}, {Λj} also) is obtained by subtracting one-
+step vacuum energy expressions, generated in small field regions, from the initial
+constant E. This initial constant is defined in fact as a sum of all such expressions for
+all the lattices T(k) as the small field regions. The constant E1 was defined in Sect. 1,
+and a general inductive definition will be given in the next section.
+All the inductive assumptions are formulated for the effective density obtained
+after the k-i\\ operation RT. It is a composition of the operations 7"and R, applied in
+this order, and after the operation T we obtain expressions with better analyticity
+and decay properties. More precisely, the expressions with indicesj< k are exactly
+as described above, but the newly created expressions E{k\ R(k\ B(/c) are defined on
+slightly larger spaces, with the coefficients in their definition bigger by β multiplied
+by a corresponding number, and they have better decay properties, with the number
+K replaced, for example, by (1 + 4β)κ. Such improved bounds are needed for the
+R-operation.
+Now we are ready to formulate the basic results of this paper. The first theorem
+is a generalization of Theorem 3 [I].
+Theorem 1. There exist constants, introduced in the above description, such that if the
+sequence of coupling constants {gk}, determined by the recursive renormalization
+group (Callan-Symanzik) equations (0.18), (0.20) [I], satisfies the inequalities
+(1.0.33), then the sequence of densities {ρk}, generated by successive applications of the
+operations RT to the density ρo = exp [— (l/gl)A — E], satisfies all the inductive
+assumptions. The constants satisfy numerous restrictions introduced in the proof.
+Let us make two remarks connected with the formulation of the above theorem.
+At first, some of the restrictions on constants, e.g. on constants TC, M, SJ, α0J, α1><; ,
+come from the paper [I]. We assume that all of them are satisfied here, and we will
+introduce some new restrictions also.
+The second remark concerns a possible generalization of this theorem. For a
+given index k we introduce the space of all densities satisfying the conditions of the
+inductive assumption. The theorem states that the operation RT transforms the
+space with the index k into the space with the index k + 1. This generalization does
+not seem to be useful, or interesting now.
+
+=== PAGE 21 ===
+Convergent Renormalization Expansions for Lattice Gauge Theories 263
+Obviously we are interested not only in getting representations of the effective
+densities, but also in proving uniform bounds for them. We state now several results
+of this type. We formulate bounds for the effectiove actions separately. We start
+with localized expressions and bounds. Let Ω be a domain from Όk contained in
+Bj(Λ]), and let φ e Q° (Ω~), φ = 1 on Ω. Notice that here Ω~ denotes the union of
+the domains (Ωn(Ωn\ΩM + J)~, n =j\....,k, the operation ~ is in the corresponding
+scale.
+Theorem 2. Under the assumptions of Theorem 1 there exists a constant Ex
+independent ofj, k, Ω, {Ωj}, {Λj}, T (but dependent on the other constants occurring
+in the formulation of this theorem), such that
+zeΛ<>nΩ
+Σ {IJ-»y\ΓnnΩ\ , (2.43)
+for β< 1, and sufficiently regular configurations Uk= Uk(V), e.g. for V restricted by
+the characteristic functions in (2.18). The constant Ex depends on β also, and grows to
+oo if β->\. The volumes are taken in the corresponding scales, i.e. \ΓnnΩ\ means the
+number of points in the set ΓnnΩ c 7j(π). Similarly, there exists an absolute constant Rx
+such, that
+k
+Σ [R01)(Jsr5ί/k)-R(j)(Jsr,i)] ύRigf Σ lΓ*nβl > (2 44)
+for the regular configurations Uk. (In fact the constant i^ can be taken as equal to 1
+for gj sufficiently small.)
+The most essential part of this theorem is the inequality (2.43). It is an immediate
+consequence of the inequality with the set ΛfnΩ replaced by one point, and with the
+function φ replaced by a function, which is localized in a neighborhood of this point,
+and which is an element of a special decomposition of unity. The new, more detailed
+representation (2.26), (2.27) of this part of the effective action is introduced in order
+to prove this inequality. The second inequality (2.44) is more elementary and easier
+to prove. It follows from the considerations of Sects. 3, 4 [I]. Let us write now some
+consequences of these inequalities. Taking Ω = Bj(Λj), φ = φj in (2.43), and
+summing the obtained inequalities over j, we get
+k n k
+iEk(C4)ig£i Σ \Γn\ Σ (jj-ny<E1(\-L-βy1 Σ ι^,ι (2.45)
+n = 1 j = 1 «= 1
+Similarly, taking Ω = Bj(Λ( ) in (2.44), and summing over7, we get
+|R,(t4)l^i Σ W Σ 9?<*i Σ \rn\gκn°~6< Σ \Γ»\ > (2 46)
+n—i J=l n—\ n—\
+for κo^7 and g sufficiently small. Bounds for the boundary terms (2.40) are even
+more elementary. We use the exponential factor exp(— (K — l)dj(X)) from the
+inequality (2.42) to control the sum over X in (2.41). The remaining factor
+
+=== PAGE 22 ===
+264 T. Balaban
+exp (— dj(X)) is used to get an additional small factor, e. g. for/ > n it can be bounded
+by 2~u~1~n\ Thus we obtain
+for j>n, and this inequality with \Γn\Λk\ for j = n. Summing over j from n to k, and
+then over n from 1 to k, we get
+Σ \Γ«\ (2.48)i = l
+Finally, the vacuum energy counterterm Ek, except the terms logarithmic in
+coupling constants, has the same bound as above, only with a different constant.
+These bounds yield the following bounds for the effective actions
+— 9 uk)=-A[-2, Uk\ + (the logarithmic terms) + 0(1) £ |Γ, | .
+9 k / \ak J j=l
+(2.49)
+The first term on the right-hand side yields the small factors for large field
+characteristic functions. It also controls the logarithmic terms. Thus we estimate the
+integral j dVkρk by a sum of terms similar to the one considered in Sect. 3 [6], e. g., see
+(3.42). The procedure is constructed in such a way, that the combinatorics now is the
+same, relative to the 77-scale of the lattice Tη, as in [6], hence we have the same result
+for this scale.
+Corollary 3 (Ultraviolet Stability). Under the assumptions of Theorem 1 there exist
+constants E_, E+ independent of η and Γ, but depending on gk, such that
+™ . (2.50)
+3. The k + 1-st Renormalization Transformation and the Proof of Theorem 2
+We apply the next renormalization transformation to the density ρk, and we study
+the generation of the new density, and especially the terms E(k + 1), R(k+1), B(fc+1),
+Eik + 1\ The inductive assumptions and Theorem 2 are proved for these terms.
+Almost all operations and bounds were studied in the previous papers [16,1], so we
+concentrate only on new issues.
+Using the inductive assumption we write
+(Tρk)(Vk + 1)= X ϊdVkδ(VkVk-+\)χkTkπpAk, (3.1)
+{ΩJ},{ΛJ}
+and next we consider one term on the right-hand side. Notice that the restrictions
+ontroduced by the characteristic function χk imply that the new fields Vk + ί satisfy
+the bounds \Vk + 1(dp') — l\<2L2εk forp'eΓJ^K We introduce new restrictions on
+these fields. The term has a large field region Zk = Ak, and we denote by Zk the union
+of all LMRk + 1 -cubes intersecting the region Zk, and belonging to the partition of
+the lattice Tη. This partition, or the corresponding partition of the lattice TL-ιη into
+MRk + 1 -cubes, is compatible with all the previous partitions. We surround Zk by
+
+=== PAGE 23 ===
+Convergent Renormalization Expansions for Lattice Gauge Theories 265
+four layers of the LMRk + 1 -cubes, i.e., we take the domain Zk~4, and we introduce
+the following decomposition of unity for the domain (Z^~4)c:
+1= Σ Π xPk+ί D'CP£+1
+' ΠB'CPk+
+= Σ
+where the summation is over domains Pk + ί<^(Zk'~*)c, which are unions of
+L2M2Rk + ί -cubes. The cubes are from the partition of the lattice Tη into cubes of the
+size L2M2 Rk + ι,or the partition of the lattice TL-ίη into cubes of the size LM2 Rk + ί-
+The partition is compatible with all the other partitions. We take the set Pk + 1- the
+union of all LMRk + x -cubes intersecting Pk + 1 - and we surround the union
+Pk'+1uZk~4 by a layer of LMRk + ι-cubes. In the complement (Pk"^1uZk^5)c
+we introduce the axial gauge fixing as in (1.5), with Vk, εk, gk instead of U, ε0, g0.
+Denote by Pιk + 1 the subset of T(k+1) such that 5fc + 1(^fc+i) = (^ΐi)c^(^Γ5)c
+We get an expansion of the form (1.6), with the corresponding changes. Next, we
+surround the domain P^uZ^5 by a layer of LMRk + 1 -cubes, or we take off
+such a layer from Bk + 1(Pl+ί), and in the domain (Pk'Ί\κjZk~6)c
+= (Bk + 1(Pl+1))~~1 we introduce the decomposition of unity restricting the
+approximate fluctuation fields,
+1=Σ Π x[\ sup
+• Π x(\ sup \Vk(b)(V$(b)Γι-l\^
+= Σ xί(QUi)xίe(Qt+i) (3-3)<2k+i
+The summation is over subdomains Qk + 1^(Bk + 1 (Pkx+ ί))~~1, which are unions of
+L2M2Rk + 1 -cubes, and the complement is relative to the domain (Bk + 1(Pkί+1))~ "1.
+The configuration V{$ is defined on (D/~)(/c) by
+Kg> = Λ/*(C/k + 1>D0 , (3.4)
+and δk = gkAί/Aopo(gk). We denote again by Qk+1 the union of LMRk + x-cubes
+intersecting Qk + 1, and we surround the domain Qk+ιv((Bk+ί(Pk1+ι)c)~ by two
+layers of such cubes. Denote
+Ωk+1=(QΓ+2MBk+\Pi+1γyy, (3.5)
+hence (Qk + 1)c = Qί+ίu(Bk+ί(Pl+1)c)~. On the domain Ωk2x there are only the
+small field characteristic functions from the above decompositions of unity. Now
+we prove that on Ωk~+ ί the functions χAx and χk are equal to 1. Take χk(Π) for a cube
+• <=Ωk~+1. This cube determines a cube •' of the next partition, such that
+
+=== PAGE 24 ===
+266 T. Bafaban
+• <=π'<=Ωt~+1. For the function UKΏ we have
+(3.6)
+On almost the whole cube D~4, except a boundary layer of the width 2 Mγ, the field
+in the argument of the function Hk π is equal to (1 //) log [ Vk (V^) ~1 ], hence it can be
+bounded by 4δk. On the boundary layer this field can be bounded by 30d2L2B3(\
++ βo)εk by an application of the inequality (1.65) from [14], or rather by an
+application of the reasoning leading to that inequality. By the exponential decay
+property (190) [15] we obtain the estimate
+,ί + exp(-δ2M2Rk)30d2L2B3(l+β0)εk)
+<— εk on D~ , (3.7)
+for AγjA0 and y sufficiently small. This estimate and the equalities (3.7), (1.43)
+[14] imply
+<2(l+βo)L-2εkη2+~εkη2<εkη2 for paΠ~ . (3.8)
+Thus χk(Π) = 1 for Π<=Ω^+1. For a function from χAx we have a simpler situation.
+Using the axial gauge for VQ), we have
+^εk<εk for ye(Ωk + 1Yk + ί) , xeB(y) , (3.9)
+and for A1/Ao sufficiently small. Thus χ\x((Ωk~+iyk)) = l.
+On the domain Ωk + 1 we introduce a fluctuation field as in [16]. Define the field
+V{k) on Ω^lγ as the minimum of the functional
+for Vk:Vk=Vk+1 on Γ, + 1
+= l for jeΓk+1 , xeB(y) . (3.10)
+This minimum is given by V{k) = Mk(Uk + 1), where the minimal configuration Uk + 1
+is determined by the sequence of domains {βk+l5ί2fc,....}, and the corresponding
+sequence of fields {Vk + 1\Γk + i, Vk\Γk,....}. The fluctuation field Vk is defined now by
+y1 on B(Γk + 1) . (3.11)
+
+=== PAGE 25 ===
+Convergent Renormalization Expansions for Lattice Gauge Theories 267
+Consider a cube D'<=Ωk + 1. The restrictions on the fields Vk, Vk + 1 on Ωk~+ί, and
+Theorem 1 from [16] imply, that Uk + ί satisfies the following regularity condition:
+\Uk+1(dp)-l\<2B3L2(l+βo)h(L'1η)2 for />cπ'~ . (3.12)
+On this cube the configuration Uk + ίtΠ> satisfies the regularity condition as above,
+only with the coefficient 1 in front of εk + ί. By the definition of these configurations,
+and the constraints on Vk, we have Mk + 1(Uk + 1) = Vk + 1 = Mk + 1(Uk+1>π>) on Π'~.
+Applying Lemma 1 [14] we obtain
+\V™-V§)\<(4dL)2(l+β0)B3εk on π'~ , (3.13)
+hence
++ (4dL)2(ί+β0)B3εk = O(l)εk on π'~ . (3.14)
+This implies that \Vk —1| <O(l)εk on Ωk + ί, because Π' is an arbitrary cube
+contained in Ωk + 1. We define Ak = (\/i)log Vk, hence \Ak\<O(l)εk also.
+This way each term in (3.1) has been written as a sum of terms of the same type,
+but with the new characteristic functions inserted. We represent this sum as a sum
+over admissible domains Ωk + ί, and for a fixed Ωk + 1 we resum over admissible sets
+Pk + 1, Qk + i, i e >the sets which satisfy all the conditions of the above constructions,
+and which determine the same fixed Ωk + ί. The resummatίon applies only to the
+characteristic functions and the gauge fixing terms localized in Ωk\Ωk + 1. Denote the
+sum by ζ(Ωk + ί). The other characteristic functions introduced above are localized
+in Ωk + U and are equal to χk + 1(Ωk + ί)χ'k(Ωk + ί).
+The next steps are exactly the same as in Sect. C [16], and in fact the same as in
+Sect. 2 [I]. We expand all the expressions with respect to Ak, and we linearize the
+expressions in the ^-functions for bonds in Γk+1. Finally we remove the δ-functions
+using the operator C, and we perform the scaling transformation Ak = gkAk. All the
+applied formulas are the same as in Sect. 2 [I], only the symbols represent different
+operators, determined by the sequence {Ωj}. Their properties are essentially the
+same as before, because of the localization of the field Ak. Let us write the result of
+these operations.
+Σ Xk+i(Ωk+1) μvk\Ω
++ logσ0\B(Γk + 1)*\
+lfc> ί dAk\Ωk+iχ'k(Ωk+1)
+
+=== PAGE 26 ===
+268 T. Balaban
+ϊ + B^(Uk(Gxpi[gkCAk-hΰ(gkCAO]V^))
+~\> Uk(cxpi[gkCAk-hD(gkCAk)]
+Ok
+(3.15)
+In the above integral the characteristic functions χ'k depend now on the field V(k\
+hence on the new field variables Vk + 1 on the whole set Γk + ί. We want to have
+characteristic functions depending on the fluctuation field only, hence we introduce
+another decomposition of unity. Consider the domain Ω^^1, i.e., the domain
+obtained by taking off one layer of LMRk+1 -cubes from Ωk + 1. On this domain
+introduce the decomposition of unity
+1=Σ Σ χ(L(D%,)JΛ(Z?)l<(5fc})D,cI] χ{{beia%^Akib)l-δk}
+= Σ x{k)(Rl+i)χ{k)c(Rk+i) , (3 16)
+where the summation is over the subdomains of Ωk\γ, which are unions of
+L2M2Rk + 1 -cubes of the partition of unity, and the complement Rk + 1 means the
+complement of Rk + ί to the domain Ωk+\ι. For a cube Ώ'^Rck+ι there are now two
+small field characteristic functions in the integral, one from the decomposition (3.3),
+and another from the decomposition (3.16). The first is equal to 1, because of the
+bound on Ak introduced by the second, and the fact that the configuration
+j/^j/g))-1 _1 is small, much smaller than δk. This follows from the identity
+analogous to (3.6),
+"(GΓ+i ^-hi))"1]) C^ + i.π'I
+(3.17)
+The field Uk + ι satisfies the regularity condition \dUk + ί — l\<2B3εk + 1(L~1η)2 on
+Ωk+ι, hence the argument of the function Hk+1>π is bounded by 44d2B?)εk+ι, and
+has a support in a boundary layer of the width 2LMγ at the boundary of D'~4.
+Thus, the function Hk+1 jD, is bounded by i?3exp( — δLM2Rk+ί)44d2B3εk+i
+<,44d2B2(ί+β0)exp(-Rk)εk on D^2, and
+^ (3.18)
+These facts, and the bounds (106)-(108), (159)-(163) in [12], imply
+= O(l)44d2B2(l+β0)^exp(-Rk)δk<δk (3.19)
+
+=== PAGE 27 ===
+Convergent Renormalization Expansions for Lattice Gauge Theories 269
+for gk, or 7 sufficiently small, and Z?e(D'~2)(k)*. Thus for cubes D'c:i?£+1 there are
+only the small field characteristic functions from the decomposition (3.16) in the
+integral. The domain Rk + 1 is defined, as usual, as a union of the LMRk + 1 -cubes
+intersecting Rk + ί. We surround the domain (Ωk + 1)~uRk + ί by a layer ofLMRk + 1-
+cubes, and we denote the complement of the so-obtained domain by Λk + ί, hence
+(3 20)
+In fact we modify the domain Λk + ί in the same way as in Sect. 1; we consider
+components of Ak + 1, and if a component is contained in a cube of the size
+100LΛfjRk + 1, then we replace it by the smallest rectangular parallelepiped
+containing it. On the domain Λk+1, in fact on Ak + x also, there are only the small field
+characteristic functions from (3.16) in the integral, their product is χik)(Λk+1).
+On the domain Ωk + ίnAk + ι there is the function
+1nΛck + 1,Sk + 1) = /k\Rck + ίnΛck + 1)χ^(Rk + 1)χi(Sk + ^ . (3.21)
+The last function above depends nonlocally on Vk + 1, through the function V{k\ We
+remove this dependence by an operation similar to the one in Sect. 1, formulas
+(1.21)—(1.23). We take the determining set B(Ack+1nAk)vBk+ί defined in (2.14),
+which in this case is simply equal to the union Bk + 1(Ak + 1)\Ωk + ιuBk(Ak)\Ωck+^
+and the corresponding function
+We want to replace V{k) by the k-th average of the above function. We use again the
+formula (3.17), but with Uk+lf0, replaced by the above function. It yields the
+representation (3.18) with the corresponding changes, e.g., V§) is replaced by
+V{k) . , and with similar bounds. Denoting
+we obtain that H(k) is an analytic function of the background field Uk + 1 restricted to
+Λk + ιnΛk, bounded on the set Sk + 1 by 0(l)εkexp( — Rk), hence by any positive
+power of gk. Now we make a change of variables for each bond variable
+Ak(b), b e S^. For bonds in CR^ nSk+ί)ik)* we take the change of variables given
+by the formula (1.22), with H(k)(b) instead oΐHίAx(b). For the remaining bonds we
+take the simpler change of variables with the function g(Ak(b)) replaced by 1. These
+changes of variables transform the function χ'k(Sk + ί) into the same function, but
+with V{k) replaced by V$ nΛk. We use the same notation for the new function. The
+other characteristic functions are unchanged. The action is changed by terms
+corresponding to (1.24), and by terms obtained by the first order expansion of the
+action with respect to the perturbative parts of the changes of variables. We denote
+this new part of the action by Vik)(Sk + ί,Ak,Hik)). All terms of the previous action
+contribute to it, but the differentiation with respect to the perturbation gives an
+additional localization in Sk + 1. The above operations render each term of the sum
+
+=== PAGE 28 ===
+270 T. Balaban
+in (3.15) as a sum of terms. We write this sum as a sum over domains Λk + 1, and for a
+fixed domain Λk + 1, as a sum over the admissible sets Sk+ί.
+For each term of the obtained sum we consider the conditional integral with
+respect to Ak restricted to Λk + ί. The remaining integration with respect to Ak
+restricted to Ωk + ίnAk + 1 is included into the operation T(k + 1\ Thus we define
+Γ-i•expΓ {Ak,CΔCAk)+
+(3.23)
+Here z(/c) denotes the product of factors corresponding to bonds in Γk + 1nΛk + 1.
+Denoting the sum of constants in the first exponential in (3.15) by E^k), and defining
+, (3.24)
+we get
+Σ χk + 1(k + i)k + ipUf^{ΩJ},{VJ} L \9k
+(3.25)
+Here Ak denotes the fluctuation field on Ωk + 1nΛk + 1, and A denotes this field
+onΛfc + i
+Now the fundamental problem is to represent the logarithm of the last
+fluctuation field integral in the form described by the inductive assumption, i.e. as
+the sum of three terms E(k + 1) + R(k + 1) + B(k + 1) satisfying the inductive assumption.
+Let us remark that these terms correspond to the particular sequences
+{Ωj}, {Λj}, {Sj} obtained after the Λ: -h 1-st renormalization transformation, and
+they will be changed properly after the R-operation. Therefore we need the
+improved statements and bounds for these terms, discussed before the formulation
+of Theorem 1, but we obtain such improvements quite naturally.
+At first we decompose the logarithm of the fluctuation field integral into a sum
+of three expressions, which contribute mainly to the three terms. This decom-
+position is rather naturally connected with the form of the fluctuation field effective
+action in (3.15), but we divide the expression determined by Rk into two parts, and
+we treat them differently. Let us recall that the Euclidean co variance property (2.32)
+holds for Euclidean transformations leaving invariant the partition of the lattice Tη
+into L~{k~j)MRj-cubes. For k —jlarge enough, more precisely forj <Lkx, where k1 is
+the largest integer satisfying L'{k~kl)MRj^L, the cubes of the partition are
+
+=== PAGE 29 ===
+Convergent Renormalization Expansions for Lattice Gauge Theories 271
+contained in L-cubes corresponding to the L-blocks. Therefore the expression
+determined by the sum Rk = £ R(^ is Euclidean covariant with respect to the
+i = i
+Euclidean transformations leaving invariant the lattice T(k + 1\ It has the same
+covariance property as the expression determined by Ek, and we include it into Ek.
+The sum of the two expressions, Rk and Ek5 is denoted also by Ek. The sum of the
+k
+remaining terms Rk= £ R0) *s treated separately. Introduce now auxiliary
+parameters s,t, the parameter t multiplying the expressions Bk, A((l/gl( ))
+-(\IQI\....\ V{k\ s multiplying Rk We have
+log\z{k) f Λ4χ(k)exp -\- {A, C*A{k)CA>-....
++ logΓz(t) jA4χ(i)exp ~<A,C*Δ(*)CAy-....(s = 0,t = 0).... .
+Here ( >M denotes the expectation value with respect to the probabilistic measure
+(3.27)
+where the introduction of the parameters s, t was described above, and Zs>f is the
+normalization factor.
+On the right-hand side of (3.6) we have the sum of three expressions. The first is
+the integral over t of the expectation value of the boundary terms, and it contributes
+to B(/c + 1) only. The second is the integral over s of the expectation value of the
+i?-terms, and it contributes to R(/c + 1) and B(/c+1). The third expression is the
+logarithm of the fluctuation field integral involving the regular terms of the effective
+action only, and it contributes to E(/c + 1) and B(/c + 1). This expression has to be
+transformed further, because we need the particular representation (2.26), (2.27) for
+the regular terms. At first we separate obvious boundary terms connected with the
+external fluctuation field Ak, by expanding in this field. We introduce the parameter
+/ multiplying Ak in the expressions in the logarithm. We have
+log \z{k) j dAχik)εxp\ -X- (A, C*A{k)CA) -....(^ = 0, / = 0)....
+
+=== PAGE 30 ===
+272 T. Balaban
++ (^-Ek(Uk(....)),Ak// 2
+Γ Γ l ΊΊ
++ log\zik) f dAχ(k)exp\ — {A, C*A{k)CA} -....(^ = 0, ί = 0,^k = 0)....
+L L 2 JJ
+~
++ log z((ί) I βL4χ(/ί)exp -\- (A,C*Δ(k)CA}+Pιk)(gk,A)
++ {Ek(Uk(cxpi[gkCA-hD(gkCA)]V*>))-Ek(Uk + 1)}T\ . (3.28)
+Here < )f denotes the expectation value with respect to the probabilistic measure
+{Uk(...(tAk,A)...))-Ek(Uk + i)}} . (3.29)
+The first expression on the right-hand side of (3.28) is the expectation value of the
+sum of terms with at least one localization in the domain Ωk + ί\Λk + ί, hence this
+expression contributes to B(fe+1) only.
+The remaining expression in (3.28), the last logarithm, is formally given by the
+same formula as the term E(/c + x} in [I] [see (2.12), (2.13)], but the integral is restricted
+to Λk + ί, and operators are determined by the sequence {Ωj}. To get the
+representation (2.26), (2.27) we expand this expression with respect to gk up to the
+first order. The idea is that this expansion is obtained by expanding the
+underintegral expression in gkCA, because of the special structure of these
+expressions. The field gkCA has the desired dependence on space variables (the
+bond variables in this case), which can be used to construct (2.26). Multiplying gk by
+the parameter t we have
+[the logarithm on the right-hand side of (3.28)]
+= logΓz<*> j ^expΓ-* <Λ, C*J<*>CΛ>T| + log
+dt (Jt- P«\tgk,A) + J^ Έk(Uk(...tgkCA...))} , (3.30)
+where the expectation value is with respect to the probabilistic measure defined by
+the function χ(k) exp [...tgk...]in the logarithm, but with the constant gk replaced by
+tgk. Let us now analyze successively the terms in the above expansion. Consider the
+
+=== PAGE 31 ===
+Convergent Renormalization Expansions for Lattice Gauge Theories 273
+derivatives in the last term, in the expectation value. They can be expressed as inner
+products of functional derivatives of some functions of tgkCA, with the field CA.
+This is obvious for all terms in the effective action, as displayed in the formula
+(2.12) [I], maybe with the exception of the terms divided by (tgk)2. These we expand
+up to the second order with respect to tgkCA. We use the fact that the lower-order
+terms vanish, and we represent the remainders by quadratic forms in A, as in
+(6.42) [I]. The coefficients are functions of tgkCA, and the differentiation with
+respect to tgk yields such an inner product. Thus the derivatives in the expectation
+value can be written as
+<\'k(tgk,A),CA>= Σ trVk(tgk,A,b)(CA)(b) , (3.31)
+beΛίkU
+where V^ is the sum of all the functional derivatives. Consider the second logarithm
+on the right-hand side of (3.30). Denote the characteristic function with the
+parameter t multiplying the variables A by χ{k). Thus there is the function χ{k) in this
+expression, and χ^)==l. We have
+logίΦc^^o^H dt j dμcίkHΛk^} I ^'(ίΦc,),,,,,)^)"1 > (3-32)0 Ol
+and (d/dt)x{tk) can be written as a sum of terms, for which only one characteristic
+function in the product is differentiated. Consider now the first logarithm on the
+right-hand side of (3.30). The factor z(k) comes from elimination of the ^-functions,
+and is equal to the product of the factors z{k)(c) for ceΛ^+^K We have
+z(fc>Jά4exp -log z
+(3.33)
+The last term is a number, which contributes to the vacuum energy renormalization,
+so we include it into the definition of E£\ The first term has already the localized
+form, so we consider the second term. We have
+-- logdet(C*zl(k)C)= -X- Trlog(C*zl(k)C)
+z. z*
+= — f dz\ogzΎr(C*Δ{k)C-ziyι , (3.34)
+y
+where the contour γ surrounds the spectrum of C*zl(/c)C, e.g. we take γ composed
+of a segment of the circle \z\ =R for 7? large enough, and of an interval on the line
+Re z = r, r positive and small. We take λ0 > r, but small enough, and we expand the
+resolvent in (3.34) as follows:
+(3.35)
+
+=== PAGE 32 ===
+274 T. Balaban
+The integral of the first term on the right-hand side is equal to —1/2 log/ί0/. The
+second term is O(\z\~2) as |z|->oo, hence we can replace the contour of integra-
+tion by the contour {z :Imz= — r, Rez^0}u{z: Rez = 0, |Imz|^r}u{z : Imz = r,
+Rez gO}, and next take the limit as r-»0. This yields
+-l- logdet(C*Δ^C) = -~ \oj?
+2 o
+ιτr(C*A(k)C-λoI)(C*Δik)C + λiyι .
+(3.36)
+Let us introduce the following definiton:
+•tri(C*Δ*)C-λ0I)(C*Δik)C + λΓ1
++ [dt )
+b'eΛW*,b'Φb Ol
++ gk \dt(ti\'k(tgk,A,b)(CA)(b)}t . (3.37)
+0
+The identities (3.30)—(3.33), (3.36), together with the above definition, imply the
+equality
+[the logarithm on the right-hand side of (3.28)]
+(3.38)
+The constant above is the constant in (3.33), included into the vacuum renor-
+malization E$].
+The terms in (3.38) are gauge invariant. If they are constructed assuming that
+Λj+1 is the whole space, i.e. assuming Ωj = Λj= Tη for j=l,....,k +1, then they are
+also Euclidean covariant, and we have
+Eik + 1\rUk + 1,r-1b) = Eik + 1)(Uk + ι,b) . (3.39)
+Here r is an arbitrary Euclidean transformation of the continuous space Γ,
+transforming the lattice T{k + 1) into itself. We have dropped the subscript 0 because
+in this case the expressions (3.37) coincide with the expressions in the inductive
+assumption, e.g. in (2.26), (2.27). The Euclidean covariance (3.39) follows from the
+transformation laws (2.29), (2.32), and from the definitions of the expressions in
+(3.37).
+
+=== PAGE 33 ===
+Convergent Renormalization Expansions for Lattice Gauge Theories 275
+Next we introduce functions hz on the lattice Γ/k), for zeT^ + 1)\
+d
+λz(x)=Π h^μ-zμ) , A(0 = max{l-L-1|ί|,0} . (3.40)
+μ = l
+They form a decomposition of unity: ^ hz = 1. With the help of these functions
+we define z
+Ί
+)\ ,
+(3.41)
+This function has the same properties as the function (3.37), namely it is gauge
+invariant, and, when defined on the whole lattice, it is Euclidean covariant, i.e. it
+satisfies the inductive assumption (2.29) forj = k + l. The equality (3.38) implies
+[the logarithm on the right-hand side of (3.28)]= £ E£k + 1)(Λk + 1,z) + const .
+(3.42)
+The functions E^ + 1)(z) are not equal yet to the functions E(fc + 1)(z) in the inductive
+assumptions. These are obtained by constructing localized expansions of the
+expressions in (3.41), and summing up terms with localizations in Λk + 1. The
+localized expansions are cluster expansions for the expectation values, and the
+generalized random walk expansions for the operators in the second term on the
+right-hand side of (3.37).
+Let us consider now the expectation values in the formulas (3.26), (3.28),
+(3.37). To construct their cluster expansions we repeat all the considerations of
+Sect. 3.7 [I], with minor changes connected with the boundary layers {Ωj\Ωj + 1},
+and additions connected with the new terms in the effective action. We describe here
+briefly these changes and additions only. Let us start with the last expectation value
+in (3.37), and more exactly with the analysis of the effective action given by the
+expression in the last exponential in (3.28). Formally it is equal to the effective
+action in (2.12), (2.13) [I], but the fluctuation field A is localized in ΛjQf, and,
+what is more important, all the operators and the background field configuration
+Uk + 1 are determined by the sequence of domains {Ωj}. The difference in the analysis
+is connected with the fact that on the domain Ωj\Ωj+ί the configuration
+Uk + ί coincides with a ί/y-type configuration, it has the same regularity properties
+and bounds. Therefore we have to change properly the scales on this domain. In [I]
+we have constructed the family of cubes {•} covering the space T, and the
+corresponding partition of unity {Cπ}. Now we take the family of these cubes
+covering the domain Ωk, and for each layer Ωj\Ωj+ί we construct its cover by cubes
+Π, which are unions of 2d neighboring cubes from Uj, i.e. cubes of the size 2MLjη
+(measured in ^-scale). For the union of these families, which is a cover of Ωί, we
+construct the corresponding partition of unity. Such covers and partitions were
+constructed and used in [11, 13], in connection with the generalized random walk
+expansions.
+
+=== PAGE 34 ===
+276 T. Balaban
+We repeat the analysis of Sect. 3 [I] using the above cover {D}, and the partition
+of unity {CQ} For the term E(J) it is in fact restricted to the domain Ay If a cube • in
+the expansion (1.3.4) is a union of 2d cubes from πnj'^n^k, then the operation ~ is
+also defined using cubes from πn. Thus the conditions (1.3.5) have a different
+meaning now, the difference shows up in bounds only. In all bounds connected with
+such a cube we have to replace η = L~k by L~n. For bounds involving distances
+it is obvious, e.g. if a localization domain IGD; is disjoint with Π~, then
+dist (X, D) > MLnη, hence in the £-scale dist{ξ) (X, Πϊ) > M(LjL~nyK Other bounds
+involve regularity properties of the configuration Uk + ί on a neighborhood of
+Ωn\Ωn + 1, and these are the same as for ^-configurations, i.e. they are characterized
+by the scale L~". Thus, for terms connected with such a cube D, we obtain all the
+formulas and bounds of Sects. 3, 4 [I] with η replaced by L~". In fact we have better
+bounds, because the fluctuation field is localized in Ωk + 1, and the exponential decay
+of propagators and minimizing functions yields additional small factors. They
+contribute to the bound (2.38), because such terms will be included into boundary
+terms.
+After the completion of the operations of Sects. 3-5 [I] we localize the obtained
+expressions. We repeat again the analysis of Sect. 6 [I], with the only change that the
+random walk expansions we use now are constructed for the sequence {Ωj}, so we
+apply Theorems 3.7-3.10 [13] in their full generality. The expansions (6.9) [I] are
+constructed for families σ0 = {A} of cubes in proper scales, i.e. if A<=Ωj\Ωj+1, then
+the size of A is equal to MUη. Then we resum them in localization domains FoeDfc,
+and we obtain the expansions (1.6.10) with these domains. The remaining
+considerations and bounds are the same as in [I]. The same remarks apply to the
+expression P(/c), and we obtain Lemmas 5, 6 [I] with the corresponding changes.
+More precisely, the terms of the expansion (1.6.41), with localization domains Y
+contained in Ak + x, satisfy exactly all the conditions of those lemmas. The remaining
+terms satisfy such conditions also, but with analyticity space (1.6.34) replaced by the
+space
+{
+(3.43)
+Notice also that the localization domains occurring in this expansion have
+nonempty intersections with Λk + ί. These remaining terms will contribute to the
+boundary terms B(/c + 1) in the final expansion.
+Let us discuss briefly the above operations for the actions defining the measures
+(3.27), (3.29). The action in (3.29) differs only by the additional dependence on the
+field tAk, but this was already taken into acount in the above considerations. The
+action in (3.27) contains more expressions. The expression determined by Rk is
+treated in exactly the same way as Έk, except the second renormalization connected
+with the coupling constant renormalization counterterm, which is not needed here.
+In fact the analylsis presented in [16] for three-dimensional models is enough here.
+The expression determined by the boundary terms Bk is much simpler to deal with.
+To its terms we apply the formulas (3.6), (3.7) [I], and next we localize the obtained
+expressions. The localized expansion is over domains Yo e Dfc having nonempty
+intersections with Λk + 1. Terms of this expansion can be extended [as in (1.3.13)] to
+analytic functions defined on the corresponding spaces (3.43). Notice that on the
+
+=== PAGE 35 ===
+Convergent Renormalization Expansions for Lattice Gauge Theories 277
+domain Ωck+ι there is no regularity improvement of the configuration Uk + ι on the
+other hand we have to use a part of the analyticity domains of terms in Bfc for the
+function Hk. This is the reason for putting the powers of 1/2 in the conditions
+(2.36)-(2.39). The analyticity domains become smaller after each step, but the
+difference is very small and exponentially decreasing in the number of steps. The
+localization of the fluctuation field, and the exponential decay of the minimizing
+function Hk imply that this difference is still much greater than bounds on this
+function. The terms of the expansion can be estimated as in (2.42), but with the
+additional factor O(εk) arising from the bound of the fluctuation field. The last
+expression in the curly bracket in (3.27), or in (3.15), is at first localized by the
+decomposition of unity {ζD} introduced into the sum over plaquettes in the Wilson
+action. We obtain a sum of terms localized in Zfc, because supp(gk2( •)— gk2)
+aZk . These terms contribute to the boundary terms only, and they are treated as
+above. Notice that the large values of the function gk2( ) — gk2 are suppressed by
+the exponential decay of Hk. Finally, the expression V(k)(Sk+i) arises as the sum of
+all the expressions discussed above, but expanded with respect to the pexturbatrve
+terms in the transformations (1.22). These expressions have at least one localization
+in Sk + l9 and are treated again as the boundary terms.
+The expressions in the expectation values in (3.26), (3.28), (3.37) are expanded
+and localized in the same way as the corresponding expressions in the actions
+discussed above.
+The final step in constructing localized expansions of the expectation values is
+the exponentiated cluster expansion of Sect. 7 [I], or rather its appropriate
+generalization. Let us start the construction for the last expectation value in
+(3.37) again. The normalization factor in it, which is the integral in the logarithm
+on the right-hand side of (3.28), is expanded in exactly the same way as in
+Sect. 7 [I]. The differences, like the restriction of the integration to Λk + ί, or the
+larger class of localization domains, do not matter, and the factor is represented as
+expE(Λ + 1)(ylfc+1). The expression E(k + 1)(Λk + 1) in the exponential is given by
+(1.7.12), with terms given by (1.7.13), but with the localization domains Z{eΌk,
+Xe Dfc + 1 having nonempty intersections with Λk + 1. The integral in the nominator
+of the expectation value is expanded in the following way. We take the expansion of
+the integrated function, and we obtain the sum of integrals of the localized terms. In
+each integral we apply the Mayer expansion (1.7.1). To each term of the obtained
+sum we apply next the constructions of Sect. 7 [I], described between (7.2) and
+(7.10) there. We obtain
+[the nominator of the expectation value in (3.37)]= £ Hf(Z0) \..H(Zn) ,
+{Zo,..,Zn}
+(3.44)
+where the localization domains ZO,....,ZΠ satisfy all the conditions described in
+Sect. 7 [I] in connection with the formula (7.11), and the above conditions too. In
+addition the domain Zo contains the bond b (or the point z). We can have n = 0, for
+n > 0 the factors //(Zf) are the same as in the expansion of the denominator. The
+factor H' (Zo) is different it is given by an integral with trie integrand including, as
+one of the factors, a localized term from the expansion of the integrated function in
+the expectation value in (3.37). Although different, it satisfies the same bound as the
+
+=== PAGE 36 ===
+278 T. Balaban
+other factors. In the sum (3.44) we separate the summation over Zo, and for a fixed
+Zo we consider the remaining sum over {Z1,....,Zn}. It has the form (1.7.11), with
+the additional condition that the domains Zf do not intersect Zo along a cube, or a
+wall of a cube. This condition can be formulated as Zi c Zc0, where ZQ is the union of
+all cubes from πk9 such that they do not intersect Zo, or intersect it along a two-
+dimensional edge at most. The sum is exponentiated, and the exponent is
+represented by (1.7.12), with the additional restriction on the polymers Zt . We
+denote the exponent by E(k + 1)(Λfc + 1,Zo), and we have
+[the expectation value in (3.37)]= ^ //'(Z0)exp [E(fc + 1)(Λ.k + 1,Zo)
+Z0Db
+frik + l)/ A λ~ι C\ Λ ς\
+— JL \Λk + i)\ . (^:>.4OJ
+The difference in the exponential has the representation (1.7.12) with (Zl9....,Zn)
+satisfying the additonal condition that at least one of the localization domains
+intersects Zo along a three-dimensional wall at least. Resumming the terms of this
+representation according to (1.7.13), we obtain
+[the expectation value in (3.37)]= £ #'(Z0)exp -£ E(k + 1)(Λk + ί, Y) .
+(3.46)
+The sum in the exponential is over the localization domains Y satisfying both
+conditions relative to Λk + l9Z0. Finally, the exponential on the right-hand side of
+(3.46) is expanded into the Mayer expansion, as the action density (1.7.1). This, after
+the proper resummation, yields the representation
+[the expectation value in (3.37)]= £ Έ$ + ί)(Λk + 1,X9b) . (3.47)
+XeΌk+uXDb
+There is also the dependence on the variable t, suppressed in the above formula. The
+terms of the sum above satisfy the bounds (2.42), with the constant Bo replaced by
+O(pl(gk)). Of course the integration with respect to t preserves the form of the
+representation, and the multiplication by gk yields small bounds.
+The second integral on the right-hand side of (3.37) is treated in the same way as
+above, but it is simpler because there is only the Gaussian action. Thus we start with
+the expansion (1.7.3), taken with Γo = 0, for the denominator, and with this
+expansion taken with Yo = Π, D is the cube containing b, for the nominator. Next we
+repeat the steps from (1.7.3) to (1.7.13), and the above from (3.44) to (3.47). We
+obtain an expansion of the form (3.47), with terms satisfying the bounds (1.1.18).
+Finally, the operators in the first integral on the right-hand side of (3.37) are
+represented by the generalized random walk expansions. After the integration we
+get a representation of the form (3.47), with terms satisfying (2.42).
+Summing up the above expansions we obtain the representation (3.47) for
+Έ§ + 1)(Λk + ί9b)9 and the corresponding representation for Έ§ + ί)(Λk + ί,z). The
+important remark is that the terms Έ$ + 1)(Λk + l9 X, z) of this representation, for
+XczΛk + ί9 do not depend on Λk + l9 and coincide with the corresponding terms
+arising from the expressions defined on the whole lattice, i.e. in the framework
+of [I]. Now we can define the expressions in the formulas (2.26), (2.27) ϊoxj —
+
+=== PAGE 37 ===
+Convergent Renormalization Expansions for Lattice Gauge Theories 279
+We put Eik+1)(X,z) = Eg + 1)(Ak + i,X,z) for zeA°k + ι, XaΛk + ί, and we define
+E(fc + 1)(ΛΛ + 1,z), E(k + 1)(Ak + 1) by the formulas (2.27), (2.26) correspondingly. This
+ends the construction of the regular part of the effective action after A: H- 1-st
+renormalization transformation. The remaining terms in the expansions (3.47) are
+included into the boundary term B{k + 1).
+The other expectation values in (3.26), (3.28) are treated in exactly the same way.
+We have discussed already the localized expansions for the actions defining the
+corresponding measures, and for the integrated expressions. Having these expan-
+sions we proceed with the cluster expansions, and with the operations described
+above in (3.44)-(3.47). In effect we get representations of the type (3.47). Let us
+describe briefly special features of these representations for various expectation
+values. This in (3.28) is almost identical to the one in (3.37), but the expressions
+integrated have localized expansions with localization domains always intersecting
+Ωk + ί\Λk + 1, hence this whole expectation value is included into the boundary term
+B(/c + 1). Similarly, the first expectation value in (3.26) is included into this boundary
+term, too. The expansion (3.47) for the second expectation value in (3.26) is divided
+into two parts. The terms with localization domains contained in Λk + 1 have the
+same important property as the corresponding E(/c + 1)-terms, namely they do not
+depend on Λk + 1. We denote them by R"(k + ί\ and we include them into the term
+j£(/c + i) JJ^ remammg terms are included again into the boundary term.
+Thus we have finished the decomposition of the logarithm of the fluctuation
+field integral in (3.25) into the sum of the three terms: E(fc + 1), R"(k + 1\ and B(k + 1).
+These terms satisfy all the conditions of the inductive assumption. Let us remark
+that they are not the terms in the k-\-l-st effective action, because we have to
+perform yet the R-operation, which will change many features of the action.
+Obviously in general new terms will be included into R(/c + 1). To complete the
+procedure in this step, we have to renormalize the new terms. The vacuum energy
+renormalization is performed by subtracting the values of E(fc + 1) and R"(k + 1) at the
+configuration Uk + ί = l from the corresponding terms, and adding these values to
+E$\ This yields the term E{k\ and we define —Ek + E{k)= — Ek + ί. The coupling
+constant renormalization is performed by subtracting βk + 1(gk)A(φk + 1,Uk + 1)
+from E(/ί + 1)—E(/ί + 1)(l), and by replacing the function gk2(') in the action
+Λ(gk2( ), ί/fc + i) by gk~+x ( ) defined by the equation (2.24) withy = fc + 1. After this
+we obtain Tρk represented exactly in the form described by the inductive assumption
+with k + \ instead of k. This ends the inductive proof of this representation.
+The Proof of Theorem 2. Here we want to achieve a more extensive goal than just the
+proof. We want to describe an approach to renormalization, which is alternative to
+the one described in Sects. 3-5 [I]. It will clarify also some of the issues barely
+mentioned only in the above analysis.
+The basic expression to analyze, either in the proof of Theorem 2, or in the
+analysis of renormalization, is the difference Έij)(Aj9 Uk,z)—Eij)(Aj, l,z). The field
+Uk may depend on the fluctuation field, as in the exponential in (3.15). Let us assume
+that z E Ajn(Ωn\Ωn + 1)9 and let us take the cube Πeπn such that zeΠ. We represent
+the function Eω(Λ7 ,z) as the sum (2.27) over the localization domains XeΌj,
+X<=Aj9 zeX. Consider the two cases (1.3.5): Xc=π~2, Xn(D~2)cφ0 (the ~-
+operation is in the L""-scale). In the second case the function E(j)(I5z) is already
+
+=== PAGE 38 ===
+280 T. Balaban
+very small by the bound (1.1.18):
+\E(j)(X,z)\^E0exp(-KiUL'")-1)exp(-^κdj(X)) . (3.48)
+In the proof of Theorem 2 we simply estimate all these terms using the above bound,
+and the sum over Xis bounded by O(\)txv(-κ(lJL--n)-ι)^O(\)(lJLΓn)5. This is
+an admissible error contributing only to the constant on the right-hand side of
+(2.43). For the complete analysis we apply the formulas (3.3), (3.6)—(3.13) [I]. We
+may use also the simpler representation E(j)(X, exp iηHUk+1, z), and then to replace
+the background configuration by the corresponding complex variables.
+Consider the basic first case now. We keep the same notations as in Sect. 3 [I],
+and we apply the formulas and transformations (3.3), (3.18)—(3.28) [I]. They have a
+bit different meaning now, because the configuration C/k, or C/k+1, restricted to
+Ωn\Ωn + 1 coincides with a £/M-type confiuration, but the difference is seen in bounds
+only. Notice also that for the proof of Theorem 2 we put Hk(B') = 0 in (1.3.28), or
+A = 0 in (1.3.30), and we replace L~1ηHk + ι by ηiik. The function UηA, where A is
+defined by (1.3.30), satisfies the bound (1.3.32), but in the L~"-scale instead of the
+f7-scale. Next we apply the expansion (1.3.34). The last term in it satisfies the bound
+(1.3.54), the right-hand side of which can be further bounded by (1.3.35), again with
+η replaced by L~n. To the sum on the right-hand side (1.3.34) we apply the
+considerations of Sect. 4 [I], with two differences only. We do not differentiate with
+respect to tπ yet, hence all the factors B in the sum are the same, and applying the
+Ward-Takahashi identities (1.4.14), (1.4.15), and other operations of that section,
+we move the factors B to the point z instead of the point x. The final formula we
+obtain is slightly different from the formula (1.4.34). We have
+Σ <(,), > Σ \= 1 * μ,v,κ,λ \_x,y
++ (the irrelevant terms) (3.49)
+As in Sect. 4 [I] we have dropped the superscript (/) in the symbols above, the
+superscripts written denote the functional derivatives with respect to B. In
+particular
+δ* )|β=0 . (3.50)
+This implies E(μ2v}(X, x, y, z) = Eί?J(X, y, x, z). We prove the following antisymmetry
+property
+Σ E£XX,x,y,z)(xκ-zκ)= -Σ Έ.%(X,x,y,z)(xμ-zJ . (3.51)
+
+=== PAGE 39 ===
+Convergent Renormalization Expansions for Lattice Gauge Theories 281
+Let us suppress the other symbols and denote the left-hand side above by Eμκ. We
+decompose it into the symmetric and antisymmetric parts :
+F =E(S) + F(β) F(5) —1/2 (F 4-F ϊ
+We have to prove that the symmetric part is equal to 0. Take the scalar product with
+an arbitrary matrix A, tr AΈis) = tr A (s)E, where A(s) is the symmetric part oΐA. Thus
+^=Σ E%>(X,x,y,z) £ Aj*(xκ-zκ) . (3.52)
+x,μ K
+Take the function
+Kχ)=\ Σ Ό*, -z»)(χκ -^ -Σ Ό*μ ~ZJ (3-53)μ,κ μ
+Of course (^l)(x) = Σ ^μΐί^-^). hence
+K
+=Σ (aμ2)(x)E<2v>(Z.x,j,z)=0 (3.54)
+by the first identity (1.4.15). Because ^4 is an arbitrary matrix, so the above equalities
+imply E(i) = 0, which is the property (3.51). Denoting by ΈμVffcλ(X,z) the sum over
+x,y in the square bracket in (3.49), we have
+K\κχ(X>z)= -E^μλ(X,z)= -Έ$tKV(X9z) . (3.55)
+This property allows us to antisymmetrize the derivatives in (3.49) in the indices μ, K
+and v, λ. Denoting Fκμ(z) = (dκBJ(z)-(dμBκ)(z) + i[Bκ(z),Bμ(z)]9 we have
+« = 1 ^! κ<μ,λ<v Z
++ (the irrelevant terms) . (3.56)
+Let us recall that (the irrelevant terms) above, and in (3.49), denotes the sum of
+terms which can be bounded by O((LjL~n)5~β) exp (-κdj(X)), where β is a positive
+number. The identities (3.56) hold for the localization domains X satisfying the
+condition Jc up2. We sum up the identities over all such domains, and we extend
+the sum on the right-hand side to all domains XeΌj for the space L~jZd,X
+containing the point z. The difference between the two sums contributes to the
+irrelevant terms only, by the bounds (3.48). Thus we obtain the identity (3.56)
+resummed over the domains X, but with the first expression on the right-hand side
+replaced by
+\ Σ Π^κλtτFκμ(z)Fλv(z) . (3.57)
+Here Πμ{\κλ = Σ ΠμJv\x9>', z)(xκ -zκ)(yλ -zλ), and the function Πμ{\x,>', z) is given
+by the formula (3.50), but with Έ{j)(X. Uj9 z) replaced by EU)(£/,-> z) defined on the
+whole lattice L~jZd. This function is translation invariant, hence Π(μjv]κλ is
+independent of z. Let us describe its other properties. The most important one is the
+
+=== PAGE 40 ===
+282 T. Balaban
+Euclidean covariance following from (2.29). It can be reformulated as
+E{j)(Uj(QxpίrBlrz) = EU)(Uj(expiBlz) , (3.58)
+where rB represents the configuration (rB)μ(x) = (rB)μ(r~1x). The notation here is
+confusing, the symbol r on the left-hand side denotes the transformation of the
+vector field on the lattice Zd, generated by the Euclidean transformation r of this
+lattice. On the right-hand side r denotes the matrix of the corresponding rotation,
+and r~ιx denotes the point obtained by the application of r~ι to x. We must also
+take into account the convention B((x, x + eμ}) = Bμ(x). For example, if r is the
+reflection in the hyperplane xμ = 0, then
+Thus rx = (..., —xμ,...)—eμ, which is equal to rx—eμ, where in the last expression rx
+denotes simply the reflection applied to the point x. Keeping in mind these different
+meanings of the symbol r, we write the following conclusion of the covariance (3.58)
+((r-1^r-1)Πi%v(rx,ry9rz) = Π^(x9y,z) . (3.59)
+For the number Π{μj^κλ these different interpretations of r disappear, and the above
+covariance together with the first Ward-Takahashi indentity (1.4.15) imply
+ΛπA Πμ{\κλ . (3.60)
+/ Jμv,κλ
+Here r denotes the matrix of the Euclidean rotation r. This invariance has the usual
+implications, analyzed already in Sect. 5 [I]. Let us describe them for the indices
+satisfying the restrictions κ<μ, λ<v occurring in the sum (3.57). Considering
+reflections we conclude that in this case the coefficients in the sum are different from
+0 only if μ = v and κ = λ. Considering permutations we conclude that then they are
+all equal, e. g. they are equal to their values for μ = v = 2, κ = λ = l. Thus we obtain
+; Σ v j \ . (3.61)^ μ< v
+The last identity can be considered as a possible definition of the ^-function. Now
+we prove that it coincides with the definition (1.1.22). Using the translation
+invariance and the identity (1.4.15) again we have
+βj = Σ Πg(x,y,0)xiyi=~ Σ ΠiίKx,y,0)(x1-yι)2
+x,y Z x,y
+= -~ Σ Πg(z-y, 0, -y)(Xι -y,f =-\Σ π®(χ>°'z)xl (3 62)^ x,y ^ x,z
+From the equality (2.26) for Λj = L~jZd, and from the definitions (1.1.20), (1.5.1), we
+obtain
+(3.63)
+
+=== PAGE 41 ===
+Convergent Renormalization Expansions for Lattice Gauge Theories 283
+Thus the representation (1.5.16), or (1.5.37), implies
+β'i = -\ Σ
+This is the required equality.
+Consider now the term -βjA(φj9Uk). We decompose it into the sum of
+localized expressions
+A(φj,Uk)= Σ Λ(KΦpUk) , (3.65)
+where hz is defined as in (3.40), but on the lattice TL-J, and with
+A(0 = max{l —1/|,0}. For zeΛ? we have hzφj = hz, and the function A(hz, Uj) is
+Euclidean covariant. Analyzing A(hz, Uk) in the same way as above, we obtain
+A(hz,Uk) = - X tri^v(z) + (the irrelevant terms) . (3.66)
+^ μ < v
+Thus the first expression on the right-hand side of the expansion of —βjA(hz, Uk)
+cancels the expression on the right-hand side of (3.61), and we are left with the
+irrelevant terms only. To get the expressions needed in the fluctuation field integral,
+we differentiate these terms with respect to the parameter tπ multiplying the
+fluctuation field. For the expressions considered in the proof of Theorem 2, we have
+the following conclusion:
+E^(ApUk,z)-E^(Apl,z)-βjA(hz,Uk) = O((LJL-")5-e) , (3.67)
+for z e A® n(Ωn\Ωn + 1), β>0. Summing over zeA^nΩ w get the inequality (2.43) in
+Theorem 2 (with 1 — β, β > 0, instead of β < 1). Thus we have proved the first part of
+Theorem 2, concerning the functions E0).
+The inequality (2.44) for the functions R(^ can be proved in an almost
+identical way. We analyze these functions as above, but we stop at the identity
+(3.49), where E(2)(Z, x,y, z) is replaced by R(2)(X, x,y), and z is an arbitrary
+point from X. Now all the terms on the right-hand side can be bounded by
+O{\)(LjL-nfgftx^{-κdj{X)\ and this yields the inequality (2.44). The proof of
+Theorem 2 is completed.
+Finally, let us sketch briefly another proof of Theorem 2. It is interesting
+because we do not use the Ward-Takahashi identities, but directly the gauge
+invariance. As in the previous proof we want to analyze the difference
+EU)(Λj, Uk,z)-E(j)(Λj, l,z) for zeΛ^n(Ωn\Ωn + ί). Now we take the cube Beπj
+containing z, zeD, and the cube Π~"~J. We divide the localization domains
+X into two classes: IcΠ^"j, or In(D~"""J')V0. For X in the second
+class the difference of the corresponding expressions can be estimated by
+2E0exp(-(1/2)>φ -j))exp (-(l/2)κdj(X)l and exp(-(l/2)/φ -j)) <(Z/ZΓ")5,
+hence these terms can be treated as before. Consider the terms with localization
+domains in the first class. Take the cube D0 = ίlΓ"~'7 + 1 and the representation Uk
+= [/j Do(M (Uk)). Now we repeat the construction of Sect. F [15], and we
+introduce the axial gauge for the field Mj(Uk) on Πo, considering Πo as one block
+with center at z. We denote the argument in the representation by V\ i.e., V
+
+=== PAGE 42 ===
+284 T. Balaban
+= M\Uk), and V is a small field, more precisely we have
+V'-\\ < 11 d2εn(LjL-n)2 + dM(n -j + 2)
+<3dM(l+logLjL-")εn(LjL-n)2 . (3.68)
+We write V = exp IB', and we expand the terms up to the third order in B''. The third
+order terms are already irrelevant by the above bound, hence
+j (3.69)
+In the quadratic form above we restrict B' to Π~n~\ and we replace the function
+Ujf Do by Uj, the differences contribute to the last term only. Summing over X we get
++ O(l)(LjL-n)5 , (3.70)
+where the summation over x,y is restricted to Π~"~j, and
+B'(b)=UogUl(ΓZtb_ubuΓb + ιZ) . (3.71)
+Now we take the cube Πi e πn containing z, and we repeat the construction
+before (3.68), but for the representation Uk = UnίΠ~ (M \Uk)). We write Uk
+= (exp iL~nHn D~ (1/z) log M (Uk)))Uk , and using the gauge invariance of the trace
+in (3.70) we can replace the variables B' by
+y log(exp/βJ.(L-"HΪIfDΓ))(Γ)=y log(exp/Λ)(Γ)
+Σ i[B{b\B(b>)}b,b'CΓ,b<b'
+)3 (3.72)
+where Γ = Γzb_ubuΓb+ z. The contour variable B(Γ) is represented as (dB)(Σ),
+where Σ is a minimal surface with the boundary Γ. This assures that both terms on
+the right-hand side above are of the order 0{{LjL~n)2). We move the plaquette
+variables in the first term, and the bond variables in the second term, to the point z.
+The main term equals £ (xκ —zκ)Fκμ(z), if b = (x, x + eμ}, the remainder can be
+K < μ
+estimated by O(l)(LjL~n)3. Thus we obtain the representation (3.70), but with the
+first term on the right-hand side replaced by the expression (3.57). The remaining
+arguments are as in the first proof.
+The above proof can be also elaborated to a complete renormalization
+procedure, as the one in Sects. 3-5 of [I], but it is important to notice that it works
+only if we have the representation (2.26), (2.27) with the corresponding properties,
+similarly as the first proof.
+
+=== PAGE 43 ===
+Convergent Renormalization Expansions for Lattice Gauge Theories 285
+Acknowledgements. The author would like to express his gratitude for numerous interesting
+discussions during his work on gauge field theories to his collaborators Profs. A. Jaffe, J. Imbrie,
+D. Brydges, and to Profs. G. Gallavotti, F. Nicolo, G. Benfatto, R. Seneor, J. Magnen,
+V. Rivasseau, and J. Feldman.
+References
+I Balaban, T.: Renormalization group approach to lattice gauge field theories. I. Generation of
+effective actions in a small field approximation and a coupling constant renormalization in
+four dimensions. Commun. Math. Phys. 109, 249-301 (1987) and references therein
+II Balaban, T.: Renormalization group approach to lattice gauge field theories. II. Cluster
+expansions. Commun. Math. Phys. 116, 1-22 (1988)
+Communicated by A. Jaffe
+Received June 5, 1987, in revised form February 8, 1988
+
+=== PAGE 44 ===
+
+
