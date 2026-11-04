@@ -32,6 +32,7 @@ import BalabanPRT2
 import BalabanREG
 import BalabanVAR
 import BalabanPBG
+import BalabanRG1
 
 
 noncomputable section
@@ -495,52 +496,56 @@ end PBG
 
 namespace RG1
 
+open YangMills.BalabanPRT1
+
 /-- **RG1 Section 6.2, Theorem 2 (CMP 109, p. 254)**: 4D 1-Loop Running Coupling.
     β₀ = 11 C₂(G) / (48 π²) > 0 for non-abelian gauge group G. -/
 def oneLoopBetaCoeff (C2 : ℝ) : ℝ :=
-  11 * C2 / (48 * Real.pi ^ 2)
+  YangMills.BalabanRG1.oneLoopBetaCoeff C2
 
-theorem oneLoopBetaCoeff_pos (C2 : ℝ) (hC2 : 0 < C2) : 0 < oneLoopBetaCoeff C2 := by
-  unfold oneLoopBetaCoeff
-  have h_num : 0 < 11 * C2 := by linarith
-  have h_den : 0 < 48 * Real.pi ^ 2 := by positivity
-  exact div_pos h_num h_den
+theorem oneLoopBetaCoeff_pos (C2 : ℝ) (hC2 : 0 < C2) : 0 < oneLoopBetaCoeff C2 :=
+  YangMills.BalabanRG1.oneLoopBetaCoeff_pos C2 hC2
 
 /-- SU(2) 1-Loop Beta Coefficient: C₂(SU(2)) = 2. -/
-def su2Beta0 : ℝ := oneLoopBetaCoeff 2
+def su2Beta0 : ℝ := YangMills.BalabanRG1.su2Beta0
+
+theorem su2Beta0_eq : su2Beta0 = 11 / (24 * Real.pi ^ 2) :=
+  YangMills.BalabanRG1.su2Beta0_eq
 
 theorem su2Beta0_pos : 0 < su2Beta0 :=
-  oneLoopBetaCoeff_pos 2 (by norm_num)
+  YangMills.BalabanRG1.su2Beta0_pos
 
 /-- SU(3) 1-Loop Beta Coefficient: C₂(SU(3)) = 3. -/
-def su3Beta0 : ℝ := oneLoopBetaCoeff 3
+def su3Beta0 : ℝ := YangMills.BalabanRG1.su3Beta0
+
+theorem su3Beta0_eq : su3Beta0 = 11 / (16 * Real.pi ^ 2) :=
+  YangMills.BalabanRG1.su3Beta0_eq
 
 theorem su3Beta0_pos : 0 < su3Beta0 :=
-  oneLoopBetaCoeff_pos 3 (by norm_num)
+  YangMills.BalabanRG1.su3Beta0_pos
 
 /-- SU(N) 1-Loop Beta Coefficient for N ≥ 2: C₂(SU(N)) = N. -/
 def sunBeta0 (N : ℕ) (hN : 2 ≤ N) : ℝ :=
-  oneLoopBetaCoeff (N : ℝ)
+  YangMills.BalabanRG1.sunBeta0 N
 
-theorem sunBeta0_pos (N : ℕ) (hN : 2 ≤ N) : 0 < sunBeta0 N hN := by
-  unfold sunBeta0
-  have : (0 : ℝ) < (N : ℝ) := by positivity
-  exact oneLoopBetaCoeff_pos (N : ℝ) this
+theorem sunBeta0_pos (N : ℕ) (hN : 2 ≤ N) : 0 < sunBeta0 N hN :=
+  YangMills.BalabanRG1.sunBeta0_pos N hN
 
 /-- One-loop running coupling step: g_{k+1}² = g_k² + β₀ g_k⁴ ln L. -/
 def oneLoopBetaStep (beta0 : ℝ) (L : ℕ) (g_sq : ℝ) : ℝ :=
-  g_sq + beta0 * (g_sq ^ 2) * Real.log (L : ℝ)
+  YangMills.BalabanRG1.oneLoopBetaStep beta0 L g_sq
 
 /-- RG1 Theorem 2: Coupling runs strictly larger at coarser scales (asymptotic freedom in UV). -/
 theorem oneLoopBetaStep_strictly_increasing (beta0 : ℝ) (L : ℕ) (g_sq : ℝ)
     (h_b0 : 0 < beta0) (hL : 2 ≤ L) (hg : 0 < g_sq) :
-    g_sq < oneLoopBetaStep beta0 L g_sq := by
-  unfold oneLoopBetaStep
-  have h_log : 0 < Real.log (L : ℝ) := by
-    have : (1 : ℝ) < (L : ℝ) := by exact_mod_cast (by omega : 1 < L)
-    exact Real.log_pos this
-  have h_prod : 0 < beta0 * (g_sq ^ 2) * Real.log (L : ℝ) := by positivity
-  linarith
+    g_sq < oneLoopBetaStep beta0 L g_sq :=
+  YangMills.BalabanRG1.oneLoopBetaStep_strictly_increasing beta0 L g_sq h_b0 hL hg
+
+/-- Inverse coupling strength strictly decreases at coarser scales (interaction weakens in UV). -/
+theorem oneLoopInvCoupling_strictly_decreasing (beta0 : ℝ) (L : ℕ) (g_sq : ℝ)
+    (h_b0 : 0 < beta0) (hL : 2 ≤ L) (hg : 0 < g_sq) :
+    1 / (oneLoopBetaStep beta0 L g_sq) < 1 / g_sq :=
+  YangMills.BalabanRG1.oneLoopInvCoupling_strictly_decreasing beta0 L g_sq h_b0 hL hg
 
 /-- **RG1 Section 6.2, Theorem 3**: Irrelevant cluster terms exponential decay across blocks. -/
 structure IrrelevantClusterDecay (E0 kappa : ℝ) where
@@ -548,7 +553,45 @@ structure IrrelevantClusterDecay (E0 kappa : ℝ) where
   h_kappa : 0 < kappa
   bound : ℝ → ℝ := fun volume => E0 * Real.exp (-kappa * volume)
 
+/-- Accumulated cluster correction remainder is uniformly bounded by the multiscale geometric sum. -/
+theorem cluster_decay_sum_bound {k : ℕ} (M : YangMills.BalabanRG1.MultiscaleClusterDecayData)
+    (E : YangMills.BalabanRG1.EffectiveActionDecomposition k) (volume : ℝ)
+    (h_bound : ∀ j : Fin (k + 1), |E.cluster_corrections j| ≤ M.scale_bound j.val volume) :
+    |E.cluster_sum| ≤ M.multiscale_sum_bound volume :=
+  YangMills.BalabanRG1.effective_action_cluster_decay_bound M E volume h_bound
+
+/-- **Discrete Ward–Takahashi Identity & No-Mass-Counterterm Theorem**:
+    Gauge invariance strictly forbids non-gauge-invariant mass counterterms (1/2 m² A² = 0),
+    guaranteeing that the leading marginal operator is the massless 4D Yang–Mills curvature action. -/
+theorem no_mass_counterterm {N : ℕ} [NeZero N] (hN : 2 ≤ N) (m : ℝ)
+    (h_inv : ∀ (A : Form1 N) (lambda : Form0 N),
+      (1 / 2 : ℝ) * (m ^ 2) * normSq1 (fun x μ => A x μ - d0 lambda x μ) =
+      (1 / 2 : ℝ) * (m ^ 2) * normSq1 A) :
+    m ^ 2 = 0 :=
+  YangMills.BalabanRG1.no_mass_counterterm_of_gauge_invariance hN m h_inv
+
+/-- **Constructive Grounding to BalabanRG1 (CMP 109, 249–301, 1987)**:
+    The 4D small-field fluctuation determinant, 1-loop beta function flow,
+    and ultraviolet stability of irrelevant cluster densities are constructively
+    grounded in `BalabanRG1.lean`. -/
+theorem balaban_rg1_step_grounded (k N L M1 : ℕ) [NeZero N]
+    (hN : 2 ≤ N) (hL : 2 ≤ L)
+    (H : YangMills.BalabanREG.DomainHierarchyScale k L M1)
+    (D : YangMills.BalabanREG.NestedSubdomains k N)
+    (C_const : YangMills.BalabanVAR.MinimizerBoundConstants)
+    (V : YangMills.BalabanVAR.CoarseBoundaryCondition k N C_const.a1)
+    (hV_zero : V.field = fun _ _ => 0)
+    (lap_params : YangMills.BalabanPBG.CovariantLaplacianParams) :
+    Nonempty (YangMills.BalabanRG1.BalabanRG1Step k N L M1 hN hL H D C_const V lap_params) :=
+  YangMills.BalabanRG1.balaban_rg1_step_nonempty k N L M1 hN hL H D C_const V hV_zero lap_params
+
+#print axioms oneLoopInvCoupling_strictly_decreasing
+#print axioms cluster_decay_sum_bound
+#print axioms no_mass_counterterm
+#print axioms balaban_rg1_step_grounded
+
 end RG1
+
 
 /-! ============================================================================
     PAPER 7: RG2 (CMP 116, 1–22, 1988)
