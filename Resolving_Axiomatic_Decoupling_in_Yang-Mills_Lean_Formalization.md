@@ -422,7 +422,7 @@ Wait—if you quantify ∀ (gen : Fin k → ObservableLabel G Curv), ∃ (α β 
 
 > 1. **Zero new fields in Curv:** You don't have to define polyNorm or thread norms through Poly and LiePoly.  
 > 2. **Immediate Rescaling Immunity:** If you rescale an observable O↦*c*O, that creates a *new* generator family gen', which is allowed to have its own constant *α*′\=∣*c*∣*α*. The rescaling contradiction disappears completely.  
-> 3. **Immediate High-Degree Immunity:** If you pick higher-degree curvature polynomials in gen, the seminorm order *s* and growth constants *α*,*β* are allowed to depend on gen, matching Wightman / OS reconstruction where each local composite field Φ*a*​ in a finite multiplet has its own temperedness order *sa*​ (and taking *s*\=max*a*∈Fin *k*​*sa*​, *α*\=max*a*​*αa*​ yields a uniform *s*,*α*,*β* for any *n*\-point function formed from that finite multiplet).  
+> 3. **Immediate High-Degree Immunity:** If you pick higher-degree curvature polynomials in gen, the seminorm order *s* and growth constants *α*,*β* are allowed to depend on gen, matching Wightman / OS reconstruction where each local composite field Φ*a*​ in a finite multiplet has its own temperedness order *sa*​ (and taking *s*\=max*a*∈Fin *k*​*sa*​, *α*\=max*a*​*αa*​ yields a uniform *s*,*α*,*β* for any *n*\-point function formed from that finite multiplet).  
 > 4. **Exact Match to OS II Reconstruction:** In OS II (§IV.1, p. 287), the theorem reconstructs the Wightman quantum fields for any finite collection of fields satisfying (*E*ˇ0′). Quantifying ∀ (k : ℕ) (gen : Fin k → ObservableLabel G Curv), ∃ (α β : ℝ) (s : ℕ), ... ensures that **every** finite sub-collection of local gauge-invariant polynomials forms a valid OS II multiplet with a well-defined reconstruction to Wightman operators on the physical Hilbert space. *(Note: Also use α ^ n or α \* (α\_0 ^ n)—or remember that in OS II Eq. (IV.3), α(n\!)β absorbs α0n​ by slightly increasing β since cn≤C(n\!)ϵ, so either α \* ((Nat.factorial n : ℝ) ^ β) or (α ^ n) \* ... is mathematically equivalent.)*
 
 If you want to keep α \* ((Nat.factorial n : ℝ) ^ β) exactly as written in your file, simply move ∀ (k : ℕ) (gen : Fin k → ObservableLabel G Curv), to the very front of os0\_temperedness and replace (ops : Fin n → ObservableLabel G Curv) with (idx : Fin n → Fin k) and ops with (fun i \=\> gen (idx i))\!
@@ -464,7 +464,7 @@ Wait: how do you represent the linear map *X*↦⟨*Fμν*​,*X*⟩ cleanly ins
 
 > * **Architecture 1 (Coordinate-Tensor Split — Most Rigorous):** Introduce the bilinear tensor map lie\_tensor : Poly\_coord → Lie → LiePoly or, even simpler, recognize that *Fμν*​∈LiePoly is the **single canonical g\-valued 2-form**, while contracting *Fμν*​ with a constant Lie algebra element *X*∈g⊂LiePoly happens via a **constant embedding** lie\_embed : Lie →ₗ\[ℝ\] LiePoly of classical dimension 0\!
 
-Let's verify this\! If you embed g\=Lie(*G*) into LiePoly as **constant (dimension 0) g\-valued polynomials** via lie\_embed : Lie →ₗ\[ℝ\] LiePoly:
+Let's verify this\! If you embed g\=Lie(*G*) into LiePoly as **constant (dimension 0) g\-valued polynomials** via lie\_embed : Lie →ₗ\[ℝ\] LiePoly:
 
 > 1. **Is lie\_embed a true Lie algebra homomorphism?** **YES\!** For constant elements *X*,*Y*∈g (scaling dimension 0), \[lie\_embed X, lie\_embed Y\] \= lie\_embed \[X, Y\] has dimension 0+0=0. There is no dimension contradiction\!  
 > 2. **Are constant elements killed by covariant derivatives?** No, in a non-trivial gauge background *Dμ*​*X*\=\[*Aμ*​,*X*\] is not gauge-covariant, which is why constant g\-elements aren't local curvature polynomials.
@@ -477,7 +477,7 @@ Let's check the **Universal Graded Lie Algebra of Curvature Jets**\! In algebrai
 
 via the canonical linear injection:
 
-*ιμν*​\=F\_comp *μ* *ν*:g↪LiePoly
+*ιμν*​\=F\_comp *μ* *ν*:g↪LiePoly
 
 In this universal construction:
 
@@ -488,7 +488,7 @@ In this universal construction:
 > * It has **classical scaling dimension 2** (classicalDimLie (F\_comp μ ν X) \= 2 for *μ*\=*ν*,*X*\=0).  
 > * Its **trace pairing** satisfies trace\_pair (F\_comp μ ν X) (F\_comp μ ν Y) \= (lie\_inner X Y) • Ω\_{μν} where Ω*μν*​\=0 is the scalar quadratic Casimir curvature invariant dimg1​Tr(*Fμν*​*Fμν*​)∈Poly\!  
 > * What about the bracket ⁅F\_comp μ ν X, F\_comp ρ σ Y⁆? In the universal differential Lie algebra of curvature jets, the Lie bracket of two degree-2 generators has **degree 4** (classicalDimLie ⁅A, B⁆ ≤ classicalDimLie A \+ classicalDimLie B), and is linked to F\_comp by the **Ricci commutator identity**:  
->   \[*Dμ*​,*Dν*​\](F\_comp *ρ* *σ* *Y*)=*a*∑​ brackets with the basis of g  
+>   \[*Dμ*​,*Dν*​\](F\_comp *ρ* *σ* *Y*)=*a*∑​ brackets with the basis of g  
 >   Specifically, the universal Casimir / curvature element *Fμν*​ acts via the adjoint representation\!
 
 Let's verify this\! Why did your file have both F : Fin 4 → Fin 4 → LiePoly AND F\_comp : Fin 4 → Fin 4 → Lie →ₗ\[ℝ\] LiePoly? Because in ricci\_commutator:
@@ -518,10 +518,10 @@ To make the connection between F, F\_comp, Lie, LiePoly, and Poly 100% solid and
 
 > 1. **Drop F\_comp\_bracket (or replace it with graded bracket dimension compatibility):** As proved above, ⁅F\_comp μ ν X, F\_comp μ ν Y⁆ \= F\_comp μ ν ⁅X, Y⁆ equates a degree-4 quadratic curvature expression with a degree-2 linear curvature expression. Instead, the Lie bracket on LiePoly is sub-additive in classical dimension (classicalDimLie ⁅A, B⁆ ≤ classicalDimLie A \+ classicalDimLie B), and the adjoint action of F μ ν on F\_comp ρ σ X is governed by the Lie structure of g.  
 > 2. **Require F\_comp to be injective and of classical dimension 2:** For *μ*\=*ν*, Function.Injective (F\_comp μ ν) and ∀ X ≠ 0, classicalDimLie (F\_comp μ ν X) \= 2\.  
-> 3. **Explicitly identify F with F\_comp over an orthonormal basis of Lie:** For any Ad(*G*)-invariant inner product lie\_inner on Lie, there exists an orthonormal basis *B*:Fin *d*→Lie such that:  
+> 3. **Explicitly identify F with F\_comp over an orthonormal basis of Lie:** For any Ad(*G*)-invariant inner product lie\_inner on Lie, there exists an orthonormal basis *B*:Fin *d*→Lie such that:  
    * F μ ν \= ∑ i, F\_comp μ ν (B i) (linking F directly to F\_comp), AND  
    * ∀ l μ ν X, covDeriv l (F\_comp μ ν X) \+ covDeriv μ (F\_comp ν l X) \+ covDeriv ν (F\_comp l μ X) \= 0 (Bianchi holds on all F\_comp components, which then automatically implies it for F).  
-> 4. **Upgrade trace\_pair\_lie\_inner\_compat to an exact quantitative identity linking trace\_pair, F\_comp, F, and lie\_inner:** For any *μ*,*ν*∈Fin 4 and *X*,*Y*∈Lie, the trace pairing of two component generators is proportional to lie\_inner X Y times the canonical quadratic curvature scalar trace\_pair (F μ ν) (F μ ν):  
+> 4. **Upgrade trace\_pair\_lie\_inner\_compat to an exact quantitative identity linking trace\_pair, F\_comp, F, and lie\_inner:** For any *μ*,*ν*∈Fin 4 and *X*,*Y*∈Lie, the trace pairing of two component generators is proportional to lie\_inner X Y times the canonical quadratic curvature scalar trace\_pair (F μ ν) (F μ ν):  
 >    `trace_pair_F_comp_exact : ∀ (μ ν : Fin 4) (X Y : Lie),`  
 >      `(trace_pair (F_comp μ ν X) (F_comp μ ν Y)) * (algebraMap ℝ ℂ (lie_dim_norm)) =`  
 >      `(algebraMap ℝ ℂ (lie_inner X Y)) • trace_pair (F μ ν) (F μ ν)`
