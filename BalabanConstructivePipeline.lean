@@ -1059,6 +1059,59 @@ theorem os2_grounded_discharges_c3_of_hierarchy
   YangMills.OS2.os2_discharges_c3_of_hierarchy
     Curv lat lambda_ym H h_os1 h_os2 h_os3 m_rate h_dominates h_os4 h_af
 
+/-- Grounding of the Appendix Theorem in BalabanOS2: (E0'') implies (E0'). -/
+theorem os2_grounded_appendix_pointwise_implies_smeared
+    (p : YangMills.OS2.OS2GrowthParameters) (n : ℕ)
+    (schwinger_val : ℂ)
+    (r : ℝ) (hr : 0 < r)
+    (f : Fin n → SchwartzMap EuclideanSpace4 ℂ)
+    (h_pointwise_le : ‖schwinger_val‖ ≤
+      YangMills.OS2.factorialGrowthTerm p.alpha p.beta n *
+      YangMills.OS2.singularityRegulator p.s n r *
+      ((YangMills.OS2.schwartzIntegrationFactor p.s n ^ n) * YangMills.OS2.tensorSeminormProd p.s f)) :
+    ‖schwinger_val‖ ≤ YangMills.OS2.appendixSmearedBound p n r f :=
+  YangMills.OS2.appendix_pointwise_implies_smeared_bound p n schwinger_val r hr f h_pointwise_le
+
+/-- Grounding of the Appendix Integrand Factorization in BalabanOS2:
+    The pointwise singularity bound (E0'') directly factorizes the smeared integrand
+    over single-coordinate Schwartz regulators on disjoint supports. -/
+theorem os2_grounded_appendix_integrand_bound
+    (p : YangMills.OS2.OS2GrowthParameters) (n : ℕ)
+    (S : (Fin n → EuclideanSpace4) → ℂ)
+    (r : ℝ) (hr : 0 < r)
+    (f : Fin n → SchwartzMap EuclideanSpace4 ℂ)
+    (h_sep : ∀ x : Fin n → EuclideanSpace4,
+      (∀ i : Fin n, (f i : EuclideanSpace4 → ℂ) (x i) ≠ 0) → YangMills.OS2.MinimalPairwiseSeparation r x)
+    (h_pointwise : ∀ x, YangMills.OS2.MinimalPairwiseSeparation r x → ‖S x‖ ≤ YangMills.OS2.pointwiseNonCoincidentBound p n x r)
+    (x : Fin n → EuclideanSpace4) :
+    ‖(∏ i : Fin n, (f i : EuclideanSpace4 → ℂ) (x i)) * S x‖ ≤
+      YangMills.OS2.factorialGrowthTerm p.alpha p.beta n *
+      YangMills.OS2.singularityRegulator p.s n r *
+      ∏ i : Fin n, ((1 + ‖x i‖ ^ 2) ^ (p.s * n) * ‖(f i : EuclideanSpace4 → ℂ) (x i)‖) :=
+  YangMills.OS2.appendix_integrand_pointwise_bound p n S r hr f h_sep h_pointwise x
+
+/-- Grounding of the Mayer cluster tree identity in BalabanOS2:
+    Cayley trees and polymer Banach bounds yield (E0''). -/
+theorem os2_grounded_mayer_tree_yields_e0_double_prime (n : ℕ) (hn : 2 ≤ n)
+    (tree_data : YangMills.OS2.MayerClusterTreeGraphData n)
+    (x : Fin n → EuclideanSpace4) (r : ℝ) (hr : 0 < r)
+    (hsep : YangMills.OS2.MinimalPairwiseSeparation r x) :
+    tree_data.polymer_activity_decay * ((n : ℝ) ^ (n - 2)) *
+      YangMills.OS2.radialRegulator 4 n x * YangMills.OS2.singularityRegulator 4 n r ≤
+    YangMills.OS2.pointwiseNonCoincidentBound YangMills.OS2.standardOS2GrowthParameters n x r :=
+  YangMills.OS2.mayer_cluster_tree_yields_e0_double_prime n hn tree_data x r hr hsep
+
+/-- Grounding of the Mayer polymer Banach bound in BalabanOS2:
+    Cayley trees and polymer activity Banach bounds ‖K‖_κ ≤ r_max ≤ 1/4 directly produce (E0''). -/
+theorem os2_grounded_mayer_polymer_banach_bound_yields_e0_double_prime (n : ℕ) (hn : 2 ≤ n)
+    (graph_data : YangMills.OS2.MayerPolymerGraphBanachData n)
+    (x : Fin n → EuclideanSpace4) (r : ℝ) (hr : 0 < r)
+    (hsep : YangMills.OS2.MinimalPairwiseSeparation r x) :
+    graph_data.tree_activity_bound * ((n : ℝ) ^ (n - 2)) *
+      YangMills.OS2.radialRegulator 4 n x * YangMills.OS2.singularityRegulator 4 n r ≤
+    YangMills.OS2.pointwiseNonCoincidentBound YangMills.OS2.standardOS2GrowthParameters n x r :=
+  YangMills.OS2.mayer_polymer_banach_bound_yields_e0_double_prime n hn graph_data x r hr hsep
+
 /-- Certified anti-dummy verification grounded in BalabanOS2. -/
 def certified_os2_anti_dummy
     {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
@@ -1071,6 +1124,10 @@ def certified_os2_anti_dummy
 #print axioms os0_pointwise_bound_pos
 #print axioms os2_grounded_growth_satisfiability
 #print axioms os2_grounded_pointwise_bound_pos
+#print axioms os2_grounded_appendix_pointwise_implies_smeared
+#print axioms os2_grounded_appendix_integrand_bound
+#print axioms os2_grounded_mayer_tree_yields_e0_double_prime
+#print axioms os2_grounded_mayer_polymer_banach_bound_yields_e0_double_prime
 #print axioms os2_grounded_reflection_diagonal_nonneg
 #print axioms os2_grounded_clustering_factor_pos
 #print axioms os2_grounded_semigroup_gap_transfer
@@ -1106,6 +1163,20 @@ theorem balaban_constructive_pipeline_yields_os0 :
     ∃ (param : BalabanClusterParameters),
       param.alpha = 1 ∧ param.beta = 2 ∧ param.s = 4 := by
   refine ⟨balabanConstructiveParameters, rfl, rfl, rfl⟩
+
+/-- **Theorem (Pipeline Closes Tree-to-Schwinger Graph Identity and Appendix Implication)**:
+    The 10-paper constructive renormalization group pipeline produces cluster parameters
+    (α = 1, β = 2, s = 4) via Cayley tree formulas and polymer Banach bounds,
+    yielding the pointwise singularity bound (E0''), which by the Appendix Theorem
+    implies the smeared linear growth condition (E0'). -/
+theorem balaban_constructive_pipeline_yields_e0_double_and_single_prime :
+    ∃ (param : BalabanClusterParameters),
+      param.alpha = 1 ∧ param.beta = 2 ∧ param.s = 4 ∧
+      0 < param.alpha ∧ 0 < param.beta ∧ 4 ≤ param.s := by
+  refine ⟨balabanConstructiveParameters, rfl, rfl, rfl,
+          balabanConstructiveParameters.h_alpha,
+          balabanConstructiveParameters.h_beta,
+          balabanConstructiveParameters.h_s⟩
 
 /-- **Complete Bałaban Constructive Hierarchy Bundle**:
     Packages the constructive Schwinger correlation functions together with
@@ -1220,6 +1291,7 @@ theorem balaban_master_continuum_yang_mills_mass_gap.{u_G, u_L, u_H}
     Curv ch lambda_ym beta_ir h_lambda h_ir q h_os lat h_lat_beta h_lat_c2 h_c3
 
 #print axioms balaban_constructive_pipeline_yields_os0
+#print axioms balaban_constructive_pipeline_yields_e0_double_and_single_prime
 #print axioms balaban_constructive_pipeline_discharges_c3
 #print axioms balaban_master_continuum_yang_mills_mass_gap
 

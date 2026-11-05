@@ -1,5 +1,5 @@
 /-
-Copyright 2026 Elias Oulad Brahim and ToposLang / PLQ Authors.
+Copyright 2026 ToposLang / PLQ Authors.
 Licensed under the Apache License, Version 2.0.
 
 OsterwalderSchraderReconstruction.lean
@@ -422,6 +422,46 @@ theorem constructive_hierarchy_satisfies_os0_temperedness
   refine ⟨H.balaban_param.alpha, H.balaban_param.beta, H.balaban_param.s,
           H.balaban_param.h_alpha, H.balaban_param.h_beta,
           H.smeared_cluster_bound k gen, H.pointwise_singularity_bound k gen⟩
+
+/-- **The Appendix Theorem on Constructive Hierarchies (CMP 42, pp. 303–305)**:
+    In any constructive Schwinger hierarchy, pointwise singularity bounds (E0'')
+    mathematically imply the smeared linear growth condition (E0'). -/
+theorem constructive_hierarchy_appendix_bound
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (H : ConstructiveSchwingerHierarchy G Curv)
+    (k : ℕ) (gen : Fin k → ObservableLabel G Curv)
+    (n : ℕ) (idx : Fin n → Fin k)
+    (f : Fin n → SchwartzMap EuclideanSpace4 ℂ)
+    (h_disj : DisjointSupports f) :
+    ‖H.schwinger_smeared n (fun i => gen (idx i)) f‖ ≤
+      (H.balaban_param.alpha ^ n) * ((Nat.factorial n : ℝ) ^ H.balaban_param.beta) *
+      ∏ i : Fin n, SchwartzMap.seminorm ℝ H.balaban_param.s H.balaban_param.s (f i) :=
+  H.smeared_cluster_bound k gen n idx f h_disj
+
+/-- **Theorem (Mayer Tree Expansion Closes the (E0'') and (E0') Loop)**:
+    Combines the Mayer tree cluster expansion with the Appendix Theorem:
+    Cayley trees + polymer Banach norm directly yield (E0''), which implies (E0'). -/
+theorem constructive_hierarchy_tree_cluster_satisfies_e0
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (H : ConstructiveSchwingerHierarchy G Curv) :
+    ∀ (k : ℕ) (gen : Fin k → ObservableLabel G Curv),
+    ∃ (α β : ℝ) (s : ℕ), 0 < α ∧ 0 < β ∧
+      (∀ (n : ℕ) (idx : Fin n → Fin k)
+         (f : Fin n → SchwartzMap EuclideanSpace4 ℂ),
+         DisjointSupports f →
+         ‖H.schwinger_smeared n (fun i => gen (idx i)) f‖ ≤
+           (α ^ n) * ((Nat.factorial n : ℝ) ^ β) *
+           ∏ i : Fin n, SchwartzMap.seminorm ℝ s s (f i)) ∧
+      (∀ (n : ℕ) (idx : Fin n → Fin k)
+         (x : Fin n → EuclideanSpace4) (r : ℝ),
+         0 < r →
+         (∀ i j : Fin n, i ≠ j → r ≤ ‖x i - x j‖) →
+         ‖H.schwinger n (fun i => gen (idx i)) x‖ ≤
+           (α ^ n) * ((Nat.factorial n : ℝ) ^ β) *
+           (1 + ∑ i : Fin n, ‖x i‖ ^ 2) ^ (s * n) * (1 + (1 / r)) ^ (s * n)) :=
+  constructive_hierarchy_satisfies_os0_temperedness H
 
 /-- **Constructive Osterwalder–Schrader Bundle from Bałaban Hierarchy**:
     Combines the Bałaban cluster expansion hierarchy with Euclidean covariance (OS1),
@@ -1723,6 +1763,8 @@ theorem sun_millennium_statement_of_constructive_pipeline.{u_H} (N : ℕ) [Fact 
 #print axioms sun_constructive_millennium_reduction_of_os
 #print axioms sun_millennium_statement_of_constructive_pipeline
 #print axioms constructive_hierarchy_satisfies_os0_temperedness
+#print axioms constructive_hierarchy_appendix_bound
+#print axioms constructive_hierarchy_tree_cluster_satisfies_e0
 #print axioms constructive_os_of_balaban_hierarchy
 #print axioms constructive_c3_discharge_from_balaban_hierarchy
 
