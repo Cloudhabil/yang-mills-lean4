@@ -72,3 +72,8 @@ lean_lib «BalabanCRE» where
 lean_lib «BalabanLFR1» where
   roots := #[`BalabanLFR1]
 
+@[default_target]
+lean_lib «BalabanOS2» where
+  roots := #[`BalabanOS2]
+
+
