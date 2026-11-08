@@ -10,6 +10,7 @@ __pycache__/
 
 # Binary databases and scratch files
 *.db
+!benchmarks/yang_mills_eight_landmarks_transplanckian.db
 *.db-journal
 *.pdf
 *.eml
