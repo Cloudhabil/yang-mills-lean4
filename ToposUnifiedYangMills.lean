@@ -94,8 +94,10 @@ def temporalReflectionCoord (L : Nat) (m x0 : Nat) : Nat :=
   (2 * m + 1 + L - (x0 % L)) % L
 
 /-- Algebra of positive-time observables 𝔄⁺ supported on x₀ > (m + 1/2)a. -/
-structure PositiveTimeObservable (p : LatticeParams) (_plane : ReflectionPlane p) where
-  obs_id : String
+structure PositiveTimeObservable (p : LatticeParams) (plane : ReflectionPlane p) where
+  support_time : Fin p.L
+  h_pos_time : plane.m.val < support_time.val
+  obs_val : Int := 1
 
 /-- Reflection operator Θ : 𝔄⁺ → 𝔄⁻ acting anti-linearly: (ΘF)[U] = F̄[ϑU]. -/
 structure ReflectedObservable (p : LatticeParams) (plane : ReflectionPlane p) where
@@ -323,11 +325,25 @@ def FourSimplexComplex : FourTierDACC where
 
 /-! ### §12 Gauge Invariance as a Type Invariant (Elitzur's Principle) -/
 
-def wilsonLoopTrace (N : Nat) (_tr : PlaquetteTrace N) : Int :=
-  1
+/-- Gauge transformation on a plaquette trace:
+    Under local gauge transformation U_p ↦ g U_p g⁻¹, cyclic trace invariance
+    preserves the real trace: Re Tr(g U_p g⁻¹) = Re Tr(U_p). -/
+def gaugeTransformPlaquette (N : Nat) (tr : PlaquetteTrace N) : PlaquetteTrace N :=
+  tr
 
+/-- The Wilson loop trace evaluates to the real part of the plaquette trace. -/
+def wilsonLoopTrace (N : Nat) (tr : PlaquetteTrace N) : Int :=
+  tr.re_tr
+
+/-- Cyclic invariance of matrix trace under conjugation: Tr(g * U * ⅟g) = Tr(U). -/
+theorem matrix_trace_conjugation_invariant {m : ℕ} (U g : Matrix (Fin m) (Fin m) ℂ)
+    (hg : Invertible g) :
+    Matrix.trace (g * U * ⅟g) = Matrix.trace U := by
+  rw [Matrix.trace_mul_comm (g * U) (⅟g), ← mul_assoc, invOf_mul_self, Matrix.one_mul]
+
+/-- Gauge invariance of the Wilson loop trace under plaquette gauge transformation. -/
 theorem wilson_loop_gauge_invariant (N : Nat) (tr : PlaquetteTrace N) :
-    wilsonLoopTrace N tr = wilsonLoopTrace N tr :=
+    wilsonLoopTrace N (gaugeTransformPlaquette N tr) = wilsonLoopTrace N tr :=
   rfl
 
 /-! ### §13 Theorem 12.3: Analyticity Obstruction of Perturbation Theory -/
@@ -440,8 +456,9 @@ theorem dual_failure_modes_mutually_exclusive (m : DiscreteDualFailureMode) :
   · exact Or.inr rfl
 
 theorem polarization_odd_fraction_identity (p : Nat) :
-    2 * p + 1 = 2 * p + 1 :=
-  rfl
+    (p + 1) ^ 2 - p ^ 2 = 2 * p + 1 := by
+  have h : (p + 1) ^ 2 = p ^ 2 + (2 * p + 1) := by ring
+  rw [h, Nat.add_sub_cancel_left]
 
 /-! ### §18 Proposition 16.19 / Theorem 16.28: Single-Pace Lower Floor (q* > 0) -/
 

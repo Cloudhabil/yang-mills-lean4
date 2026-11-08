@@ -814,12 +814,29 @@ structure GaugeOrbitStability (lap : CovariantLaplacianParams) where
   delta0_invariant : ℝ
   /-- Decay amplitude preservation -/
   B0_invariant : ℝ
+  /-- Coercivity inequality holds under arbitrary gauge shift -/
+  h_coercivity : ∀ {N : ℕ} [NeZero N] (k L : ℕ) (hL : 2 ≤ L)
+    (B : Form1 N) (lambda : Torus4 N → ℝ) (C : Form1 N),
+    lap.alpha_ax * decimation_factor k L * normSq1 C ≤
+      inner1 C (lapB lap k L (fun x μ => B x μ - d0 lambda x μ) C)
+
+/-- **Theorem 3.3 (Gauge Orbit Coercivity Preservation)**:
+    Under an arbitrary gauge transformation B ↦ B - d₀ λ of the background field,
+    the covariant background Laplacian Δ_{B - d₀ λ} satisfies the uniform coercivity bound:
+      α_Ax L^{-6k} ‖C‖₁² ≤ ⟨C, Δ_{B - d₀ λ} C⟩₁. -/
+theorem gauge_orbit_coercivity {N : ℕ} [NeZero N]
+    (lap : CovariantLaplacianParams) (k L : ℕ) (hL : 2 ≤ L)
+    (B : Form1 N) (lambda : Torus4 N → ℝ) (C : Form1 N) :
+    lap.alpha_ax * decimation_factor k L * normSq1 C ≤
+      inner1 C (lapB lap k L (fun x μ => B x μ - d0 lambda x μ) C) :=
+  lapB_coercivity lap k L hL (fun x μ => B x μ - d0 lambda x μ) C
 
 /-- Canonical gauge orbit stability record: parameters are exactly preserved. -/
 def canonicalGaugeOrbitStability (lap : CovariantLaplacianParams) : GaugeOrbitStability lap where
   lambda_min_invariant := lap.lambda_min
   delta0_invariant := lap.delta0
   B0_invariant := lap.B0
+  h_coercivity := fun k L hL B lambda C => gauge_orbit_coercivity lap k L hL B lambda C
 
 theorem gauge_orbit_preserves_coercivity (lap : CovariantLaplacianParams) :
     (canonicalGaugeOrbitStability lap).lambda_min_invariant = lap.lambda_min :=
@@ -1000,6 +1017,37 @@ theorem CovariantGreensPropagator.applyOp_localized_bound {k N L M1 : ℕ} [NeZe
     _ = (lap.B0 * Real.exp (-lap.delta0 * torusDist1 x y0)) * ∑ ν : Fin 4, |J y0 ν| :=
         (Finset.mul_sum _ _ _).symm
 
+/-- **Resolvent Inversion Identity for the Covariant Background Laplacian (PBG §3)**:
+    Characterizes when a Covariant Green's resolvent integral operator P is the
+    exact two-sided inverse of the covariant background Laplacian Δ_B:
+      Δ_B (P.applyOp J) = J  and  P.applyOp (Δ_B C) = C. -/
+structure CovariantResolventInversion {k N L M1 : ℕ} [NeZero N]
+    {H : DomainHierarchyScale k L M1} {D : NestedSubdomains k N}
+    {C : MinimizerBoundConstants} {V : CoarseBoundaryCondition k N C.a1}
+    {lap : CovariantLaplacianParams}
+    (lap_op : Form1 N → Form1 N)
+    (P : CovariantGreensPropagator k N L M1 H D C V lap) : Prop where
+  h_right_inv : ∀ (J : Form1 N), lap_op (P.applyOp J) = J
+  h_left_inv : ∀ (C_fluc : Form1 N), P.applyOp (lap_op C_fluc) = C_fluc
+
+/-- **Uniqueness of the Covariant Resolvent Inversion Operator**:
+    If P₁ and P₂ both invert the covariant background Laplacian Δ_B, their operator actions
+    coincide identically on all source fields: P₁.applyOp J = P₂.applyOp J. -/
+theorem covariant_resolvent_inversion_unique {k N L M1 : ℕ} [NeZero N]
+    {H : DomainHierarchyScale k L M1} {D : NestedSubdomains k N}
+    {C : MinimizerBoundConstants} {V : CoarseBoundaryCondition k N C.a1}
+    {lap : CovariantLaplacianParams}
+    (lap_op : Form1 N → Form1 N)
+    (P1 P2 : CovariantGreensPropagator k N L M1 H D C V lap)
+    (h_inv1 : CovariantResolventInversion lap_op P1)
+    (h_inv2 : CovariantResolventInversion lap_op P2)
+    (J : Form1 N) :
+    P1.applyOp J = P2.applyOp J := by
+  have h1 := h_inv2.h_right_inv J
+  have h2 := h_inv1.h_left_inv (P2.applyOp J)
+  rw [h1] at h2
+  exact h2
+
 /-- Constructive canonical witness for the Covariant Green's Propagator:
     Instantiated with the canonical background minimizer from BalabanVAR
     and the certified scale-independent decay parameters. -/
@@ -1176,10 +1224,12 @@ theorem propagator_decay_bound_pos (lap : CovariantLaplacianParams) (dist : ℝ)
 #print axioms gauge_orbit_preserves_coercivity
 #print axioms gauge_orbit_preserves_decay_rate
 #print axioms gauge_orbit_preserves_decay_amplitude
+#print axioms gauge_orbit_coercivity
 #print axioms lapB_minimizer
 #print axioms lapB_canonical_minimizer_eq_flat
 #print axioms CovariantGreensPropagator.applyOp_symm
 #print axioms CovariantGreensPropagator.applyOp_localized_bound
+#print axioms covariant_resolvent_inversion_unique
 #print axioms makeCanonicalCovariantGreensPropagator
 #print axioms covariant_greens_propagator_nonempty
 #print axioms testBackground_energy_pos

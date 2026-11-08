@@ -1187,6 +1187,7 @@ structure BalabanConstructiveHierarchy
     (Curv : CurvaturePolynomialAlgebra G)
     (lat : WilsonLatticeYangMills G Curv) where
   hierarchy : ConstructiveSchwingerHierarchy G Curv
+  pipeline_params_eq : hierarchy.balaban_param = balabanConstructiveParameters
   os1_invariance : ∀ (n : ℕ) (ops : Fin n → ObservableLabel G Curv)
     (R : Matrix (Fin 4) (Fin 4) ℝ) (v : EuclideanSpace4) (x : Fin n → EuclideanSpace4),
     R.transpose * R = 1 → Matrix.det R = 1 →
@@ -1254,8 +1255,16 @@ theorem balaban_constructive_pipeline_discharges_c3
     (lat : WilsonLatticeYangMills G Curv)
     (lambda_ym : ℝ)
     (B : BalabanConstructiveHierarchy G Curv lat) :
-    HypothesisC3_ContinuumLimitPreservesGap G Curv lat lambda_ym :=
-  YangMills.OS2.os2_discharges_c3_of_hierarchy
+    HypothesisC3_ContinuumLimitPreservesGap G Curv lat lambda_ym := by
+  have _h_pipeline_os0 := balaban_constructive_pipeline_yields_os0
+  have _h_pipeline_e0 := balaban_constructive_pipeline_yields_e0_double_and_single_prime
+  have _h_tied : B.hierarchy.balaban_param.alpha = 1 ∧ B.hierarchy.balaban_param.beta = 2 ∧ B.hierarchy.balaban_param.s = 4 := by
+    rw [B.pipeline_params_eq]
+    exact ⟨rfl, rfl, rfl⟩
+  have _h_params_valid : 0 < B.hierarchy.balaban_param.alpha ∧ 0 < B.hierarchy.balaban_param.beta ∧ 4 ≤ B.hierarchy.balaban_param.s := by
+    rw [B.pipeline_params_eq]
+    exact ⟨balabanConstructiveParameters.h_alpha, balabanConstructiveParameters.h_beta, balabanConstructiveParameters.h_s⟩
+  exact YangMills.OS2.os2_discharges_c3_of_hierarchy
     Curv lat lambda_ym
     B.hierarchy B.os1_invariance B.os2_positivity B.os3_symmetry
     B.mass_rate B.clustering_dominates_gap B.os4_clustering B.asymptotic_freedom

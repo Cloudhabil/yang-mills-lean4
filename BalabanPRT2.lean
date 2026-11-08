@@ -1205,6 +1205,19 @@ def makeMultiscalePropagatorInversion (N k L : ℕ) [NeZero N] (hk : 1 ≤ k) (h
     intro x _
     ring
 
+/-- **Uniqueness of the Multiscale Propagator Inversion**:
+    Any two inverses M_inv1 and M_inv2 of the multiscale propagator M agree identically. -/
+theorem multiscale_propagator_inversion_unique {N k L : ℕ} [NeZero N] {hk : 1 ≤ k} {hL : 2 ≤ L}
+    (P : MultiscalePropagatorInversion N k L hk hL)
+    (M_inv2 : Form0 N → Form0 N)
+    (h_left2 : ∀ f, P.M (M_inv2 f) = f)
+    (f : Form0 N) :
+    P.M_inv f = M_inv2 f := by
+  have h1 := h_left2 f
+  have h2 := P.h_right_inv (M_inv2 f)
+  rw [h1] at h2
+  exact h2
+
 /-! ============================================================================
     SECTION 5: UNIFORM MULTISCALE GREEN'S EXPONENTIAL DECAY (PRT2 PROP 2.6)
     ============================================================================ -/
@@ -1449,6 +1462,30 @@ theorem MultiscaleGreensResolvent.applyOp_localized_bound {N k L : ℕ} [NeZero 
   rw [h_single_ν, h_at_ν0, mul_one]
   exact R.h_decay x y0 μ ν0
 
+/-- **Resolvent Inversion Identity for the Multiscale Green's Resolvent (PRT2 §2)**:
+    Characterizes when a multiscale Green's resolvent integral operator R is the
+    exact two-sided inverse of the multiscale block operator Δ^{(k)}:
+      Δ^{(k)} (R J) = J  and  R (Δ^{(k)} A) = A. -/
+structure MultiscaleResolventInversion (N k L : ℕ) [NeZero N] (hk : 1 ≤ k) (hL : 2 ≤ L)
+    (lap_op : Form1 N → Form1 N) (R : MultiscaleGreensResolvent N k L hk hL) : Prop where
+  h_right_inv : ∀ (J : Form1 N), lap_op (R.applyOp J) = J
+  h_left_inv : ∀ (A : Form1 N), R.applyOp (lap_op A) = A
+
+/-- **Uniqueness of the Multiscale Resolvent Inversion Operator**:
+    If R₁ and R₂ both invert the multiscale operator Δ^{(k)}, their operator actions
+    coincide identically on all source fields: R₁.applyOp = R₂.applyOp. -/
+theorem multiscale_resolvent_inversion_unique {N k L : ℕ} [NeZero N] {hk : 1 ≤ k} {hL : 2 ≤ L}
+    (lap_op : Form1 N → Form1 N)
+    (R1 R2 : MultiscaleGreensResolvent N k L hk hL)
+    (h_inv1 : MultiscaleResolventInversion N k L hk hL lap_op R1)
+    (h_inv2 : MultiscaleResolventInversion N k L hk hL lap_op R2)
+    (J : Form1 N) :
+    R1.applyOp J = R2.applyOp J := by
+  have h1 := h_inv2.h_right_inv J
+  have h2 := h_inv1.h_left_inv (R2.applyOp J)
+  rw [h1] at h2
+  exact h2
+
 /-- Constructive instantiation of the MultiscaleGreensResolvent from fundamental parameters.
     Demonstrates that a non-trivial, self-adjoint Green's propagator satisfying the
     universal exponential bound exists on every decimation scale k ≥ 1. -/
@@ -1614,6 +1651,7 @@ theorem prt1_grounds_prt2_all_scales (N L : ℕ) [NeZero N] (hN : 2 ≤ N) (hL :
 #print axioms neumannPartialKernel_le_K_inv
 #print axioms neumannPartialKernel_remainder_identity
 #print axioms makeMultiscalePropagatorInversion
+#print axioms multiscale_propagator_inversion_unique
 #print axioms compoundGreenBound_strictly_decreasing
 #print axioms compoundGreenBound_eq_prt1_bound
 #print axioms compoundGreenBound_one_eq_prt1
@@ -1622,6 +1660,7 @@ theorem prt1_grounds_prt2_all_scales (N L : ℕ) [NeZero N] (hN : 2 ≤ N) (hL :
 #print axioms MultiscaleGreensResolvent.applyOp_symm
 #print axioms MultiscaleGreensResolvent.applyOp_localized_bound
 #print axioms makeMultiscaleGreensResolvent
+#print axioms multiscale_resolvent_inversion_unique
 #print axioms rg_resolvent_step_preserves_delta3
 #print axioms uniform_exponential_decay_all_scales
 #print axioms canonicalPRT1LatticeDecay_delta0

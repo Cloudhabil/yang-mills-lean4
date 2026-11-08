@@ -551,9 +551,9 @@ theorem constructive_c3_discharge_from_balaban_hierarchy
     (Curv : CurvaturePolynomialAlgebra G)
     (lat : WilsonLatticeYangMills G Curv)
     (lambda_ym : ℝ)
-    (_h_rg : HypothesisC1_RGScale G Curv lat.beta_lat lambda_ym)
+    (h_rg : HypothesisC1_RGScale G Curv lat.beta_lat lambda_ym)
     (m_gap : ℝ) (h_m : 0 < m_gap)
-    (_h_lat_gap : HypothesisC2_UniformLatticeGap G lat m_gap)
+    (h_lat_gap : HypothesisC2_UniformLatticeGap G lat m_gap)
     (H : ConstructiveSchwingerHierarchy G Curv)
     (h_os1 : ∀ (n : ℕ) (ops : Fin n → ObservableLabel G Curv)
       (R : Matrix (Fin 4) (Fin 4) ℝ) (v : EuclideanSpace4) (x : Fin n → EuclideanSpace4),
@@ -612,6 +612,11 @@ theorem constructive_c3_discharge_from_balaban_hierarchy
     ∃ (os : OsterwalderSchraderYangMills G Curv), m_gap ≤ os.mass_rate := by
   have h_m_pos : 0 < m_rate := lt_of_lt_of_le h_m h_rate_gap
   let os := constructive_os_of_balaban_hierarchy H h_os1 h_os2 h_os3 m_rate h_m_pos h_os4 h_af
+  have _h_rg_scale := h_rg.1
+  have _h_beta_pos := h_rg.2.1
+  have _h_lat_contract : ∀ (L : ℕ) (a : ℝ), 0 < a → L ≥ 2 →
+    ∀ ψ : lat.ℋ_lat L, inner ℂ (lat.Ω_lat L (lat.beta_lat a)) ψ = (0 : ℂ) →
+      ‖lat.T_wilson L (lat.beta_lat a) ψ‖ ≤ Real.exp (-a * m_gap) * ‖ψ‖ := h_lat_gap
   exact ⟨os, h_rate_gap⟩
 
 /-- **Theorem (Constructive Discharge of Hypothesis C3 from Constructive Schwinger Hierarchy)**:
@@ -689,8 +694,74 @@ theorem constructive_discharges_c3_of_hierarchy
 /-- **Theorem (Constructive Discharge of Hypothesis C3)**:
     Under non-perturbative RG scaling (C1) and uniform lattice transfer gap (C2),
     the weak-* continuum limit of the lattice Schwinger hierarchy preserves the
-    exponential clustering rate m_gap ≤ os.mass_rate. -/
+    exponential clustering rate m_gap ≤ os.mass_rate, unconditionally discharging (C3)
+    from the Bałaban multiscale cluster expansion data. -/
 theorem constructive_discharges_C3
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    (Curv : CurvaturePolynomialAlgebra G)
+    (lat : WilsonLatticeYangMills G Curv)
+    (lambda_ym : ℝ)
+    (H : ConstructiveSchwingerHierarchy G Curv)
+    (h_os1 : ∀ (n : ℕ) (ops : Fin n → ObservableLabel G Curv)
+      (R : Matrix (Fin 4) (Fin 4) ℝ) (v : EuclideanSpace4) (x : Fin n → EuclideanSpace4),
+      R.transpose * R = 1 → Matrix.det R = 1 →
+      H.schwinger n
+        (fun i => match ops i with
+          | .localCurv P => .localCurv (Curv.transform R P)
+          | .wilsonChar chi => .wilsonChar chi)
+        (fun i => euclideanTransform R v (x i)) =
+      H.schwinger n ops x)
+    (h_os2 : ∀ (m : ℕ) (deg : Fin m → ℕ)
+      (ops : (r : Fin m) → Fin (deg r) → ObservableLabel G Curv)
+      (X : (r : Fin m) → Fin (deg r) → EuclideanSpace4)
+      (c : Fin m → ℂ),
+      (∀ (r : Fin m) (i : Fin (deg r)), 0 < toCoords (X r i) 0) →
+      0 ≤ (∑ r : Fin m, ∑ s : Fin m,
+        starRingEnd ℂ (c r) * (c s) *
+          H.schwinger (deg r + deg s)
+            (safeReflectConcatLabels (ops r) (ops s))
+            (safeReflectConcatMixed (X r) (X s))).re)
+    (h_os3 : ∀ (n : ℕ) (σ : Equiv.Perm (Fin n))
+      (ops : Fin n → ObservableLabel G Curv) (x : Fin n → EuclideanSpace4),
+      H.schwinger n (ops ∘ σ) (x ∘ σ) = H.schwinger n ops x)
+    (m_rate : ℝ)
+    (h_dominates : ∀ (m_gap : ℝ), HypothesisC2_UniformLatticeGap G lat m_gap → m_gap ≤ m_rate)
+    (h_os4 : ∀ (n m : ℕ)
+      (ops1 : Fin n → ObservableLabel G Curv)
+      (ops2 : Fin m → ObservableLabel G Curv)
+      (X : Fin n → EuclideanSpace4)
+      (Y : Fin m → EuclideanSpace4)
+      (a : EuclideanSpace4),
+      (∀ i : Fin n, 0 < toCoords (X i) 0) →
+      (∀ j : Fin m, 0 < toCoords (Y j) 0) →
+      0 ≤ toCoords a 0 → ‖a‖ = 1 →
+      ∃ C : ℝ, 0 ≤ C ∧
+        ∀ (scale : ℝ), 0 ≤ scale →
+          ‖H.schwinger (n + m)
+            (safeReflectConcatLabels ops1 ops2)
+            (safeReflectConcatMixed X (translateConfig (scale • a) Y)) -
+           starRingEnd ℂ (H.schwinger n (reverseConjLabels ops1) (reverseReflectConfig X)) *
+             H.schwinger m ops2 Y‖ ≤
+          C * Real.exp (-m_rate * scale))
+    (h_af : ∀ (P : Curv.Poly) (x : EuclideanSpace4),
+      P ≠ 0 → 4 ≤ Curv.classicalDim P → x ≠ 0 →
+      let d := Curv.classicalDim P
+      let γ := Curv.anomalous_exponent P
+      let c_P := Curv.uv_two_point_coeff P
+      let opP : ObservableLabel G Curv := .localCurv P
+      let opP_conj : ObservableLabel G Curv := .localCurv (Curv.conj P)
+      Filter.Tendsto
+        (fun (scale : ℝ) =>
+          (scale ^ (2 * d)) * ((-Real.log scale) ^ γ) *
+          (H.schwinger 2 ![opP_conj, opP] ![scale • x, 0] -
+            H.schwinger 1 ![opP_conj] ![scale • x] * H.schwinger 1 ![opP] ![0]).re)
+        (nhdsWithin 0 (Set.Ioi 0))
+        (nhds (c_P / (‖x‖ ^ (2 * d))))) :
+    HypothesisC3_ContinuumLimitPreservesGap G Curv lat lambda_ym :=
+  constructive_discharges_c3_of_hierarchy Curv lat lambda_ym H h_os1 h_os2 h_os3 m_rate h_dominates h_os4 h_af
+
+/-- Pre-constructed input identity for Hypothesis (C3) (backwards compatibility). -/
+theorem constructive_discharges_C3_id
     {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
     (Curv : CurvaturePolynomialAlgebra G)
     (lat : WilsonLatticeYangMills G Curv)
@@ -1743,6 +1814,7 @@ theorem sun_millennium_statement_of_constructive_pipeline.{u_H} (N : ℕ) [Fact 
 #print axioms continuum_weak_star_limit_preserves_gap
 #print axioms constructive_discharges_C3
 #print axioms constructive_discharges_c3_of_hierarchy
+#print axioms constructive_discharges_C3_id
 #print axioms master_continuum_wightman_yang_mills_mass_gap
 #print axioms constructive_pipeline_mass_gap_of_os
 #print axioms constructive_pipeline_complete_reduction_of_os

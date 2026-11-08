@@ -1282,13 +1282,15 @@ def InOS2NullSpace
   (os2StalkInnerProduct os u u).re = 0
 
 /-- The OS-II reflection equivalence relation on stalks:
-    u ~ v iff their reflection norms agree, identifying configurations that differ by null vectors. -/
+    u ~ v iff ⟨u, w⟩_OS = ⟨v, w⟩_OS for all positive-time stalks w,
+    identifying configurations that differ by null vectors. -/
 def OS2StalkEquiv
     {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
     {Curv : CurvaturePolynomialAlgebra G}
     (os : OsterwalderSchraderYangMills G Curv)
     (u v : OS2PositiveTimeStalk G Curv) : Prop :=
-  os2StalkInnerProduct os u u = os2StalkInnerProduct os v v
+  ∀ (w : OS2PositiveTimeStalk G Curv),
+    os2StalkInnerProduct os u w = os2StalkInnerProduct os v w
 
 /-- Reflexivity of the OS-II stalk equivalence relation. -/
 theorem os2_stalk_equiv_refl
@@ -1297,7 +1299,7 @@ theorem os2_stalk_equiv_refl
     (os : OsterwalderSchraderYangMills G Curv)
     (u : OS2PositiveTimeStalk G Curv) :
     OS2StalkEquiv os u u :=
-  rfl
+  fun _ => rfl
 
 /-- Symmetry of the OS-II stalk equivalence relation. -/
 theorem os2_stalk_equiv_symm
@@ -1307,7 +1309,7 @@ theorem os2_stalk_equiv_symm
     {u v : OS2PositiveTimeStalk G Curv}
     (h : OS2StalkEquiv os u v) :
     OS2StalkEquiv os v u :=
-  h.symm
+  fun w => (h w).symm
 
 /-- Transitivity of the OS-II stalk equivalence relation. -/
 theorem os2_stalk_equiv_trans
@@ -1317,7 +1319,17 @@ theorem os2_stalk_equiv_trans
     {u v w : OS2PositiveTimeStalk G Curv}
     (h1 : OS2StalkEquiv os u v) (h2 : OS2StalkEquiv os v w) :
     OS2StalkEquiv os u w :=
-  h1.trans h2
+  fun z => (h1 z).trans (h2 z)
+
+/-- Equivalence preserves the reflection inner product and norm square. -/
+theorem os2StalkEquiv_preserves_norm_sq
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    {u v : OS2PositiveTimeStalk G Curv}
+    (h : OS2StalkEquiv os u v) :
+    os2StalkInnerProduct os u u = os2StalkInnerProduct os v u :=
+  h u
 
 /-- Pre-inner product non-degeneracy on the quotient:
     The norm of [u] vanishes if and only if u is in the null space. -/
@@ -1720,6 +1732,7 @@ def makeCertifiedOS2AntiDummy (G : Type*) [TopologicalSpace G] [Group G]
 #print axioms os2_stalk_equiv_refl
 #print axioms os2_stalk_equiv_symm
 #print axioms os2_stalk_equiv_trans
+#print axioms os2StalkEquiv_preserves_norm_sq
 #print axioms os2_quotient_inner_nondegenerate
 #print axioms os2_semigroup_clustering_transfers_gap
 #print axioms os2_vacuum_energy_zero

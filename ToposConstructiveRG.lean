@@ -457,6 +457,38 @@ structure RGPolymerEvolutionMap (G : Type*) [TopologicalSpace G] [Group G]
   frechet_norm_bound : ∀ β R, 0 < β →
     (evolve β R).norm_kappa ≤ P.theta * R.norm_kappa + P.C_mayer * R.norm_kappa ^ 2 + P.C_vert / β
 
+/-- Concrete Mayer contraction evolution map on polymer activities. -/
+def concretePolymerEvolve {G : Type*} [TopologicalSpace G] [Group G]
+    [CompactSimpleLieGroup G] (P : PolymerTrappingParams) (_β : ℝ) (R : PolymerActivity G) :
+    PolymerActivity G where
+  weight := fun X => P.theta * R.weight X
+  decay_rate := R.decay_rate
+  decay_pos := R.decay_pos
+  norm_kappa := P.theta * R.norm_kappa
+  norm_nonneg := mul_nonneg P.h_theta_nonneg R.norm_nonneg
+  norm_bound := by
+    intro X
+    rw [abs_mul, abs_of_nonneg P.h_theta_nonneg]
+    have h_w := R.norm_bound X
+    calc P.theta * |R.weight X|
+        ≤ P.theta * (R.norm_kappa * Real.exp (-R.decay_rate * (X.card : ℝ))) :=
+          mul_le_mul_of_nonneg_left h_w P.h_theta_nonneg
+      _ = (P.theta * R.norm_kappa) * Real.exp (-R.decay_rate * (X.card : ℝ)) := by ring
+
+/-- Concrete constructive instance of `RGPolymerEvolutionMap G P`. -/
+def makeConcreteRGPolymerEvolutionMap {G : Type*} [TopologicalSpace G] [Group G]
+    [CompactSimpleLieGroup G] (P : PolymerTrappingParams) : RGPolymerEvolutionMap G P where
+  evolve := concretePolymerEvolve P
+  preserve_decay := fun _ _ => rfl
+  frechet_norm_bound := by
+    intro β R hβ
+    dsimp [concretePolymerEvolve]
+    have h_quad : 0 ≤ P.C_mayer * R.norm_kappa ^ 2 :=
+      mul_nonneg P.h_mayer_nonneg (sq_nonneg _)
+    have h_vert : 0 ≤ P.C_vert / β :=
+      div_nonneg P.h_vert_nonneg (le_of_lt hβ)
+    linarith
+
 /-- Exact 1-loop RG step shift Δβ_1loop = 2 b₀ ln 2 > 0. -/
 def oneLoopBetaStep {G : Type*} [TopologicalSpace G] [Group G]
     [CompactSimpleLieGroup G] (Curv : CurvaturePolynomialAlgebra G) : ℝ :=

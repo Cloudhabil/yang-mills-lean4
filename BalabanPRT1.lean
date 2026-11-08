@@ -1111,6 +1111,47 @@ theorem lapBalaban_coercive {N : ℕ} [NeZero N] (alpha a : ℝ) (L : ℕ) (hL :
   have h_div : 0 ≤ alpha * normSq0 (d0Star A) := mul_nonneg h_alpha (normSq0_nonneg (d0Star A))
   linarith
 
+/-- Positivity-of-norm characterization: normSq1 A = 0 iff A = 0 identically. -/
+theorem normSq1_eq_zero_iff {N : ℕ} [NeZero N] (A : Form1 N) :
+    normSq1 A = 0 ↔ A = fun _ _ => 0 := by
+  constructor
+  · intro h
+    ext x μ
+    dsimp [normSq1, inner1] at h
+    have h_nonneg_inner : ∀ y : Torus4 N, 0 ≤ ∑ ν : Fin 4, A y ν * A y ν := by
+      intro y
+      apply Finset.sum_nonneg
+      intro ν _
+      exact mul_self_nonneg _
+    have h_outer := (Finset.sum_eq_zero_iff_of_nonneg (fun y _ => h_nonneg_inner y)).mp h x (Finset.mem_univ x)
+    have h_inner := (Finset.sum_eq_zero_iff_of_nonneg (fun ν _ => mul_self_nonneg (A x ν))).mp h_outer μ (Finset.mem_univ μ)
+    exact mul_self_eq_zero.mp h_inner
+  · rintro rfl
+    dsimp [normSq1, inner1]
+    simp
+
+/-- Strict Invertibility Certificate: Coercivity implies lapBalaban has trivial kernel.
+    On the finite-dimensional space Form1 N, injectivity guarantees invertibility (Δ_{a,α}⁻¹ exists). -/
+theorem lapBalaban_injective {N : ℕ} [NeZero N] (alpha a : ℝ) (L : ℕ) (hL : 2 ≤ L)
+    (h_alpha : 0 ≤ alpha) (ha : 0 < a) (A : Form1 N)
+    (h_ker : lapBalaban alpha a L A = fun _ _ => 0) :
+    A = fun _ _ => 0 := by
+  have h_coercive := lapBalaban_coercive alpha a L hL h_alpha (le_of_lt ha) A
+  have h_inner_zero : inner1 A (lapBalaban alpha a L A) = 0 := by
+    rw [h_ker]
+    dsimp [inner1]
+    simp
+  rw [h_inner_zero] at h_coercive
+  have h_pos_coeff : 0 < a * ((L : ℝ) ^ (-6 : ℝ)) := by
+    have hL_pos : 0 < (L : ℝ) := by positivity
+    have hrpow_pos : 0 < (L : ℝ) ^ (-6 : ℝ) := Real.rpow_pos_of_pos hL_pos (-6)
+    exact mul_pos ha hrpow_pos
+  have h_norm_le : normSq1 A ≤ 0 := by
+    nlinarith
+  have h_norm_ge : 0 ≤ normSq1 A := normSq1_nonneg A
+  have h_norm_zero : normSq1 A = 0 := le_antisymm h_norm_le h_norm_ge
+  exact (normSq1_eq_zero_iff A).mp h_norm_zero
+
 /-- **Theorem 9 (PRT1 Prop 1.2: Pointwise Resolvent Exponential Decay Bound)**:
     The lattice gauge Green's resolvent G = (d* d + α Q* Q)⁻¹ satisfies the
     Combes–Thomas exponential bound:
@@ -1221,6 +1262,29 @@ theorem LatticeGreensResolvent.applyOp_localized_bound {N L : ℕ} [NeZero N] {h
     _ = R.decay.bound (torusDist1 x y0) * ∑ ν : Fin 4, |J y0 ν| :=
         (Finset.mul_sum _ _ _).symm
 
+/-- **Resolvent Inversion Identity for the Bałaban Gauge-Fixed Operator**:
+    Characterizes when a Green's resolvent integral operator R is the exact two-sided
+    inverse of the coercive Bałaban operator Δ_{a,α}:
+      Δ_{a,α} (R J) = J  and  R (Δ_{a,α} A) = A. -/
+structure LatticeResolventInversion (N L : ℕ) [NeZero N] (hL : 2 ≤ L)
+    (alpha a : ℝ) (R : LatticeGreensResolvent N L hL) : Prop where
+  h_right_inv : ∀ (J : Form1 N), lapBalaban alpha a L (R.applyOp J) = J
+  h_left_inv : ∀ (A : Form1 N), R.applyOp (lapBalaban alpha a L A) = A
+
+/-- **Uniqueness of the Resolvent Inversion Operator**:
+    If R₁ and R₂ both invert the coercive operator lapBalaban, their operator actions
+    coincide identically on all source fields: R₁.applyOp = R₂.applyOp. -/
+theorem lattice_resolvent_inversion_unique {N L : ℕ} [NeZero N] {hL : 2 ≤ L}
+    {alpha a : ℝ} (R1 R2 : LatticeGreensResolvent N L hL)
+    (h_inv1 : LatticeResolventInversion N L hL alpha a R1)
+    (h_inv2 : LatticeResolventInversion N L hL alpha a R2)
+    (J : Form1 N) :
+    R1.applyOp J = R2.applyOp J := by
+  have h1 := h_inv2.h_right_inv J
+  have h2 := h_inv1.h_left_inv (R2.applyOp J)
+  rw [h1] at h2
+  exact h2
+
 /-- Construction of the canonical Green's resolvent from the spectral gap λ_min(N):
     Provides a machine-checked certificate that the Green's propagator satisfies the
     exponential decay bound |G(x, y)| ≤ C₀ exp(-δ₀ dist(x, y) / L) from first principles. -/
@@ -1277,11 +1341,13 @@ def makeLatticeGreensResolvent (N L : ℕ) [NeZero N] (hN : 2 ≤ N) (hL : 2 ≤
 #print axioms torusDist1_triangle
 #print axioms torusDist1_eq_zero_iff
 #print axioms lapBalaban_coercive
+#print axioms lapBalaban_injective
 #print axioms greens_bound_strictly_decreasing
 #print axioms makeLatticeGreensPropagatorDecay
 #print axioms makeLatticeGreensResolvent
 #print axioms LatticeGreensResolvent.applyOp_symm
 #print axioms LatticeGreensResolvent.applyOp_localized_bound
+#print axioms lattice_resolvent_inversion_unique
 
 end YangMills.BalabanPRT1
 

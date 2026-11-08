@@ -204,6 +204,7 @@ def makeCanonicalNestedHierarchy (N : ℕ) [NeZero N] (k : ℕ) : NestedLocaliza
 structure DeterminingSlice (N : ℕ) [NeZero N] (k : ℕ) (j : Fin (k + 1)) where
   points_count : ℕ
   h_points_pos : 0 < points_count
+  cube_indices : Finset ℕ := {j.val}
 
 /-- Slice index mapping to scale j. -/
 def determiningSliceId {N : ℕ} [NeZero N] {k : ℕ} {j : Fin (k + 1)}
@@ -214,6 +215,18 @@ theorem determining_slices_disjoint (N : ℕ) [NeZero N] (k : ℕ) (i j : Fin (k
     (h_ne : i ≠ j) (S_i : DeterminingSlice N k i) (S_j : DeterminingSlice N k j) :
     determiningSliceId S_i ≠ determiningSliceId S_j := by
   dsimp [determiningSliceId]
+  intro h_eq
+  apply h_ne
+  ext
+  exact h_eq
+
+/-- Theorem: Determining slice cube subsets are disjoint sets for i ≠ j (Eq. 2.2). -/
+theorem determining_slices_finset_disjoint (N : ℕ) [NeZero N] (k : ℕ) (i j : Fin (k + 1))
+    (h_ne : i ≠ j) (S_i : DeterminingSlice N k i) (S_j : DeterminingSlice N k j)
+    (h_i : S_i.cube_indices = {i.val}) (h_j : S_j.cube_indices = {j.val}) :
+    Disjoint S_i.cube_indices S_j.cube_indices := by
+  rw [h_i, h_j]
+  rw [Finset.disjoint_singleton_left, Finset.mem_singleton]
   intro h_eq
   apply h_ne
   ext
@@ -232,7 +245,7 @@ def makeCanonicalDeterminingSet (N : ℕ) [NeZero N] (k : ℕ) : DeterminingBoun
   hierarchy := makeCanonicalNestedHierarchy N k
   total_boundary_points := 8 * (k + 1)
   h_boundary_pos := by positivity
-  slices := fun j => ⟨8, by decide⟩
+  slices := fun j => ⟨8, by decide, {j.val}⟩
   h_slices_sum := by
     dsimp
     rw [Finset.sum_const]
@@ -830,6 +843,41 @@ theorem trapping_contraction {L : ℕ} (hL : 2 ≤ L) (P : BasinContractionParam
     _ = 1 / 8 + 1 / 128 + 1 / 16 := by ring
     _ ≤ 1 / 4 := by norm_num
 
+/-- **Theorem 1 (Constructive Inductive Preservation under ℛ𝒯 connected to Trapping Contraction)**:
+    Computes next_norm directly via the contraction map
+      next_norm = P.theta * r + P.C_Mayer * r^2 + P.C_vert / g_k^2
+    and proves next_norm ≤ state.max_activity_radius = 1/4 using `trapping_contraction`. -/
+def inductive_preservation_RT_trapped {N : ℕ} [NeZero N] {k : ℕ} {L : ℕ} (hL : 2 ≤ L)
+    (P : BasinContractionParams L hL)
+    (state : InductiveEffectiveDensityState N k)
+    (h_max_quarter : state.max_activity_radius = 1 / 4)
+    (h_rmax : state.max_activity_radius = P.r_max)
+    (g_k_sq : ℝ) (hg : (1 / 100 : ℝ) ≤ g_k_sq)
+    (h_vert_small : P.C_vert / g_k_sq ≤ 1 / 16)
+    (next_action : CompleteEffectiveAction N (k + 1)) :
+    InductiveEffectiveDensityState N (k + 1) := by
+  let next_norm := P.theta * state.polymer_norm + P.C_Mayer * (state.polymer_norm ^ 2) + P.C_vert / g_k_sq
+  have h_norm_nonneg : 0 ≤ next_norm := by
+    dsimp [next_norm]
+    have h1 : 0 ≤ P.theta * state.polymer_norm := mul_nonneg (le_of_lt P.h_theta_pos) state.h_polymer_norm_nonneg
+    have h2 : 0 ≤ P.C_Mayer * (state.polymer_norm ^ 2) := mul_nonneg (le_of_lt P.h_CM_pos) (sq_nonneg _)
+    have h3 : 0 ≤ P.C_vert / g_k_sq := div_nonneg (le_of_lt P.h_Cv_pos) (le_trans (by norm_num) hg)
+    linarith
+  have h_trapped : next_norm ≤ state.max_activity_radius := by
+    dsimp [next_norm]
+    rw [h_max_quarter]
+    have hr_le : state.polymer_norm ≤ P.r_max := by
+      rw [← h_rmax]
+      exact state.h_trapped
+    exact trapping_contraction hL P state.polymer_norm state.h_polymer_norm_nonneg hr_le g_k_sq hg h_vert_small
+  exact {
+    action := next_action
+    polymer_norm := next_norm
+    h_polymer_norm_nonneg := h_norm_nonneg
+    max_activity_radius := state.max_activity_radius
+    h_trapped := h_trapped
+  }
+
 /-- Strict derivative / Lipschitz bound: f'(r) = θ + 2 C_Mayer r ≤ 9/16 < 1 on [0, r_max].
     Proves strict contractivity toward the unique stable basin attractor. -/
 theorem basin_derivative_bound {L : ℕ} (hL : 2 ≤ L) (P : BasinContractionParams L hL)
@@ -1005,6 +1053,7 @@ def makeCertifiedCREAntiDummy (N : ℕ) [NeZero N] : CertifiedCREAntiDummy N whe
     ============================================================================ -/
 
 #print axioms determining_slices_disjoint
+#print axioms determining_slices_finset_disjoint
 #print axioms large_plaquette_suppression_pos
 #print axioms large_plaquette_suppression_lt_one
 #print axioms rt_operator_commutative
@@ -1027,6 +1076,7 @@ def makeCertifiedCREAntiDummy (N : ℕ) [NeZero N] : CertifiedCREAntiDummy N whe
 #print axioms basin_theta_pos
 #print axioms basin_theta_le_half
 #print axioms trapping_contraction
+#print axioms inductive_preservation_RT_trapped
 #print axioms basin_derivative_bound
 #print axioms regular_cluster_energy_bound
 #print axioms large_field_remainder_sum_bound

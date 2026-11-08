@@ -824,6 +824,40 @@ theorem measure_preservation_density_integral (n : ℕ)
     multicomponent_quotient_product_normalized n quot_int h_quot
   rw [h_prod, mul_one]
 
+/-- Local quotient probability density on a finite state space:
+    Q(v) = w(v) / (∑_{u} w(u)) for any strictly positive weight function w > 0. -/
+def localQuotientProbability {α : Type*} [Fintype α]
+    (w : α → ℝ) (v : α) : ℝ :=
+  w v / (∑ u : α, w u)
+
+/-- Theorem: The local quotient probability sums to identically 1 on any non-empty finite space:
+    ∑_{v} Q(v) = 1. -/
+theorem localQuotientProbability_sum_eq_one {α : Type*} [Fintype α] [Nonempty α]
+    (w : α → ℝ) (hw_pos : ∀ u : α, 0 < w u) :
+    (∑ v : α, localQuotientProbability w v) = 1 := by
+  dsimp [localQuotientProbability]
+  have h_sum_pos : 0 < ∑ u : α, w u := by
+    apply Finset.sum_pos
+    · intro u _
+      exact hw_pos u
+    · exact Finset.univ_nonempty
+  have h_ne : (∑ u : α, w u) ≠ 0 := ne_of_gt h_sum_pos
+  rw [← Finset.sum_div]
+  exact div_self h_ne
+
+/-- Positivity of the local quotient probability density. -/
+theorem localQuotientProbability_pos {α : Type*} [Fintype α] [Nonempty α]
+    (w : α → ℝ) (hw_pos : ∀ u : α, 0 < w u) (v : α) :
+    0 < localQuotientProbability w v := by
+  dsimp [localQuotientProbability]
+  have h_num := hw_pos v
+  have h_sum_pos : 0 < ∑ u : α, w u := by
+    apply Finset.sum_pos
+    · intro u _
+      exact hw_pos u
+    · exact Finset.univ_nonempty
+  exact div_pos h_num h_sum_pos
+
 /-! ============================================================================
     SECTION 9: POLYMER COMBINATORICS & ENTROPY BOUND
     ============================================================================ -/
@@ -1108,6 +1142,8 @@ def makeCertifiedLFR1AntiDummy (N : ℕ) [NeZero N] : CertifiedLFR1AntiDummy N w
 #print axioms partition_function_invariance
 #print axioms canonical_measure_preservation_invariant
 #print axioms measure_preservation_density_integral
+#print axioms localQuotientProbability_sum_eq_one
+#print axioms localQuotientProbability_pos
 #print axioms entropy_base_constant_eq
 #print axioms entropy_base_constant_pos
 #print axioms entropy_base_constant_gt_one

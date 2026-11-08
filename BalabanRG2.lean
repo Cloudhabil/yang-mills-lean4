@@ -1029,6 +1029,32 @@ theorem cluster_action_gauge_invariant {N : ℕ} (CA : ClusterActionDensity N)
     CA.E_term X (gaugeShift1 V lambda) = CA.E_term X V :=
   CA.h_gauge_inv X V lambda
 
+/-- Vanishing of the lattice Yang-Mills action on the zero gauge field. -/
+theorem S_YM_zero {N : ℕ} [NeZero N] : S_YM (0 : Form1 N) = 0 := by
+  dsimp [S_YM, normSq2, inner2]
+  have h_d1 : d1 (0 : Form1 N) = 0 := by
+    ext x μ ν
+    dsimp [d1]
+    ring
+  rw [h_d1]
+  simp only [Pi.zero_apply, MulZeroClass.mul_zero, Finset.sum_const_zero]
+
+/-- Non-trivial cluster action density with strictly positive energy on non-zero curvature. -/
+def testClusterActionDensity (N : ℕ) [NeZero N] : ClusterActionDensity N where
+  E_term := fun X V => (1 / (X.vol : ℝ)) * S_YM V
+  h_gauge_inv := fun X V lambda => by
+    have hd : d1 (gaugeShift1 V lambda) = d1 V := by
+      ext x μ ν
+      have h_nil : d1 (d0 lambda) x μ ν = 0 := by
+        have := congr_fun (congr_fun (congr_fun (d_squared_zero lambda) x) μ) ν
+        exact this
+      dsimp [d1, gaugeShift1] at h_nil ⊢
+      linarith
+    dsimp only [S_YM]
+    rw [hd]
+  h_vacuum_zero := fun X => by
+    rw [S_YM_zero, mul_zero]
+
 /-! ============================================================================
     SECTION 10: MASTER BALABANRG2 STEP & CONSTRUCTION PIPELINE
     ============================================================================ -/
@@ -1091,14 +1117,14 @@ def makeCanonicalBalabanRG2Step (k N L M1 : ℕ) [NeZero N]
     h_kappa := Real.zero_lt_one
     h_eps_small := by norm_num
   }
-  cluster_action := {
-    E_term := fun _ _ => 0
-    h_gauge_inv := by intros; rfl
-    h_vacuum_zero := by intros; rfl
-  }
+  cluster_action := testClusterActionDensity N
   h_inductive_decay := by
     intro X
-    simp only [abs_zero]
+    have hV_eq : V.field = 0 := by
+      ext x μ
+      exact congr_fun (congr_fun hV_zero x) μ
+    dsimp [testClusterActionDensity]
+    rw [hV_eq, S_YM_zero, mul_zero, abs_zero]
     have h1 : 0 ≤ (1 / 2 : ℝ) := by norm_num
     have h2 : 0 < Real.exp (-1 * X.diam) := Real.exp_pos _
     have : 0 ≤ (1 / 2 : ℝ) * 1 * Real.exp (-1 * X.diam) := by positivity
@@ -1156,32 +1182,6 @@ theorem tree_witness_n2_pos : 0 < canonicalTrees2.card := by
 theorem tree_witness_n3_pos : 0 < canonicalTrees3.card := by
   rw [canonicalTrees3_card]
   norm_num
-
-/-- Vanishing of the lattice Yang-Mills action on the zero gauge field. -/
-theorem S_YM_zero {N : ℕ} [NeZero N] : S_YM (0 : Form1 N) = 0 := by
-  dsimp [S_YM, normSq2, inner2]
-  have h_d1 : d1 (0 : Form1 N) = 0 := by
-    ext x μ ν
-    dsimp [d1]
-    ring
-  rw [h_d1]
-  simp only [Pi.zero_apply, MulZeroClass.mul_zero, Finset.sum_const_zero]
-
-/-- Non-trivial cluster action density with strictly positive energy on non-zero curvature. -/
-def testClusterActionDensity (N : ℕ) [NeZero N] : ClusterActionDensity N where
-  E_term := fun X V => (1 / (X.vol : ℝ)) * S_YM V
-  h_gauge_inv := fun X V lambda => by
-    have hd : d1 (gaugeShift1 V lambda) = d1 V := by
-      ext x μ ν
-      have h_nil : d1 (d0 lambda) x μ ν = 0 := by
-        have := congr_fun (congr_fun (congr_fun (d_squared_zero lambda) x) μ) ν
-        exact this
-      dsimp [d1, gaugeShift1] at h_nil ⊢
-      linarith
-    dsimp only [S_YM]
-    rw [hd]
-  h_vacuum_zero := fun X => by
-    rw [S_YM_zero, mul_zero]
 
 /-- Anti-Dummy Verification: Certified strictly positive cluster remainder energy
     on the non-trivial background field testBackgroundWitness from BalabanVAR. -/
