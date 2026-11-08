@@ -76,4 +76,9 @@ lean_lib «BalabanLFR1» where
 lean_lib «BalabanOS2» where
   roots := #[`BalabanOS2]
 
+@[default_target]
+lean_lib «YangMillsEightLandmarks» where
+  roots := #[`YangMillsEightLandmarks]
+
+
 
