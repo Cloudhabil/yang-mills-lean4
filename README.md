@@ -4,6 +4,7 @@
 [![Mathlib 4](https://img.shields.io/badge/Mathlib-v4.33.1-green.svg)](https://github.com/leanprover-community/mathlib4)
 [![Axioms](https://img.shields.io/badge/Axioms-Standard%20Core%20Only-brightgreen.svg)](docs/AXIOM_AUDIT.md)
 [![Constructive Pipeline](https://img.shields.io/badge/Constructive%20Modules-25%20targets%20%7C%2025%2C600%2B%20LOC-success.svg)](docs/MATHEMATICAL_WIRE.md)
+[![Wiki](https://img.shields.io/badge/GitHub-Wiki%20Knowledge%20Base-blueviolet.svg)](wiki/Home.md)
 [![Standard Model](https://img.shields.io/badge/Standard%20Model-SU(3)_C%20%C3%97%20SU(2)_L%20%C3%97%20U(1)_Y%20%7C%2070%20Quanta-blue.svg)](docs/LANDMARKS_AND_SM.md)
 [![Upstream PR](https://img.shields.io/badge/Upstream%20PR-google--deepmind%2Fformal--conjectures%20%237636-purple.svg)](https://github.com/google-deepmind/formal-conjectures/pull/7636)
 [![License](https://img.shields.io/badge/License-Apache%202.0-orange.svg)](LICENSE)
@@ -68,6 +69,9 @@ The proof is organized into **25 modular targets** totaling **25,600+ lines of L
 ---
 
 ## In-Depth Documentation
+
+> [!TIP]
+> The full 15-chapter technical knowledge base is available in the repository at [`wiki/`](wiki/) and formatted for the [GitHub Wiki Knowledge Base](https://github.com/Cloudhabil/yang-mills-lean4/wiki) with complete sidebar navigation (`_Sidebar.md`).
 
 Detailed mathematical documentation and derivations are available in the [`docs/`](docs/) directory:
 
