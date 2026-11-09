@@ -61,15 +61,24 @@ theorem simplexGreensNorm_four : simplexGreensNorm spacetimeDim = 1 / 5 := by
     indexed by `Fin 10` on the fundamental 4-simplex K₅. -/
 abbrev Plaquette4D := Fin 10
 
-/-- The Hodge 1-Laplacian on the 4D cell unit K₅ satisfies L₁ = (d + 1) · I₁₀ = 5 · I₁₀
-    identically, guaranteeing uniform strict positive-definiteness on all 1-cochains. -/
+/-- The Hodge 1-Laplacian on the elementary 4D cell unit K₅ satisfies L₁ = (d + 1) · I₁₀ = 5 · I₁₀
+    identically on `Fin 10`, providing a verified combinatorial benchmark of Eckmann Hodge theory
+    and Discrete Exterior Calculus (DEC) boundary nilpotency (∂² = 0) on a single closed 4-simplex.
+    
+    *Physical & Mathematical Demarcation*:
+    This finite algebraic identity applies strictly to the boundary complex of the isolated 4-simplex K₅
+    (which has the compact topology of the 3-sphere S³ with no non-trivial harmonic 1-forms).
+    It is NOT the macroscopic spacetime propagator on ℤ⁴ or 𝕋_N⁴. On the physical spacetime lattice,
+    the bare Hodge Laplacian d* d is gapless with continuous spectrum [0, 16], and its multiscale
+    inversion is governed by Bałaban's gauge-fixed covariant Laplacian Δ_B = D_B* D_B + α Q* Q
+    (formalized in `BalabanPRT1.lean` and `BalabanPBG.lean`). -/
 theorem dacc_hodge_laplacian_uniform_positive (i j : Fin 10) :
     hodgeLaplacian1 B1_4D B2_4D i j = if i = j then 5 else 0 := by
   revert i j
   decide
 
-/-- The exact Green's function (fluctuation covariance propagator) G₁ = L₁⁻¹ = (1 / (d + 1)) · I₁₀
-    on the fundamental 4D DACC cell unit K₅. -/
+/-- The combinatorial Green's inverse G₁ = L₁⁻¹ = (1 / (d + 1)) · I₁₀ on the elementary
+    4D simplicial cell unit K₅. -/
 def daccHodgeGreens (i j : Fin 10) : ℚ :=
   if i = j then simplexGreensNorm spacetimeDim else 0
 
