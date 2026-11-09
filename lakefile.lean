@@ -80,5 +80,10 @@ lean_lib «BalabanOS2» where
 lean_lib «YangMillsEightLandmarks» where
   roots := #[`YangMillsEightLandmarks]
 
+@[default_target]
+lean_lib «StandardModelExtension» where
+  roots := #[`StandardModelExtension]
+
+
 
 
