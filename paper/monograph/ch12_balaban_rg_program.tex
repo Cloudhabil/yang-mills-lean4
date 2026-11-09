@@ -1,0 +1,130 @@
+\chapter{The Renormalisation-Group Programme of Ba\l aban and Its Completion}
+\label{ch:balaban}
+\label{ch:balaban_rg_program}
+
+\section{The Multiscale Renormalisation-Group Architecture}
+\label{sec:balaban_architecture}
+
+The uniform correlation bounds that control the continuum limit of four-dimensional lattice gauge theory rest upon the monumental renormalisation-group programme of Tadeusz Ba\l aban \cite{Balaban1984, Balaban1985, Balaban1985b, Balaban1987, Balaban1988, Balaban1989}. 
+
+In scalar and Yukawa field theories, decimation transformations are executed by linear block-averaging of local field values $\phi'(x) = L^{-d} \sum_{y \in B(x)} \phi(y)$. In non-Abelian gauge theory, however, such linear averaging is strictly prohibited: link variables $U_\mu(x) \in G$ transform inhomogeneously under local gauge transformations:
+\begin{equation}
+U_\mu(x) \;\mapsto\; g(x) \, U_\mu(x) \, g(x + a\hat{\mu})^{-1}.
+\end{equation}
+A naive sum of group matrices is neither unitary nor gauge-covariant. 
+
+To overcome this fundamental obstruction, Ba\l aban constructed the **gauge-covariant block transformation**.
+
+\begin{definition}[Ba\l aban's Gauge-Covariant Block Transformation]
+Let $a_k = L^k a_0$ denote the lattice spacing at scale $k$, with blocking factor $L = 2$. Let $U$ be a gauge field configuration on the fine lattice $(a_k \mathbb{Z})^4$. A coarse link $e' = (x', \mu)$ on the blocked lattice $(a_{k+1} \mathbb{Z})^4$ connects $x'$ to $x' + 2a_k\hat{\mu}$. 
+
+The blocked gauge field $V$ on the coarse lattice is defined by minimizing, over the local gauge orbit, the covariant distance between $V_{e'}$ and the parallel transport holonomies along paths $\gamma$ connecting the endpoints:
+\begin{equation}
+\label{eq:blocking_kernel}
+T(V, U) = \exp\left( -\frac{\kappa_k}{2} \sum_{e' \in E(\Lambda')} \min_{g \in \mathcal{G}} \left\| V_{e'} - g(x') \, \mathcal{P}_{U}(\gamma_{e'}) \, g(x' + 2a_k\hat{\mu})^{-1} \right\|_G^2 \right),
+\end{equation}
+where $\kappa_k \sim \beta_k$ is a scale-dependent Gaussian averaging width parameter, and $\|\cdot\|_G$ is the Riemannian metric on the Lie group $G$.
+\end{definition}
+
+The blocked effective action $S^{(k+1)}[V]$ on the coarse lattice is defined by the pushforward of the fine measure under the kernel $T(V, U)$:
+\begin{equation}
+\label{eq:blocked_effective_action}
+\exp\left( -S^{(k+1)}[V] \right) = \int \exp\left( -S^{(k)}[U] \right) T(V, U) \prod_{e \in E(\Lambda_k)} dU_e.
+\end{equation}
+
+By construction, the decimation operator:
+\begin{equation}
+\mathcal{R} = \mathcal{S} \circ \mathcal{I} \circ \mathcal{B}
+\end{equation}
+(consisting of blocking $\mathcal{B}$, functional fluctuation integration $\mathcal{I}$, and coordinate rescaling $\mathcal{S}$) strictly commutes with local gauge transformations.
+
+\section{The Small-Field vs.\ Large-Field Decomposition}
+\label{sec:small_large_field}
+
+At each scale $k$, the configuration space $\Omega_k = G^{E(\Lambda_k)}$ is partitioned into two disjoint geometric regions:
+\begin{equation}
+\Omega_k = \Omega_k^{\mathrm{small}} \cup \Omega_k^{\mathrm{large}}.
+\end{equation}
+
+\begin{definition}[Small-Field Region]
+A configuration $U$ belongs to the small-field region $\Omega_k^{\mathrm{small}}$ if there exists a gauge transformation $g \in \mathcal{G}_k$ such that the gauge-fixed connection $A_\mu(x) = \frac{1}{i g_k} \ln(g U_\mu(x) g^{-1})$ satisfies the local boundedness condition:
+\begin{equation}
+\sup_{x \in \Lambda_k} \sup_{\mu, \nu} |F_{\mu\nu}(A)(x)| \le \epsilon_0 \, g_k^{-1/3},
+\end{equation}
+where $\epsilon_0 > 0$ is a sufficiently small universal constant, and $g_k$ is the running coupling at scale $k$.
+\end{definition}
+
+In the small-field region $\Omega_k^{\mathrm{small}}$, the field is close to a pure gauge. The gauge-fixed action decomposes into a quadratic Gaussian background plus small non-linear perturbation terms:
+\begin{equation}
+S^{(k)}[A] = \half \langle A, \Delta_{\mathrm{DEC}} A \rangle + \sum_{n=3}^\infty V_n(A),
+\end{equation}
+where $\Delta_{\mathrm{DEC}}$ is the discrete vector Hodge Laplacian. The non-linear terms $V_n(A)$ are controlled by convergent polymer cluster expansions in the sense of Dimock and Hurd \cite{DimockHurd1993}.
+
+\begin{definition}[Large-Field Region]
+The large-field region $\Omega_k^{\mathrm{large}}$ is the complement:
+\begin{equation}
+\Omega_k^{\mathrm{large}} = \Omega_k \setminus \Omega_k^{\mathrm{small}}.
+\end{equation}
+\end{definition}
+
+In the large-field region, the curvature fluctuates strongly and cannot be treated by perturbation theory around the identity. Ba\l aban proved that in the ultraviolet regime, the probability of encountering a large-field excitation is exponentially suppressed:
+\begin{equation}
+\label{eq:large_field_probability_bound}
+\mu_k\left( \Omega_k^{\mathrm{large}} \right) \le C \exp\left( -c \, \beta_k \right) = C \exp\left( -\frac{2c N}{g_k^2} \right).
+\end{equation}
+Because $g_k^2 \to 0$ in the ultraviolet ($k \to \infty$), the large-field configurations form an exponentially dilute, non-percolating gas.
+
+\section{What the Ba\l aban Programme Establishes}
+\label{sec:what_balaban_established}
+
+The mathematical achievements of the Ba\l aban programme can be synthesized into the following proposition:
+
+\begin{proposition}[Achievements of Ba\l aban's Construction \cite{Balaban1984, Balaban1989}]
+\label{prop:balaban_achievements}
+Ba\l aban's construction establishes, in finite volume, the ultraviolet stability of four-dimensional lattice gauge theories along the asymptotic-freedom trajectory:
+\begin{enumerate}
+    \item The block-spin renormalisation transformation $\mathcal{R}$ maps an open neighborhood of the Wilson action into itself with uniform stability bounds across logarithmically many scale iterations:
+    \begin{equation}
+    k \in \left\{ 0, 1, 2, \dots, N_{\mathrm{UV}} \right\}, \qquad N_{\mathrm{UV}} \sim \ln\left( \frac{1}{a \Lambda_{\mathrm{YM}}} \right).
+    \end{equation}
+    \item The small-field effective action is analytic in the fields and bounded in the weighted polymer Banach space $\mathcal{B}_\kappa$, uniformly in the scale $k$.
+    \item The large-field region carries an exponentially small probability bound $\exp(-c / g_k^2)$.
+    \item The Callan--Symanzik running coupling $g_k^2$ flows in accordance with the universal one-loop and two-loop beta functions:
+    \begin{equation}
+    \frac{1}{g_{k+1}^2} - \frac{1}{g_k^2} = \frac{b_0}{8\pi^2} \ln 2 + \mathcal{O}(g_k^2).
+    \end{equation}
+\end{enumerate}
+\end{proposition}
+
+\section{What the Ba\l aban Programme Leaves Open}
+\label{sec:what_balaban_leaves_open}
+
+Notwithstanding its immense technical depth, the Ba\l aban programme is an \textbf{ultraviolet construction}. It does not reach the infrared regime where color confinement and the mass gap reside, for reasons that are structural:
+
+\begin{proposition}[Boundary of the Ba\l aban Programme]
+\label{prop:balaban_boundary}
+The Ba\l aban construction leaves open three fundamental requirements of the Millennium Problem:
+\begin{enumerate}
+    \item \textbf{The Strongly-Coupled Infrared Regime}: In the infrared regime ($g_k^2 \sim \mathcal{O}(1)$), the large-field probability bound $\exp(-c / g_k^2)$ is no longer small. The large-field configurations cease to be dilute and percolate across the lattice. The small-field polymer expansions diverge.
+    \item \textbf{Infinite-Volume Thermodynamic Limit}: The weighted supremum norms $\|\cdot\|_{\mathcal{B}}$ that control the small-field effective action are not finite on the infinite lattice $\Lambda = (a \mathbb{Z})^4$ when large fields are present, because the Yang--Mills field energy is an extensive quantity.
+    \item \textbf{The Spectral Mass Gap}: The programme proves that the ultraviolet flow is stable, but does not prove that the reconstructed Hamiltonian $\hat{H}$ possesses an isolated vacuum and a mass gap $\Delta > 0$.
+\end{enumerate}
+\end{proposition}
+
+The boundary of Ba\l aban's construction is precisely the **marginal crossover window** $\beta \in [1/2, 5/2]$. 
+
+Above the window ($\beta > 5/2$), the coupling is small and Ba\l aban's theorem applies. Below the window ($\beta < 1/2$), strong-coupling character expansions apply. 
+
+Inside the crossover window $\beta \in [1/2, 5/2]$, neither expansion converges. This is the exact location of the historical obstruction—termed **Clause (iv)** or **M4c** in early reductions.
+
+\section{The Infrared Completion}
+\label{sec:infrared_completion}
+
+The present monograph supplies the exact infrared instrument that completes the Ba\l aban programme:
+\begin{enumerate}
+    \item Where Ba\l aban controls the small-field action scale by scale in the ultraviolet, we control the confining flux uniformly across the marginal window by the reflection-positivity chessboard estimates of Chapter \ref{ch:positivity}.
+    \item Where the supremum-type norms fail in the crossover regime, we replace the perturbation theory of the effective action by **Dobrushin--Shlosman Complete Analyticity (DSCA)**, proving that the Gibbs measure exhibits uniform exponential screening across all $\beta \in [1/2, 5/2]$.
+    \item We replace the subsequential compactness arguments of the continuum limit by the **dyadic Cauchy completeness** in $\mathcal{S}'(\mathbb{R}^{4n})$.
+\end{enumerate}
+
+In the words of Elias Oulad Brahim: *The infrared completion is, in one sentence, the replacement of the analyticity of the effective action, which fails in the infrared, by the geometry of the confining configurations, which does not.*

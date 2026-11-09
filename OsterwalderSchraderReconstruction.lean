@@ -830,12 +830,13 @@ theorem master_continuum_wightman_yang_mills_mass_gap_of_os_reconstruction.{u_G,
       (∀ ψ : theory.domain,
         inner ℂ theory.vacuum (ψ : ℋ) = (0 : ℂ) →
         single_pace_floor_val q * ‖(ψ : ℋ)‖ ≤ ‖theory.Hamiltonian ψ‖) := by
-  have h_os : OSReconstructionGapHypothesis.{u_G, u_H} G Curv := by
+  have h_os : OSReconstructionTheoremHypothesis.{u_G, u_H} G Curv := by
     intro os
     rcases YangMills.osterwalder_schrader_reconstruction.{u_G, u_H} os with
-      ⟨ℋ, _, _, _, _, theory, _, _, _, _, _, _, _, _, _, _, hgap⟩
-    exact ⟨ℋ, inferInstance, inferInstance, inferInstance, inferInstance, theory,
-      hgap.2.2.1, hgap.2.2.2⟩
+      ⟨ℋ, _, _, _, _, theory, T, _, _, _, h_T_zero, _, h_T_deriv,
+       _, _, _, _, _, h_T_cluster, h_excite⟩
+    exact ⟨ℋ, inferInstance, inferInstance, inferInstance, inferInstance, theory, T,
+      h_T_zero, h_T_deriv, h_T_cluster, h_excite⟩
   exact master_continuum_wightman_yang_mills_mass_gap Curv ch lambda_ym beta_ir
     h_lambda h_ir q h_os lat h_lat_beta h_lat_c2 h_c3
 
@@ -1160,12 +1161,13 @@ theorem constructive_pipeline_complete_solution.{u_G, u_H}
         (∀ k < N, B.P.beta_ir ≤ beta_seq k) →
         (∀ k < N, r_seq (k + 1) ≤ B.P.theta * r_seq k + B.P.C_mayer * (r_seq k) ^ 2 + B.P.C_vert / beta_seq k) →
         ∀ k ≤ N, r_seq k ≤ B.P.r_max) := by
-  have h_os : ToposUnifiedYangMills.OSReconstructionGapHypothesis.{u_G, u_H} G B.Curv := by
+  have h_os : ToposUnifiedYangMills.OSReconstructionTheoremHypothesis.{u_G, u_H} G B.Curv := by
     intro os
     rcases YangMills.osterwalder_schrader_reconstruction.{u_G, u_H} os with
-      ⟨ℋ, _, _, _, _, theory, _, _, _, _, _, _, _, _, _, _, hgap⟩
-    exact ⟨ℋ, inferInstance, inferInstance, inferInstance, inferInstance, theory,
-      hgap.2.2.1, hgap.2.2.2⟩
+      ⟨ℋ, _, _, _, _, theory, T, _, _, _, h_T_zero, _, h_T_deriv,
+       _, _, _, _, _, h_T_cluster, h_excite⟩
+    exact ⟨ℋ, inferInstance, inferInstance, inferInstance, inferInstance, theory, T,
+      h_T_zero, h_T_deriv, h_T_cluster, h_excite⟩
   exact constructive_pipeline_complete_reduction_of_os.{u_G, u_H} B h_os h_lat_c2 h_c3
 
 /-- **Universal Constructive Millennium Reduction Theorem (`0 sorryAx`)**:

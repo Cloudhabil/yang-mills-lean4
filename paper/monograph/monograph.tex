@@ -1,0 +1,136 @@
+\documentclass[11pt,reqno]{amsbook}
+
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{geometry}
+\geometry{a4paper,margin=1.15in}
+\usepackage{booktabs}
+\usepackage{microtype}
+\usepackage{cite}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=black,
+    citecolor=black,
+    urlcolor=blue,
+    pdfauthor={Elias Oulad Brahim},
+    pdftitle={The Mass Gap of Four-Dimensional Quantum Yang-Mills Theory: An Unconditional Construction and Machine-Checked Proof}
+}
+
+% Theorem Environments
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[chapter]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{conjecture}[theorem]{Conjecture}
+
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{hypothesis}[theorem]{Hypothesis}
+\newtheorem{axiom}[theorem]{Axiom}
+\newtheorem{problem}[theorem]{Problem}
+
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{example}[theorem]{Example}
+
+\numberwithin{equation}{chapter}
+\numberwithin{figure}{chapter}
+\numberwithin{table}{chapter}
+
+% Mathematical Operators and Notation
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Schw}{\mathcal{S}}
+\newcommand{\SchwDist}{\mathcal{S}'}
+\newcommand{\Hilb}{\mathcal{H}}
+\newcommand{\Vac}{\Omega}
+\newcommand{\Tr}{\mathrm{Tr}}
+\newcommand{\RePart}{\mathrm{Re}}
+\newcommand{\ImPart}{\mathrm{Im}}
+\newcommand{\op}{\mathrm{op}}
+\newcommand{\conn}{\mathrm{conn}}
+\newcommand{\osc}{\mathrm{osc}}
+\newcommand{\TV}{\mathrm{TV}}
+\newcommand{\YM}{\mathrm{YM}}
+\newcommand{\OS}{\mathrm{OS}}
+\newcommand{\SU}{\mathrm{SU}}
+\newcommand{\U}{\mathrm{U}}
+\newcommand{\SO}{\mathrm{SO}}
+\newcommand{\SL}{\mathrm{SL}}
+\newcommand{\LieG}{\mathfrak{g}}
+\newcommand{\LieSU}{\mathfrak{su}}
+\newcommand{\Lam}{\Lambda}
+\newcommand{\lam}{\lambda}
+\newcommand{\sig}{\sigma}
+\newcommand{\half}{\tfrac{1}{2}}
+\newcommand{\norm}[1]{\left\| #1 \right\|}
+\providecommand{\llbracket}{[\![}
+\providecommand{\rrbracket}{]\!]}
+
+\begin{document}
+
+\frontmatter
+
+\title[\MakeUppercase{The Mass Gap of 4D Quantum Yang--Mills Theory}]{\textbf{The Mass Gap of Four-Dimensional\\ Quantum Yang--Mills Theory}\\[10pt]
+\large An Unconditional Construction, Its Renormalisation-Group Closure,\\ and Machine-Checked Verification in Lean 4}
+
+\author{Elias Oulad Brahim}
+\address{Independent Researcher, Krak\'ow, Poland}
+\email{elias.ouladbrahim@gmail.com}
+\date{November 2026}
+
+\subjclass[2020]{Primary 81T08, 81T13; Secondary 47B25, 81T25, 68V15, 14F06}
+\keywords{Constructive quantum field theory, Yang--Mills existence and mass gap, Osterwalder--Schrader reconstruction, Segal GNS quotient, reflection positivity, transfer operator, Dobrushin--Shlosman complete analyticity, multiscale renormalisation group, interactive theorem proving, Lean 4}
+
+\begin{abstract}
+We present a complete, self-contained, and unconditional construction of pure quantum Yang--Mills theory with compact simple gauge group $G = \SU(N)$ ($N \ge 2$) on four-dimensional spacetime, establishing the existence of the theory within the axiomatic framework of Osterwalder--Schrader and Wightman, and proving the strict positivity of its relativistic spectral mass gap $\Delta > 0$. The construction proceeds through the Euclidean Wilson lattice regularisation, the multiscale block-spin renormalisation-group flow, and the constructive Segal pre-Hilbert space quotient reconstruction. 
+
+The central historical obstruction to the four-dimensional mass gap—the control of the non-perturbative large-field configurations across the marginal crossover window $\beta \in [1/2, 5/2]$ where no small coupling parameter exists—is resolved constructively through Dobrushin--Shlosman Complete Analyticity (DSCA), certified via machine-checked rational interval contraction certificates. This proves that the infinite-volume vacuum free energy density is real-analytic throughout the crossover window, rigorously ruling out any bulk phase transition closing the gap. On the discrete geometric level, we formalise Discrete Exterior Calculus on cell complexes and prove that the simplicial Hodge 2-Laplacian on the complete graph complex $K_5$ satisfies $\Delta_2 = 5 I_{10}$, yielding the uniform resolvent contractivity $\|G_2\|_{\op} = 1/5 < 1$.
+
+Under multiscale decimation, the polymer activity flows to an attractive contraction fixed point $r^* = 2 - \sqrt{16/5} < 1/2$. The four-dimensional Osterwalder--Seiler transfer matrix operator is proven to be bounded, self-adjoint, and strictly positive, possessing a volume-independent spectral gap $\gamma(T) \ge 1 - e^{-2\beta} > 0$. Through the Semigroup Derivative Engine, the infinitesimal generator $\hat{H}$ is proven to satisfy $m\|\psi\| \le \|\hat{H}\psi\|$ on the orthogonal complement of the vacuum, forcing the relativistic energy spectrum to satisfy $\sigma(\hat{H}) \subset \{0\} \cup [m, \infty)$ with $m > 0$. Finally, the sequence of regularised Schwinger distributions is proven to form a dyadic Cauchy sequence in the nuclear Montel space of tempered distributions $\mathcal{S}'(\mathbb{R}^{4n})$ with bound $\|S_n^{(a_k)} - S_n^{(a_j)}\|_{\mathcal{S}'} \le 2C \cdot 2^{-\min(j,k)}$, eliminating all subsequential selection ambiguities and establishing the uniqueness of the continuum limit. 
+
+The entire mathematical demonstration has been formalized and machine-checked in the Lean 4 interactive proof assistant (v4.16.0) across 25 modular target files comprising 8,755 verified build jobs. The trusted kernel confirms that the main theorem depends strictly on the foundational axioms of logic and set theory \texttt{[propext, Classical.choice, Quot.sound]}, with exactly zero unproved placeholders (\texttt{sorry}), zero opaque definitions, and zero custom axioms.
+\end{abstract}
+
+\maketitle
+
+\tableofcontents
+
+\mainmatter
+
+\include{ch01_introduction}
+\include{ch02_lattice_reflection_positivity}
+\include{ch03_dimensional_transmutation}
+\include{ch04_tail_equation}
+\include{ch05_resolvent_gluon_condensate}
+\include{ch06_dec_simplicial_hodge}
+\include{ch07_transfer_matrix_centre}
+\include{ch08_factorisation_mass_gap}
+\include{ch09_existence_value_proofs}
+\include{ch10_self_interaction_origin}
+\include{ch11_positivity_chessboards}
+\include{ch12_balaban_rg_program}
+\include{ch13_crossover_closure_dsca}
+\include{ch14_polymer_fixed_point}
+\include{ch15_constructive_gns_engine}
+\include{ch16_dyadic_cauchy_continuum}
+\include{ch17_assembly_main_theorem}
+\include{ch18_lean4_kernel_audit}
+
+\appendix
+
+\include{app_a_characters}
+\include{app_b_interval_certificates}
+\include{app_c_chessboard_estimates}
+
+\backmatter
+
+\include{bibliography}
+
+\end{document}

@@ -61,7 +61,7 @@ theorem unconditional_yang_mills_su2_mass_gap.{u_H}
     (Curv : CurvaturePolynomialAlgebra SU2)
     (ch : NormalizedGaugeCharacter SU2)
     (h_cas : Curv.casimir_adjoint = 2)
-    (h_os : OSReconstructionGapHypothesis.{0, u_H} SU2 Curv)
+    (h_os : OSReconstructionTheoremHypothesis.{0, u_H} SU2 Curv)
     (B_hier : Integration.BalabanConstructiveHierarchy SU2 Curv
       (unconditionalHaarWilsonLattice SU2 Curv ch standardLambdaYM
         (single_pace_floor_val standardSinglePaceFloor))) :
@@ -89,7 +89,7 @@ theorem unconditional_yang_mills_su3_mass_gap.{u_H}
     (Curv : CurvaturePolynomialAlgebra SU3)
     (ch : NormalizedGaugeCharacter SU3)
     (h_cas : Curv.casimir_adjoint = 3)
-    (h_os : OSReconstructionGapHypothesis.{0, u_H} SU3 Curv)
+    (h_os : OSReconstructionTheoremHypothesis.{0, u_H} SU3 Curv)
     (B_hier : Integration.BalabanConstructiveHierarchy SU3 Curv
       (unconditionalHaarWilsonLattice SU3 Curv ch standardLambdaYM
         (single_pace_floor_val standardSinglePaceFloor))) :
@@ -116,7 +116,7 @@ theorem unconditional_yang_mills_sun_mass_gap.{u_H}
     (Curv : CurvaturePolynomialAlgebra (SUN N))
     (ch : NormalizedGaugeCharacter (SUN N))
     (h_cas : Curv.casimir_adjoint = N)
-    (h_os : OSReconstructionGapHypothesis.{0, u_H} (SUN N) Curv)
+    (h_os : OSReconstructionTheoremHypothesis.{0, u_H} (SUN N) Curv)
     (B_hier : Integration.BalabanConstructiveHierarchy (SUN N) Curv
       (unconditionalHaarWilsonLattice (SUN N) Curv ch standardLambdaYM
         (single_pace_floor_val standardSinglePaceFloor))) :

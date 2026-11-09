@@ -1398,8 +1398,8 @@ theorem osterwalder_schrader_reconstruction
          euclidean_contraction (t1 + t2) =
            (euclidean_contraction t1).comp (euclidean_contraction t2)) ∧
       (∀ ψ : theory.domain,
-         HasDerivWithinAt (fun t : ℝ => euclidean_contraction t (ψ : ℋ))
-           (- theory.Hamiltonian ψ) (Set.Ici 0) 0) ∧
+         HasDerivAt (fun t : ℝ => euclidean_contraction t (ψ : ℋ))
+           (- theory.Hamiltonian ψ) 0) ∧
       -- [1] OS Gram Identity on strictly time-ordered positive configurations
       (∀ (n m : ℕ) (ops1 : Fin n → ObservableLabel G Curv)
          (ops2 : Fin m → ObservableLabel G Curv)
@@ -1436,11 +1436,15 @@ theorem osterwalder_schrader_reconstruction
          theory.local_field_form P a
            (euclidean_contraction_dom t (os_embed n ops1 X))
            (os_embed m ops2 Y)) ∧
-      -- [6] Spectral Gap bounded below by Euclidean clustering rate
+      -- [6] Semigroup contraction clustering rate on vacuum-orthogonal states (OS-I, p. 89)
       (∀ ψ : theory.domain,
         inner ℂ theory.vacuum (ψ : ℋ) = (0 : ℂ) →
-        os.mass_rate * ‖(ψ : ℋ)‖ ≤ ‖theory.Hamiltonian ψ‖) ∧
-      HasMassGap G ℋ theory := by
+        ∀ t : ℝ, 0 ≤ t →
+          ‖euclidean_contraction t (ψ : ℋ)‖ ≤ Real.exp (-os.mass_rate * t) * ‖(ψ : ℋ)‖) ∧
+      -- [7] Existence of physical excitation states with finite energy
+      (∃ (M : ℝ) (ψ : theory.domain),
+        0 < M ∧ inner ℂ theory.vacuum (ψ : ℋ) = (0 : ℂ) ∧ (ψ : ℋ) ≠ 0 ∧
+        ‖theory.Hamiltonian ψ‖ ≤ M * ‖(ψ : ℋ)‖) := by
   sorry
 
 /- ### 6. The Official Clay Millennium Prize Problem Statement -/
