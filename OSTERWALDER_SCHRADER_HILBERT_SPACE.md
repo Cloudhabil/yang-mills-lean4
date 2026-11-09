@@ -48,7 +48,7 @@ Let $\mathcal{S}(\mathbb{R}^{4n})$ be the standard Fréchet space of complex-val
 $$\|f\|_p := \sup_{x \in \mathbb{R}^{4n}, \, |\alpha| \le p} (1 + |x|^2)^{p/2} |D^\alpha f(x)|, \quad p \in \mathbb{N}.$$
 
 We define $\mathcal{S}_+(\mathbb{R}^{4n})$ as the closed topological subspace of test functions supported in the closed positive-time half-space (or vanishing with all derivatives on the complement of $\mathbb{R}^{4n}_+$):
-$$\mathcal{S}_+(\mathbb{R}^{4n}) := \{ f_n \in \mathcal{S}(\mathbb{R}^{4n}) : \operatorname{supp}(f_n) \subseteq \overline{\mathbb{R}^{4n}_+} \}.$$
+$$\mathcal{S}_+(\mathbb{R}^{4n}) := \{ f_n \in \mathcal{S}(\mathbb{R}^{4n}) : \mathrm{supp}(f_n) \subseteq \overline{\mathbb{R}^{4n}_+} \}.$$
 For $n = 0$, by convention:
 $$\mathcal{S}_+(\mathbb{R}^0) := \mathbb{C}.$$
 
@@ -70,7 +70,7 @@ $$(\Theta f_n)(x_1, \dots, x_n) := \overline{f_n(\theta x_n, \theta x_{n-1}, \do
 For $f_0 \in \mathbb{C}$, $\Theta f_0 := \bar{f}_0$.
 
 Notice the essential geometric property of $\Theta$:
-$$\operatorname{supp}(f_n) \subset \mathbb{R}^{4n}_+ \implies \operatorname{supp}(\Theta f_n) \subset \mathbb{R}^{4n}_- := \{ (x_1, \dots, x_n) : x_i^0 < 0 \}.$$
+$$\mathrm{supp}(f_n) \subset \mathbb{R}^{4n}_+ \implies \mathrm{supp}(\Theta f_n) \subset \mathbb{R}^{4n}_- := \{ (x_1, \dots, x_n) : x_i^0 < 0 \}.$$
 Thus, $\Theta$ strictly maps positive-time configurations into negative-time configurations.
 
 ---
@@ -164,7 +164,7 @@ $$(\tau_t f_n)(x_1^0, \mathbf{x}_1, \dots, x_n^0, \mathbf{x}_n) := f_n(x_1^0 - t
 For $f_0 \in \mathbb{C}$, $\tau_t f_0 := f_0$.
 
 Because $t \ge 0$, if $x_i^0 > 0$, then $x_i^0 + t > 0$. Thus:
-$$\operatorname{supp}(f_n) \subset \mathbb{R}^{4n}_+ \implies \operatorname{supp}(\tau_t f_n) \subset \mathbb{R}^{4n}_+.$$
+$$\mathrm{supp}(f_n) \subset \mathbb{R}^{4n}_+ \implies \mathrm{supp}(\tau_t f_n) \subset \mathbb{R}^{4n}_+.$$
 Hence $\tau_t$ preserves the positive-time test space: $\tau_t : \underline{\mathcal{S}}_+ \to \underline{\mathcal{S}}_+$.
 
 ### 6.2 Semigroup Property
@@ -249,8 +249,8 @@ Energy and momentum are simultaneously diagonalizable on $\mathcal{H}$.
 By the reflection positivity of Lorentz boosts rotating into Euclidean rotations (OS I, Section 3.3; OS II, Section V.2):
 For every joint generalized eigenvector $\psi \in \mathcal{H}$ with four-momentum $(E, \mathbf{p})$:
 $$E \ge \|\mathbf{p}\| = \sqrt{p_1^2 + p_2^2 + p_3^2}.$$
-That is, the joint spectrum $\operatorname{spec}(H, \mathbf{P})$ is contained in the closed forward Minkowski lightcone:
-$$\operatorname{spec}(H, \mathbf{P}) \subseteq \bar{V}_+ = \{ (p^0, \mathbf{p}) \in \mathbb{R}^4 : p^0 \ge \|\mathbf{p}\| \ge 0 \}.$$
+That is, the joint spectrum $\mathrm{spec}(H, \mathbf{P})$ is contained in the closed forward Minkowski lightcone:
+$$\mathrm{spec}(H, \mathbf{P}) \subseteq \bar{V}_+ = \{ (p^0, \mathbf{p}) \in \mathbb{R}^4 : p^0 \ge \|\mathbf{p}\| \ge 0 \}.$$
 
 ---
 

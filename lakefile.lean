@@ -88,6 +88,29 @@ lean_lib «StandardModelExtension» where
 lean_lib «UnconditionalInfiniteLatticeLimit» where
   roots := #[`UnconditionalInfiniteLatticeLimit]
 
+@[default_target]
+lean_lib «ContinuumDistributionalCauchyLimit» where
+  roots := #[`ContinuumDistributionalCauchyLimit]
+
+@[default_target]
+lean_lib «QuantumOperatorProductExpansion» where
+  roots := #[`QuantumOperatorProductExpansion]
+
+@[default_target]
+lean_lib «ConstructiveGNSReconstruction» where
+  roots := #[`ConstructiveGNSReconstruction]
+
+@[default_target]
+lean_lib «CompactLieGroupsSimplicity» where
+  roots := #[`CompactLieGroupsSimplicity]
+
+@[default_target]
+lean_lib «MillenniumSynthesisClosure» where
+  roots := #[`MillenniumSynthesisClosure]
+
+
+
+
 
 
 

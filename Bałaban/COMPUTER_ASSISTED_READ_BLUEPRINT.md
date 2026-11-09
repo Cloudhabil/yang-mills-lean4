@@ -159,7 +159,7 @@ theorem balaban_regular_fluctuation_bound (d : ℕ) (alpha_0 alpha_1 : ℝ)
 
 ### 4.1 The Non-Linear Classical Variational Problem
 - **Functional**:
-  $$\mathcal{A}^\eta(U) = \sum_{p \subset \Omega_0} \eta^{d-4} \big( 1 - \frac{1}{N} \operatorname{Re}\operatorname{Tr} U(\partial p) \big).$$
+  $$\mathcal{A}^\eta(U) = \sum_{p \subset \Omega_0} \eta^{d-4} \big( 1 - \frac{1}{N} \mathrm{Re}\mathrm{Tr} U(\partial p) \big).$$
 - **Constraint**: On coarse block boundaries $\mathfrak{B}_k$, $U^{(k)} = V$ where $V$ is a fixed regular configuration on coarse lattice.
 - **Critical Orbit**: Find $U \in \mathcal{U}_k(\{\Omega_j\}, \varepsilon_0) \cap \mathfrak{B}_k(\mathfrak{B}_k, V)$ minimizing $\mathcal{A}^\eta(U)$.
 
@@ -322,7 +322,7 @@ structure PolymerBanachSpace (kappa : ℝ) where
 
 ### 9.2 Complete Ultraviolet Stability
 - Guarantees that large fields do not spoil the small-field cluster convergence of `CRE`, completing the non-perturbative construction of the effective partition function:
-  $$\mathcal{Z}(L, a) = \int \mathcal{D}U \, e^{-S_{\text{Wilson}}(U)} \le e^{C \cdot \operatorname{Vol}}.$$
+  $$\mathcal{Z}(L, a) = \int \mathcal{D}U \, e^{-S_{\text{Wilson}}(U)} \le e^{C \cdot \mathrm{Vol}}.$$
 
 ---
 
@@ -339,7 +339,7 @@ structure PolymerBanachSpace (kappa : ℝ) where
   Any sequence of Euclidean Green's functions $\{S_n\}_{n=0}^\infty$ satisfying $(E0'), (E1), (E2), (E3), (E4)$ reconstructs a unique Wightman relativistic quantum field theory satisfying:
   1. Complete Hilbert space $\mathcal{H} = \overline{\underline{\mathcal{S}}_+ / \mathcal{N}}$,
   2. Positive Hamiltonian $H \ge 0$,
-  3. Relativistic forward lightcone spectrum $\operatorname{spec}(H, \mathbf{P}) \subseteq \bar{V}_+$,
+  3. Relativistic forward lightcone spectrum $\mathrm{spec}(H, \mathbf{P}) \subseteq \bar{V}_+$,
   4. Tempered Wightman field distributions $\mathfrak{W}_n \in \mathcal{S}'(\mathbb{R}^{4n})$ (Axiom R0),
   5. Strictly positive spectral mass gap $\Delta \ge m > 0$.
 
