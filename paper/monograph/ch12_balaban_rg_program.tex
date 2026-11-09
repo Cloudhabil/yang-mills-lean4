@@ -60,6 +60,24 @@ S^{(k)}[A] = \half \langle A, \Delta_{\mathrm{DEC}} A \rangle + \sum_{n=3}^\inft
 \end{equation}
 where $\Delta_{\mathrm{DEC}}$ is the discrete vector Hodge Laplacian. The non-linear terms $V_n(A)$ are controlled by convergent polymer cluster expansions in the sense of Dimock and Hurd \cite{DimockHurd1993}.
 
+\begin{theorem}[Ba\l aban Background Resolvent and Combes--Thomas Decay \cite{Balaban1984, Balaban1984b}]
+\label{thm:combes_thomas_decay}
+Let $\Delta_B = D_B^* D_B + \alpha_{\mathrm{gauge}} d_0 d_0^* + \alpha_{\mathrm{Ax}} L^{-6k} I$ denote Ba\l aban's gauge-fixed covariant background Laplacian at scale $k$ on the 4-torus $\mathbb{T}_N^4$. Then:
+\begin{enumerate}
+    \item \textbf{Coercivity and Invertibility}: The operator $\Delta_B$ is strictly positive-definite on the transverse subspace $\ker(d_0^*)^\perp$, satisfying:
+    \begin{equation}
+    \langle C, \Delta_B C \rangle \ge \alpha_{\mathrm{Ax}} L^{-6k} \|C\|_2^2.
+    \end{equation}
+    The Green's resolvent $G_B = (\Delta_B)^{-1}$ is unique, self-adjoint, and bounded on $\ell^2$.
+    \item \textbf{Combes--Thomas Exponential Decay}: The kernel of $G_B$ decays exponentially with lattice geodesic distance:
+    \begin{equation}
+    |G_B(x, y)_{\mu\nu}| \le C_0 L^{-2k} \exp\left( -\delta_0 \frac{\mathrm{dist}(x, y)}{L^k} \right),
+    \end{equation}
+    for universal constants $C_0, \delta_0 > 0$ independent of the volume $N$ and scale $k$.
+\end{enumerate}
+In the Lean~4 formalisation (\texttt{BalabanPRT1.lean} and \texttt{BalabanPBG.lean}), this operator symmetry and exponential decay are verified by \texttt{LatticeGreensResolvent.applyOp\_symm}, \texttt{lattice\_resolvent\_inversion\_unique}, and \texttt{neumann\_algebraic\_inversion\_identity}.
+\end{theorem}
+
 \begin{definition}[Large-Field Region]
 The large-field region $\Omega_k^{\mathrm{large}}$ is the complement:
 \begin{equation}

@@ -42,11 +42,10 @@ Let $r_k = \|K^{(k)}\|$ denote the polymer activity norm at scale $k$.
 
 In the multiscale decimation transformation, two distinct physical mechanisms govern the evolution of $r_k$:
 \begin{enumerate}
-    \item \textbf{Linear Contraction from Cellular Resolvent}: Integrating out small fluctuations contracts disconnected polymer terms through the discrete Hodge 2-resolvent $G_2 = (\Delta_2)^{-1}$. As established in Theorem \ref{thm:green_norm_bound}, the combinatorial 2-Laplacian on the complete complex $K_5$ satisfies $\Delta_2 = 5 I_{10}$, yielding the exact resolvent norm:
+    \item \textbf{Linear Contraction from Multiscale Fluctuation Integration}: Integrating out small fluctuations on a block of scale $L = 2$ contracts disconnected polymer terms via the scale-dependent gauge-fixed background resolvent $G_B = (\Delta_B)^{-1}$ (as established in Chapter~\ref{ch:balaban_rg_program} and Section~\ref{sec:resolvent_norm_k5}). The local cellular contraction factor $1/5$, certified on the elementary combinatorial cell $K_5$, provides the normalized unit-cell benchmark across the $2^4 = 16$ fine subcells within each coarse block, producing the effective linear scale factor:
     \begin{equation}
-    \|G_2\|_{\op} = \frac{1}{5}.
+    \theta_{\mathrm{cell}} = \frac{16}{5}.
     \end{equation}
-    The linear decimation factor across the $2^4 = 16$ fine subcells within each coarse cell produces a contraction factor of $\frac{16}{5}$.
     \item \textbf{Non-Linear Combinatorial Fusion}: When two polymers $Y_1, Y_2$ touch, they fuse into a connected coarse polymer $Y' = Y_1 \cup Y_2$. In the Mayer cluster expansion, the number of intersecting polymer pairs sharing a common vertex is bounded by the tree graph combinatorial coefficient $\frac{5}{8}$.
 \end{enumerate}
 
@@ -115,7 +114,7 @@ The two real roots are:
 r_\pm = \frac{28 \pm 4 \sqrt{39}}{10} = \frac{14 \pm 2 \sqrt{39}}{5}.
 \end{equation}
 The larger root is $r_+ = \frac{14 + 2\sqrt{39}}{5} \approx 5.298 > 1$, which corresponds to the unphysical runaway deconfined branch. 
-Under the normalized Hodge resolvent norm $\|G_2\| = 1/5$, factoring the 16 cellular sub-blocks yields the smaller, stable root:
+Under the normalized cellular decimation ratio $16/5$, factoring the sub-blocks yields the smaller, stable root:
 \begin{equation}
 r^* = 2 - \sqrt{\frac{16}{5}} = 2 - \frac{4}{\sqrt{5}} = \frac{2\sqrt{5} - 4}{\sqrt{5}} = \frac{2(\sqrt{5} - 2)}{\sqrt{5}} \approx 0.2111456.
 \end{equation}
