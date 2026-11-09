@@ -12,6 +12,7 @@ __pycache__/
 *.db
 !benchmarks/yang_mills_eight_landmarks_transplanckian.db
 !benchmarks/standard_model_full_spectrum.db
+!benchmarks/unconditional_infinite_lattice_and_quanta.db
 *.db-journal
 *.pdf
 *.eml

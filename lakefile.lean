@@ -84,6 +84,11 @@ lean_lib «YangMillsEightLandmarks» where
 lean_lib «StandardModelExtension» where
   roots := #[`StandardModelExtension]
 
+@[default_target]
+lean_lib «UnconditionalInfiniteLatticeLimit» where
+  roots := #[`UnconditionalInfiniteLatticeLimit]
+
+
 
 
 
