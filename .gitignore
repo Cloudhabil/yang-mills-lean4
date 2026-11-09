@@ -15,6 +15,7 @@ __pycache__/
 !benchmarks/unconditional_infinite_lattice_and_quanta.db
 *.db-journal
 *.pdf
+*.zip
 *.eml
 scratch/
 test_*.lean
