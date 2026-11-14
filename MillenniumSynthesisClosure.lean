@@ -385,8 +385,19 @@ theorem constructive_su3_millennium_synthesis
           (1 : ℝ) • YangMills.ContinuumFieldNontriviality.unitTimeVec]
       YangMills.ContinuumFieldNontriviality.IsNonCoincident x ∧
       YangMills.ContinuumFieldNontriviality.connectedS4Centered w.os su3ScalarGlueballOps4 x ≠ 0) ∧
+    (gnsPreHilbertSemigroup w.os 0 le_rfl = id ∧
+      (∀ (t1 t2 : ℝ) (ht1 : 0 ≤ t1) (ht2 : 0 ≤ t2),
+        gnsPreHilbertSemigroup w.os (t1 + t2) (add_nonneg ht1 ht2) =
+          gnsPreHilbertSemigroup w.os t1 ht1 ∘ gnsPreHilbertSemigroup w.os t2 ht2) ∧
+      (∀ (f g : PositiveTimeTestData (Matrix.specialUnitaryGroup (Fin 3) ℂ)
+        YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra),
+        ∃ C : ℝ, 0 ≤ C ∧ ∀ (t : ℝ) (ht : 0 ≤ t),
+          ‖sesqOS w.os f (shiftPositiveTimeTestData t ht g) -
+            starRingEnd ℂ (w.os.schwinger f.deg (reverseConjLabels f.ops) (reverseReflectConfig f.X)) *
+              w.os.schwinger g.deg g.ops g.X‖ ≤
+          C * Real.exp (-w.os.mass_rate * t))) ∧
     YangMills.YangMillsSU3MassGap.{0} := by
-  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · intro β r hβ_lo hβ_hi hr_lo hr_hi
     exact YangMills.UVThresholdBridge.gaussian_remainder_contraction_on_uv_bridge
       hβ_lo hβ_hi hr_lo hr_hi
@@ -410,6 +421,9 @@ theorem constructive_su3_millennium_synthesis
       w.os su3ScalarGlueballOps4 (by norm_num : (0 : ℝ) < 1) w.ope_wit
   · exact YangMills.ContinuumFieldNontriviality.connectedS4_ne_zero_of_singular_ope
       w.os su3ScalarGlueballOps4 (by norm_num : (0 : ℝ) < 1) w.ope_wit
+  · exact ⟨gnsPreHilbertSemigroup_zero w.os,
+      fun t1 t2 ht1 ht2 => gnsPreHilbertSemigroup_add w.os t1 t2 ht1 ht2,
+      fun f g => sesqOS_shift_clustering w.os f g⟩
   · have h_gap : HasMassGap (Matrix.specialUnitaryGroup (Fin 3) ℂ) w.H.HilbertSpace w.H.theory :=
       reconstructed_gns_has_mass_gap w.H w.semi w.os.mass_rate w.os.mass_rate_pos
         w.h_deriv w.h_cluster w.h_finite_spec

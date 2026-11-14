@@ -428,8 +428,216 @@ theorem reconstructed_gns_has_mass_gap
     (H.theory.Hamiltonian ψ : H.HilbertSpace) m h_init (h_deriv ψ)
     (fun t ht => h_cluster ψ t h_ortho ht)
 
+/-! ============================================================================
+    PART IV: CONSTRUCTIVE EUCLIDEAN TIME-TRANSLATION SEMIGROUP FROM OS1 & OS4
+    ============================================================================ -/
+
+private theorem toCoords_vec4 (t x y z : ℝ) :
+    toCoords (vec4 t x y z) = ![t, x, y, z] := rfl
+
+private theorem toCoords_euclideanShift {n : ℕ} (t : ℝ) (X : Fin n → EuclideanSpace4) (i : Fin n) :
+    toCoords (euclideanShift t 0 X i) =
+      ![toCoords (X i) 0 + t, toCoords (X i) 1, toCoords (X i) 2, toCoords (X i) 3] := by
+  simp [euclideanShift, toCoords_vec4, toCoords]
+  rfl
+
+/-- **(1) Shifted Positive-Time Test Data**: shifts all Euclidean time coordinates forward by `t ≥ 0`
+    via `euclideanShift t 0`, preserving strict positivity (`0 < c 0 + t`) and strict time ordering. -/
+def shiftPositiveTimeTestData
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (t : ℝ) (ht : 0 ≤ t) (f : PositiveTimeTestData G Curv) :
+    PositiveTimeTestData G Curv where
+  deg := f.deg
+  ops := f.ops
+  X := euclideanShift t 0 f.X
+  h_pos := fun i => by
+    have h0 : toCoords (euclideanShift t 0 f.X i) 0 = toCoords (f.X i) 0 + t := rfl
+    rw [h0]
+    exact add_pos_of_pos_of_nonneg (f.h_pos i) ht
+  h_order := by
+    refine ⟨fun i => ?_, fun i j hij => ?_⟩
+    · change 0 < toCoords (f.X i) 0 + t
+      exact add_pos_of_pos_of_nonneg (f.h_pos i) ht
+    · change toCoords (f.X i) 0 + t < toCoords (f.X j) 0 + t
+      linarith [f.h_order.2 hij]
+
+/-- **(2a) OS Reflection Symmetry of Time-Translation**:
+    Using `os.os1_euclidean_invariance` with `(R, v) = (1, vec4 t 0 0 0)`,
+    `⟨T(t)f, g⟩_OS = ⟨f, T(t)g⟩_OS`. -/
+theorem sesqOS_shift_symm
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (t : ℝ) (ht : 0 ≤ t) (f g : PositiveTimeTestData G Curv) :
+    sesqOS os (shiftPositiveTimeTestData t ht f) g =
+      sesqOS os f (shiftPositiveTimeTestData t ht g) := by
+  unfold sesqOS osSesquilinearForm shiftPositiveTimeTestData
+  dsimp only
+  have h_inv := os.os1_euclidean_invariance (f.deg + g.deg)
+    (safeReflectConcatLabels f.ops g.ops)
+    (1 : Matrix (Fin 4) (Fin 4) ℝ)
+    (vec4 t 0 0 0)
+    (safeReflectConcatMixed (euclideanShift t 0 f.X) g.X)
+    (by simp) Matrix.det_one
+  have h_ops :
+      (fun i => match safeReflectConcatLabels f.ops g.ops i with
+        | .localCurv P => .localCurv (Curv.transform 1 P)
+        | .wilsonChar chi => .wilsonChar chi) =
+      safeReflectConcatLabels f.ops g.ops := by
+    ext i
+    cases h : safeReflectConcatLabels f.ops g.ops i with
+    | localCurv P => simp only [Curv.transform_id, LinearMap.id_apply]
+    | wilsonChar chi => rfl
+  have h_pts :
+      (fun k => euclideanTransform (1 : Matrix (Fin 4) (Fin 4) ℝ) (vec4 t 0 0 0)
+        (safeReflectConcatMixed (euclideanShift t 0 f.X) g.X k)) =
+      safeReflectConcatMixed f.X (euclideanShift t 0 g.X) := by
+    ext k μ
+    change toCoords (vec4 t 0 0 0) μ +
+      ((1 : Matrix (Fin 4) (Fin 4) ℝ).mulVec
+        (toCoords (safeReflectConcatMixed (euclideanShift t 0 f.X) g.X k))) μ =
+      toCoords (safeReflectConcatMixed f.X (euclideanShift t 0 g.X) k) μ
+    rw [Matrix.one_mulVec]
+    unfold safeReflectConcatMixed
+    split_ifs with hk
+    · unfold timeReflect euclideanShift
+      fin_cases μ <;> simp [vec4, ofCoords, toCoords]
+    · unfold euclideanShift
+      fin_cases μ <;> simp [vec4, ofCoords, toCoords] <;> ring
+  calc os.schwinger (f.deg + g.deg) (safeReflectConcatLabels f.ops g.ops)
+        (safeReflectConcatMixed (euclideanShift t 0 f.X) g.X)
+    _ = os.schwinger (f.deg + g.deg)
+          (fun i => match safeReflectConcatLabels f.ops g.ops i with
+            | .localCurv P => .localCurv (Curv.transform 1 P)
+            | .wilsonChar chi => .wilsonChar chi)
+          (fun k => euclideanTransform (1 : Matrix (Fin 4) (Fin 4) ℝ) (vec4 t 0 0 0)
+            (safeReflectConcatMixed (euclideanShift t 0 f.X) g.X k)) := h_inv.symm
+    _ = os.schwinger (f.deg + g.deg) (safeReflectConcatLabels f.ops g.ops)
+          (safeReflectConcatMixed f.X (euclideanShift t 0 g.X)) :=
+        congrArg₂ (os.schwinger (f.deg + g.deg)) h_ops h_pts
+
+/-- **(2b) Preservation of `StateEquivalence`**:
+    `shiftPositiveTimeTestData t ht` descends cleanly to `GNSPreHilbertQuotient os`. -/
+theorem shiftPositiveTimeTestData_congr
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (t : ℝ) (ht : 0 ≤ t) {f f' : PositiveTimeTestData G Curv}
+    (h : StateEquivalence os f f') :
+    StateEquivalence os (shiftPositiveTimeTestData t ht f) (shiftPositiveTimeTestData t ht f') := by
+  intro w
+  change sesqOS os (shiftPositiveTimeTestData t ht f) w =
+    sesqOS os (shiftPositiveTimeTestData t ht f') w
+  rw [sesqOS_shift_symm os t ht f w, sesqOS_shift_symm os t ht f' w]
+  exact h (shiftPositiveTimeTestData t ht w)
+
+private theorem shiftPositiveTimeTestData_zero
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (f : PositiveTimeTestData G Curv) :
+    shiftPositiveTimeTestData 0 le_rfl f = f := by
+  cases f with
+  | mk deg ops X h_pos h_order =>
+    simp only [shiftPositiveTimeTestData]
+    congr 1
+    ext i μ
+    fin_cases μ <;> simp [euclideanShift, vec4, ofCoords, toCoords]
+
+private theorem shiftPositiveTimeTestData_add
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (t1 t2 : ℝ) (ht1 : 0 ≤ t1) (ht2 : 0 ≤ t2) (f : PositiveTimeTestData G Curv) :
+    shiftPositiveTimeTestData (t1 + t2) (add_nonneg ht1 ht2) f =
+      shiftPositiveTimeTestData t1 ht1 (shiftPositiveTimeTestData t2 ht2 f) := by
+  cases f with
+  | mk deg ops X h_pos h_order =>
+    simp only [shiftPositiveTimeTestData]
+    congr 1
+    ext i μ
+    fin_cases μ <;> (simp [euclideanShift, vec4, ofCoords, toCoords]; try ring)
+
+/-- **(3) Constructive Quotient Euclidean Time-Translation Semigroup**
+    `gnsPreHilbertSemigroup os t ht : GNSPreHilbertQuotient os → GNSPreHilbertQuotient os`. -/
+def gnsPreHilbertSemigroup
+    {G : Type} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (t : ℝ) (ht : 0 ≤ t) :
+    GNSPreHilbertQuotient os → GNSPreHilbertQuotient os :=
+  Quotient.lift (fun f => toPreHilbert os (shiftPositiveTimeTestData t ht f))
+    (fun _ _ h => Quotient.sound (shiftPositiveTimeTestData_congr os t ht h))
+
+/-- Semigroup identity at `t = 0`: `T(0) = id`. -/
+theorem gnsPreHilbertSemigroup_zero
+    {G : Type} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv) :
+    gnsPreHilbertSemigroup os 0 le_rfl = id := by
+  ext x
+  refine Quotient.inductionOn x fun f => ?_
+  change toPreHilbert os (shiftPositiveTimeTestData 0 le_rfl f) = toPreHilbert os f
+  rw [shiftPositiveTimeTestData_zero]
+
+/-- Semigroup composition law: `T(t1 + t2) = T(t1) ∘ T(t2)`. -/
+theorem gnsPreHilbertSemigroup_add
+    {G : Type} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (t1 t2 : ℝ) (ht1 : 0 ≤ t1) (ht2 : 0 ≤ t2) :
+    gnsPreHilbertSemigroup os (t1 + t2) (add_nonneg ht1 ht2) =
+      gnsPreHilbertSemigroup os t1 ht1 ∘ gnsPreHilbertSemigroup os t2 ht2 := by
+  ext x
+  refine Quotient.inductionOn x fun f => ?_
+  change toPreHilbert os (shiftPositiveTimeTestData (t1 + t2) (add_nonneg ht1 ht2) f) =
+    toPreHilbert os (shiftPositiveTimeTestData t1 ht1 (shiftPositiveTimeTestData t2 ht2 f))
+  rw [shiftPositiveTimeTestData_add]
+
+/-- **(4) Exponential Clustering of Shifted OS Correlations from OS4**:
+    For any positive-time states `f, g`, `sesqOS os f (shiftPositiveTimeTestData t ht g)`
+    clusters exponentially to `conj(S_{f.deg}(Θ f*)) * S_{g.deg}(g)` at rate `os.mass_rate`. -/
+theorem sesqOS_shift_clustering
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (f g : PositiveTimeTestData G Curv) :
+    ∃ C : ℝ, 0 ≤ C ∧
+      ∀ (t : ℝ) (ht : 0 ≤ t),
+        ‖sesqOS os f (shiftPositiveTimeTestData t ht g) -
+          starRingEnd ℂ (os.schwinger f.deg (reverseConjLabels f.ops) (reverseReflectConfig f.X)) *
+            os.schwinger g.deg g.ops g.X‖ ≤
+        C * Real.exp (-os.mass_rate * t) := by
+  let a : EuclideanSpace4 := vec4 1 0 0 0
+  have ha0 : 0 ≤ toCoords a 0 := by
+    change 0 ≤ (1 : ℝ)
+    norm_num
+  have ha_norm : ‖a‖ = 1 := by
+    rw [EuclideanSpace.norm_eq]
+    have h_sum : (∑ i : Fin 4, ‖a i‖ ^ 2) = 1 := by
+      have ha_eq : ∀ i : Fin 4, a i = (![1, 0, 0, 0] : Fin 4 → ℝ) i := fun _ => rfl
+      simp only [ha_eq, Fin.sum_univ_four, Matrix.cons_val_zero, Matrix.cons_val_one,
+        Matrix.cons_val]
+      norm_num
+    rw [h_sum, Real.sqrt_one]
+  obtain ⟨C, hC_nonneg, h_cluster⟩ := os.os4_exponential_clustering
+    f.deg g.deg f.ops g.ops f.X g.X a f.h_pos g.h_pos ha0 ha_norm
+  refine ⟨C, hC_nonneg, fun t ht => ?_⟩
+  have h_trans : translateConfig (t • a) g.X = euclideanShift t 0 g.X := by
+    ext j μ
+    change toCoords (g.X j) μ + toCoords (t • a) μ = toCoords (euclideanShift t 0 g.X j) μ
+    have h_smul : toCoords (t • a) μ = t * toCoords a μ := rfl
+    rw [h_smul]
+    fin_cases μ <;> simp [a, euclideanShift, vec4, ofCoords, toCoords]
+  have h_bound := h_cluster t ht
+  rw [h_trans] at h_bound
+  exact h_bound
+
 #print axioms gns_cauchy_schwarz_soundness
 #print axioms reed_simon_x49_semigroup_core
 #print axioms reconstructed_gns_has_mass_gap
+#print axioms sesqOS_shift_symm
+#print axioms gnsPreHilbertSemigroup_zero
+#print axioms gnsPreHilbertSemigroup_add
+#print axioms sesqOS_shift_clustering
 
 end YangMills.ConstructiveGNS
