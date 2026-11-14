@@ -52,7 +52,9 @@ theorem polymer_decimation_error_bound :
 theorem gap_permanence_ratio_positive :
     0 < (1 : ℚ) - (1 / 2) := by norm_num
 
-/-- 6. First-Principles Polymer Trapping Invariant Certificate. -/
+/-- 6. Canonical Polymer Trapping Invariant Certificate (Scalar Lyapunov Norm-Majorant).
+    Verifies the algebraic stability condition θ · r_max + C_mayer · r_max² + C_vert / β_ir ≤ r_max
+    bounding the sequence of effective action norms in the Banach space ℬ_κ. -/
 theorem polymer_trapping_invariant_cert :
     firstPrinciplesPolymerTrapping.theta * firstPrinciplesPolymerTrapping.r_max +
     firstPrinciplesPolymerTrapping.C_mayer * firstPrinciplesPolymerTrapping.r_max ^ 2 +

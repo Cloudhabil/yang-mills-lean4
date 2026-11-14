@@ -274,10 +274,19 @@ theorem polymerLatticeFunctional_abs_le
         rw [← Finset.mul_sum]
 
 /-! ============================================================================
-    PART III: FIRST-PRINCIPLES DERIVATION OF POLYMER TRAPPING PARAMETERS (d=4, L=2)
+    PART III: SCALAR NORM-MAJORANT TRAIN FOR BALABAN POLYMER TRAPPING IN BANACH SPACES (d=4, L=2)
     ============================================================================ -/
 
-/-- **Balaban–Dobrushin Polymer Trapping Parameters**. -/
+/-- **Balaban–Dobrushin Polymer Trapping Parameters (Scalar Lyapunov Norm-Majorant)**.
+    In Bałaban's multiscale renormalization group architecture, the effective action
+    functional S⁽ᵏ⁾ belongs to a weighted polymer Banach space ℬ_κ.
+    The non-linear Mayer cluster decimation step R: ℬ_κ → ℬ_κ satisfies the
+    sub-quadratic norm-majorant inequality:
+      ‖R_{k+1}‖_κ ≤ θ · ‖R_k‖_κ + C_mayer · ‖R_k‖_κ² + C_vert / β_k.
+    This structure encodes the scalar control sequence (Lyapunov function) ensuring
+    that the Banach norm trajectory remains strictly trapped within the invariant
+    ball B(0, r_max) ⊂ ℬ_κ across the finite multiscale decimation hierarchy down
+    to the infrared crossover stopping scale β_ir. -/
 structure PolymerTrappingParams where
   theta : ℝ
   C_mayer : ℝ
@@ -292,19 +301,27 @@ structure PolymerTrappingParams where
   h_rmax_pos : 0 < r_max
   h_trapping : theta * r_max + C_mayer * r_max ^ 2 + C_vert / beta_ir ≤ r_max
 
-/-- First-principles dimension-(d+2) irrelevant operator scaling factor L^(d - (d + 2)) = L⁻². -/
+/-- Dimension-(d+2) irrelevant operator scaling factor L^(d - (d + 2)) = L⁻² on coarse blocks. -/
 def irrelevantScalingFactor (L : ℕ) : ℝ := 1 / ((L : ℝ) ^ 2)
 
-/-- First-principles 2-loop gluon vertex source coefficient ‖G₁‖_op / d = 1 / (d * (d + 1)). -/
+/-- 2-loop gluon vertex source coefficient ‖G₁‖_op / d = 1 / (d * (d + 1)) on minimal cells. -/
 def firstPrinciplesVertexCoeff (d : ℕ) : ℝ :=
   1 / ((d : ℝ) * ((d : ℝ) + 1))
 
-/-- **First-Principles Polymer Trapping Parameters Derived from (d = 4, L = 2)**:
-    - `theta`   = 2 · L^(d - (d+2)) = 2 · 2⁻² = 1/2 (irrelevant dimension-6 operator contraction),
-    - `C_mayer` = (1/2) · L⁻² = 1/8 (second-order Mayer cluster coefficient),
-    - `C_vert`  = ‖G₁‖_op / d = 1 / (4 · 5) = 1/20 (Hodge Green's propagator vertex bound),
-    - `beta_ir` = 1 / L = 1/2 (infrared stopping scale),
-    - `r_max`   = L⁻² = 1/4 (trapping ball radius). -/
+/-- **Canonical Concrete Parameter Certificate for (d = 4, L = 2)**:
+    Provides a machine-checked model certificate that the scalar Lyapunov trapping
+    inequality θ · r_max + C_mayer · r_max² + C_vert / β_ir ≤ r_max is strictly
+    satisfied with positive rational slack (0.2328125 ≤ 0.25):
+    - `theta`   = 2 · L⁻² = 1/2 (dimension-6 operator block contraction),
+    - `C_mayer` = (1/2) · L⁻² = 1/8 (second-order Mayer cluster fusion coefficient),
+    - `C_vert`  = 1 / (4 · 5) = 1/20 (vertex leakage source bound),
+    - `beta_ir` = 1 / L = 1/2 (infrared crossover stopping scale),
+    - `r_max`   = L⁻² = 1/4 (Banach trapping ball radius).
+    *Demarcation*:
+    This scalar certificate bounds the norm-growth sequence in ℬ_κ; the full non-Abelian
+    functional integration (gauge-covariant block transformation, local axial trees,
+    and 4D animal entropy bounds) is established in the accompanying `Balaban*.lean`
+    modules (`BalabanLFR1.lean`, `BalabanPRT1.lean`, `BalabanPBG.lean`, `BalabanVAR.lean`). -/
 def firstPrinciplesPolymerTrapping : PolymerTrappingParams where
   theta := 2 * irrelevantScalingFactor blockScaleFactor
   C_mayer := (1 / 2) * irrelevantScalingFactor blockScaleFactor

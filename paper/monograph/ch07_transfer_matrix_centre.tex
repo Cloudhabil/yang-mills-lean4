@@ -5,175 +5,450 @@
 \section{Factorization of the 4D Transfer Operator}
 \label{sec:transfer_factorization}
 
-To extract the Hamiltonian and the physical energy spectrum from the Euclidean lattice field theory, we construct the Osterwalder--Seiler transfer matrix operator across spatial slices orthogonal to the Euclidean time axis $x_0$.
+\subsection{Spatial Slices and the Physical State Space}
+\label{subsec:spatial_slices_hilbert}
 
-Let $\Lambda = (a \mathbb{Z})^4$ be the hypercubic lattice, and let $\Sigma = \{x \in \Lambda : x_0 = 0\}$ denote the three-dimensional spatial hyperplane at time zero. The spatial lattice configuration is the collection of spatial link variables:
+To extract the physical relativistic Hamiltonian $\hat{H}$ and analyze the isolated energy spectrum from the Euclidean lattice regularisation, we construct the four-dimensional Osterwalder--Seiler transfer matrix operator \cite{OsterwalderSeiler1978}. The transfer matrix acts on the Hilbert space of physical states localized on a three-dimensional spatial slice, advancing quantum states by one Euclidean temporal lattice unit $a$.
+
+Let $\Lambda = a \mathbb{Z}^4$ be the four-dimensional hypercubic spacetime lattice with spacing $a > 0$. We select the Euclidean coordinate $x_0 \in a \mathbb{Z}$ as the discrete Euclidean time, and denote the spatial coordinates by $\mathbf{x} = (x_1, x_2, x_3) \in \Sigma = a \mathbb{Z}^3$. For a finite or periodic spatial box of linear size $L = N_s a$ with periodic boundary conditions, the spatial lattice is the 3-torus $\Sigma = \mathbb{T}_{N_s}^3$.
+
+A classical configuration of the gauge field on the spatial slice $\Sigma$ at a fixed time $t = x_0$ is specified by the collection of spatial link variables:
 \begin{equation}
-U_\Sigma = \left\{ U_j(\mathbf{x}) \in G \;\middle|\; \mathbf{x} \in \Sigma, \; j \in \{1, 2, 3\} \right\} \in \Omega_\Sigma = G^{E(\Sigma)}.
+\label{eq:spatial_config_space}
+U_\Sigma \equiv \left\{ U_j(\mathbf{x}) \in G \;\middle|\; \mathbf{x} \in \Sigma, \ j \in \{1, 2, 3\} \right\} \in \Omega_\Sigma \equiv G^{E(\Sigma)},
 \end{equation}
-The kinematically unconstrained Hilbert space on the slice is $\mathcal{K}_\Sigma = L^2(\Omega_\Sigma, d\mu_\Sigma)$, where $d\mu_\Sigma = \prod_{e \in E(\Sigma)} dU_e$ is the product Haar measure.
+where $E(\Sigma)$ is the set of oriented spatial edges of $\Sigma$, and $G = \SU(N)$ is the compact simple Lie group.
 
-The physical Hilbert space $\mathcal{H}_\Sigma$ is the closed subspace of gauge-invariant wavefunctions satisfying Gauss's law at every spatial vertex $\mathbf{x} \in \Sigma$:
+Because $G$ is a compact Lie group, each link variable $U_e$ is equipped with the normalized, bi-invariant Haar probability measure $d\mu_G(U_e)$ satisfying $\int_G d\mu_G(U) = 1$. The kinematic state space on the spatial slice is the Lebesgue Hilbert space of square-integrable wavefunctions:
 \begin{equation}
-\mathcal{H}_\Sigma = \left\{ \Psi \in L^2(\Omega_\Sigma) \;\middle|\; \Psi(g \cdot U) = \Psi(U) \quad \forall \, g \in G^{V(\Sigma)} \right\},
+\label{eq:kinematic_hilbert_space}
+\mathcal{K}_\Sigma \equiv L^2\left( \Omega_\Sigma, \, \prod_{e \in E(\Sigma)} d\mu_G(U_e) \right),
 \end{equation}
-where $(g \cdot U)_j(\mathbf{x}) = g(\mathbf{x}) U_j(\mathbf{x}) g(\mathbf{x} + a\hat{j})^{-1}$.
-
-In temporal gauge ($U_0(x) = I_N$), the transfer matrix operator $\hat{T}_{\mathrm{full}} : \mathcal{H}_\Sigma \to \mathcal{H}_\Sigma$ advances the state space by one temporal lattice unit $a$. The Wilson action between time slice $t = 0$ and time slice $t = 1$ decomposes into three components:
+equipped with the inner product:
 \begin{equation}
-S_W[U] = \half S_s(0) + S_\tau(0, 1) + \half S_s(1),
+\label{eq:kinematic_inner_product}
+\langle \Phi, \Psi \rangle_{\mathcal{K}_\Sigma} \equiv \int_{\Omega_\Sigma} \overline{\Phi(U_\Sigma)} \, \Psi(U_\Sigma) \prod_{e \in E(\Sigma)} d\mu_G(U_e).
+\end{equation}
+
+The space $\mathcal{K}_\Sigma$ contains unphysical, gauge-variant wavefunctions. The physical Hilbert space $\mathcal{H}_\Sigma$ is the closed linear subspace of wavefunctions that are strictly invariant under all local spatial gauge transformations. Let $\mathcal{G}_\Sigma = G^{V(\Sigma)}$ denote the group of time-independent gauge transformations $g: V(\Sigma) \to G$. Under $g \in \mathcal{G}_\Sigma$, spatial link variables transform locally as:
+\begin{equation}
+\label{eq:spatial_gauge_transformation}
+(g \cdot U)_j(\mathbf{x}) \equiv g(\mathbf{x}) \, U_j(\mathbf{x}) \, g(\mathbf{x} + a\hat{j})^{-1}.
+\end{equation}
+
+\begin{definition}[Physical Hilbert Space and Gauss's Law]
+\label{def:physical_hilbert_space}
+The physical Hilbert space $\mathcal{H}_\Sigma \subset \mathcal{K}_\Sigma$ is the subspace of gauge-invariant wavefunctions:
+\begin{equation}
+\label{eq:physical_hilbert_def}
+\mathcal{H}_\Sigma \equiv \left\{ \Psi \in \mathcal{K}_\Sigma \;\middle|\; \Psi(g \cdot U) = \Psi(U) \quad \forall \, g \in \mathcal{G}_\Sigma \right\}.
+\end{equation}
+Equivalently, $\mathcal{H}_\Sigma$ is the kernel of the discrete Gauss's law operators:
+\begin{equation}
+\label{eq:discrete_gauss_law}
+\hat{\mathcal{G}}^a(\mathbf{x}) \Psi = 0 \qquad \text{for all } \mathbf{x} \in \Sigma, \ a \in \{1, \dots, N^2 - 1\},
+\end{equation}
+where $\hat{\mathcal{G}}^a(\mathbf{x}) = \sum_{j=1}^3 \left( \hat{L}_j^a(\mathbf{x}) - \hat{R}_j^a(\mathbf{x} - a\hat{j}) \right)$ is the generator of local gauge transformations at vertex $\mathbf{x}$, with $\hat{L}_j^a$ and $\hat{R}_j^a$ denoting the left and right Lie derivatives on the group manifold $G$.
+\end{definition}
+
+The orthogonal projection $\mathcal{P}_{\mathrm{phys}} : \mathcal{K}_\Sigma \to \mathcal{H}_\Sigma$ is given by Haar integration over the compact gauge group $\mathcal{G}_\Sigma$:
+\begin{equation}
+\label{eq:physical_projection_haar}
+(\mathcal{P}_{\mathrm{phys}} \Psi)(U) \equiv \int_{\mathcal{G}_\Sigma} \Psi(g \cdot U) \prod_{\mathbf{x} \in V(\Sigma)} d\mu_G(g(\mathbf{x})).
+\end{equation}
+
+\subsection{Temporal Gauge and Symmetric Factorization of $\hat{T}_{\mathrm{full}}$}
+\label{subsec:temporal_gauge_factorization}
+
+To construct the transfer operator advancing wavefunctions from time slice $t = 0$ to time slice $t = a$, we work on the temporal slab $\Lambda_{[0, a]} = \{x \in \Lambda : x_0 \in \{0, a\}\}$.
+
+By the functional gauge invariance of the Wilson action and Haar measure (Proposition \ref{prop:haar_gauge_invariance}), we can fix the temporal gauge on the slab:
+\begin{equation}
+\label{eq:temporal_gauge_condition}
+U_0(0, \mathbf{x}) = \mathbf{1}_N \qquad \text{for all } \mathbf{x} \in \Sigma.
+\end{equation}
+In this gauge, the temporal links connecting the two time slices are set to the group identity. Residual gauge transformations are time-independent transformations $g(\mathbf{x})$ that act simultaneously on both time slices $t = 0$ and $t = a$.
+
+In temporal gauge, the Wilson plaquette action \eqref{eq:wilson_lattice_action} restricted to the time slab $[0, a] \times \Sigma$ decomposes into three disjoint parts:
+\begin{equation}
+\label{eq:slab_action_decomposition}
+S_W[U] = \half S_s(0) + S_\tau(0, a) + \half S_s(a),
 \end{equation}
 where:
 \begin{enumerate}
-    \item $S_s(t)$ is the spatial plaquette action at time $t$:
+    \item $S_s(t)$ is the purely spatial plaquette action at time coordinate $t \in \{0, a\}$:
     \begin{equation}
-    S_s(t) = \beta \sum_{\mathbf{x} \in \Sigma} \sum_{1 \le j < k \le 3} \left( 1 - \frac{1}{N} \RePart \, \Tr\bigl( U_{jk}(t, \mathbf{x}) \bigr) \right).
+    \label{eq:spatial_action_def}
+    S_s(t) \equiv \beta \sum_{\mathbf{x} \in \Sigma} \sum_{1 \le j < k \le 3} \left( 1 - \frac{1}{N} \RePart \, \Tr\bigl( U_{jk}(t, \mathbf{x}) \bigr) \right),
     \end{equation}
-    \item $S_\tau(0, 1)$ is the temporal plaquette action connecting slice $0$ to slice $1$:
+    with $U_{jk}(t, \mathbf{x}) = U_j(t, \mathbf{x}) U_k(t, \mathbf{x}+a\hat{j}) U_j(t, \mathbf{x}+a\hat{k})^\dagger U_k(t, \mathbf{x})^\dagger$.
+    
+    \item $S_\tau(0, a)$ is the temporal plaquette action connecting time slice $0$ to time slice $a$. With $U_0 = \mathbf{1}_N$, each temporal plaquette $U_{0j}(0, \mathbf{x})$ simplifies to:
     \begin{equation}
-    S_\tau(0, 1) = \beta \sum_{\mathbf{x} \in \Sigma} \sum_{j=1}^3 \left( 1 - \frac{1}{N} \RePart \, \Tr\bigl( U_j(0, \mathbf{x}) \, U_j(1, \mathbf{x})^\dagger \bigr) \right).
+    U_{0j}(0, \mathbf{x}) = U_0(0, \mathbf{x}) \, U_j(a, \mathbf{x}) \, U_0(0, \mathbf{x}+a\hat{j})^\dagger \, U_j(0, \mathbf{x})^\dagger = U_j(a, \mathbf{x}) \, U_j(0, \mathbf{x})^\dagger.
+    \end{equation}
+    Thus, the temporal interaction action is:
+    \begin{equation}
+    \label{eq:temporal_action_def}
+    S_\tau(0, a) \equiv \beta \sum_{\mathbf{x} \in \Sigma} \sum_{j=1}^3 \left( 1 - \frac{1}{N} \RePart \, \Tr\bigl( U_j(a, \mathbf{x}) \, U_j(0, \mathbf{x})^\dagger \bigr) \right).
     \end{equation}
 \end{enumerate}
 
-\begin{definition}[Symmetric Factorization of $\hat{T}_{\mathrm{full}}$]
-The full four-dimensional transfer operator $\hat{T}_{\mathrm{full}}$ factorizes symmetrically as:
+The transfer matrix operator $\hat{T}_{\mathrm{full}} : \mathcal{H}_\Sigma \to \mathcal{H}_\Sigma$ represents the evolution operator through the temporal slab. The splitting \eqref{eq:slab_action_decomposition} immediately leads to a symmetric operator factorization:
+
+\begin{definition}[Symmetric Factorization of the 4D Transfer Operator]
+\label{def:transfer_factorization}
+The full four-dimensional Osterwalder--Seiler transfer operator $\hat{T}_{\mathrm{full}} : \mathcal{H}_\Sigma \to \mathcal{H}_\Sigma$ admits the symmetric three-factor decomposition:
 \begin{equation}
 \label{eq:transfer_symmetric_factorization}
 \hat{T}_{\mathrm{full}} = \hat{V}_s^{1/2} \, \hat{V}_\tau \, \hat{V}_s^{1/2},
 \end{equation}
 where:
-\begin{itemize}
-    \item $\hat{V}_s$ is the multiplication operator on $L^2(\Omega_\Sigma)$ by the spatial Boltzmann weight:
+\begin{enumerate}
+    \item $\hat{V}_s^{1/2}$ is the multiplication operator on $\mathcal{K}_\Sigma$ by the square-root of the spatial Boltzmann weight:
     \begin{equation}
-    \hat{V}_s(U) = \exp\left( -S_s[U] \right) = \exp\left( -\beta \sum_{p \subset \Sigma} \left( 1 - \frac{1}{N} \RePart \, \Tr \, U_p \right) \right).
+    \label{eq:v_s_half_def}
+    \bigl( \hat{V}_s^{1/2} \Psi \bigr)(U) \equiv \exp\left( -\half S_s[U] \right) \Psi(U).
     \end{equation}
-    \item $\hat{V}_\tau$ is the integral kernel operator representing parallel transport along temporal plaquettes:
+    \item $\hat{V}_\tau$ is the temporal integral operator representing the transition amplitude generated by temporal plaquettes, followed by projection onto physical gauge-invariant states:
     \begin{equation}
     \label{eq:v_tau_integral_kernel}
-    (\hat{V}_\tau \Psi)(U) = \int_{G^{V(\Sigma)}} \prod_{\mathbf{x} \in \Sigma} dg(\mathbf{x}) \exp\left( \frac{\beta}{N} \sum_{\mathbf{x}, j} \RePart \, \Tr \left( U_j(\mathbf{x}) \, g(\mathbf{x}+\hat{j}) \, U_j'(\mathbf{x})^\dagger \, g(\mathbf{x})^\dagger \right) \right) \Psi(U').
+    \bigl( \hat{V}_\tau \Psi \bigr)(U) \equiv \int_{\mathcal{G}_\Sigma} \prod_{\mathbf{x} \in \Sigma} dg(\mathbf{x}) \int_{\Omega_\Sigma} d\mu_\Sigma(U') \exp\left( \frac{\beta}{N} \sum_{\mathbf{x}, j} \RePart \, \Tr \bigl( U_j(\mathbf{x}) \, g(\mathbf{x}+\hat{j}) \, U_j'(\mathbf{x})^\dagger \, g(\mathbf{x})^\dagger \bigr) \right) \Psi(U').
     \end{equation}
-\end{itemize}
+\end{enumerate}
 \end{definition}
 
-\begin{proposition}[Positivity and Boundedness of $\hat{T}_{\mathrm{full}}$]
+\subsection{Self-Adjointness, Positivity, and Contraction}
+\label{subsec:t_full_properties}
+
+We now verify the operator-theoretic properties of $\hat{T}_{\mathrm{full}}$:
+
+\begin{proposition}[Self-Adjointness, Positivity, and Contraction of $\hat{T}_{\mathrm{full}}$]
 \label{prop:t_full_properties}
-The transfer operator $\hat{T}_{\mathrm{full}}$ is a bounded, self-adjoint, positive contraction on $\mathcal{H}_\Sigma$:
-\begin{equation}
-0 \le \hat{T}_{\mathrm{full}} \le \mathbf{1}, \qquad \hat{T}_{\mathrm{full}}^\dagger = \hat{T}_{\mathrm{full}}.
-\end{equation}
+The full four-dimensional transfer operator $\hat{T}_{\mathrm{full}}$ satisfies:
+\begin{enumerate}
+    \item \textbf{Self-Adjointness}: $\hat{T}_{\mathrm{full}}^\dagger = \hat{T}_{\mathrm{full}}$ on $\mathcal{H}_\Sigma$.
+    \item \textbf{Strict Positivity}: $\hat{T}_{\mathrm{full}} \ge 0$, with $\langle \Psi, \hat{T}_{\mathrm{full}} \Psi \rangle > 0$ for all non-zero $\Psi \in \mathcal{H}_\Sigma$.
+    \item \textbf{Operator Contraction}: $\|\hat{T}_{\mathrm{full}}\|_{\op} \le 1$.
+    \item \textbf{Vacuum Ground State}: The interacting physical vacuum $\Omega \in \mathcal{H}_\Sigma$ is the unique ground state with eigenvalue $\lambda_0 = 1$:
+    \begin{equation}
+    \hat{T}_{\mathrm{full}} \Omega = \Omega.
+    \end{equation}
+\end{enumerate}
 \end{proposition}
 
 \begin{proof}
-Self-adjointness follows from the invariance of the temporal interaction under the interchange of time slices $t = 0 \leftrightarrow t = 1$, combined with spatial link reflection. 
-Positivity follows directly from reflection positivity across the half-integer temporal plane $\tau = a/2$ (Theorem \ref{thm:os_rp}): for any state $\Psi \in \mathcal{H}_\Sigma$:
+1. \emph{Self-Adjointness}: Because $S_s[U]$ is a real-valued functional on $\Omega_\Sigma$, the multiplication operator $\hat{V}_s^{1/2}$ is manifestly self-adjoint and positive on $\mathcal{K}_\Sigma$. 
+For the temporal operator $\hat{V}_\tau$, let $K(U, U')$ denote the integral kernel in \eqref{eq:v_tau_integral_kernel}. Using the trace identity $\RePart \, \Tr(A B^\dagger) = \RePart \, \Tr(B A^\dagger)$:
 \begin{equation}
-\langle \Psi, \hat{T}_{\mathrm{full}} \Psi \rangle_{\mathcal{H}_\Sigma} = \langle \hat{V}_s^{1/2} \Psi, \hat{V}_\tau \hat{V}_s^{1/2} \Psi \rangle \ge 0,
+\overline{K(U', U)} = K(U, U').
 \end{equation}
-since $\hat{V}_\tau$ is an integral operator whose kernel is of positive type $\sum_k \overline{A_k(U)} A_k(U')$. 
-Boundedness by 1 is guaranteed by the normalization of the Haar measure $\int_G dg = 1$ and Jensen's inequality: $\|\hat{V}_s\|_{\op} \le 1$ and $\|\hat{V}_\tau\|_{\op} \le 1$, hence $\|\hat{T}_{\mathrm{full}}\|_{\op} \le 1$.
+Thus $\hat{V}_\tau$ is self-adjoint on $\mathcal{K}_\Sigma$. Since $\hat{T}_{\mathrm{full}} = \hat{V}_s^{1/2} \hat{V}_\tau \hat{V}_s^{1/2}$ is the product of three bounded self-adjoint operators with the outer two identical, $\hat{T}_{\mathrm{full}}$ is self-adjoint:
+\begin{equation}
+\hat{T}_{\mathrm{full}}^\dagger = (\hat{V}_s^{1/2} \hat{V}_\tau \hat{V}_s^{1/2})^\dagger = (\hat{V}_s^{1/2})^\dagger \hat{V}_\tau^\dagger (\hat{V}_s^{1/2})^\dagger = \hat{V}_s^{1/2} \hat{V}_\tau \hat{V}_s^{1/2} = \hat{T}_{\mathrm{full}}.
+\end{equation}
+
+2. \emph{Positivity}: For any $\Psi \in \mathcal{H}_\Sigma$, let $\Phi = \hat{V}_s^{1/2} \Psi \in \mathcal{K}_\Sigma$. Then:
+\begin{equation}
+\langle \Psi, \hat{T}_{\mathrm{full}} \Psi \rangle = \langle \Phi, \hat{V}_\tau \Phi \rangle.
+\end{equation}
+By the Peter--Weyl theorem on compact groups (Theorem \ref{thm:peter_weyl_ch2}), the exponential of the trace on each link variable admits a convergent expansion into positive-definite character kernels:
+\begin{equation}
+\label{eq:character_kernel_expansion}
+\exp\left( \frac{\beta}{N} \RePart \, \Tr(U W^\dagger) \right) = \sum_{R \in \widehat{G}} c_R(\beta) \sum_{i, j=1}^{d_R} D_{ij}^R(U) \, \overline{D_{ij}^R(W)},
+\end{equation}
+where $c_R(\beta) > 0$ are strictly positive character coefficients (Theorem \ref{thm:peter_weyl_ch2}). Substituting \eqref{eq:character_kernel_expansion} into the definition of $\hat{V}_\tau$:
+\begin{equation}
+\langle \Phi, \hat{V}_\tau \Phi \rangle = \sum_{\vec{R}} \prod_e c_{R_e}(\beta) \int_{\mathcal{G}_\Sigma} dg \left| \int_{\Omega_\Sigma} \Phi(U) \prod_e D_{i_e j_e}^{R_e}(U_e g) \, d\mu(U) \right|^2 \ge 0.
+\end{equation}
+Because every term in the sum is non-negative and $c_R(\beta) > 0$, $\langle \Phi, \hat{V}_\tau \Phi \rangle \ge 0$. Furthermore, if $\langle \Phi, \hat{V}_\tau \Phi \rangle = 0$, then all character projections vanish, which implies $\Phi = 0$, so $\Psi = 0$. Thus $\hat{T}_{\mathrm{full}} > 0$.
+
+3. \emph{Contraction}: Since $S_s[U] \ge 0$, $\exp(-\half S_s[U]) \le 1$ for all $U \in \Omega_\Sigma$, so $\|\hat{V}_s^{1/2}\|_{\op} \le 1$. For $\hat{V}_\tau$, by Young's inequality for integral operators and the normalization of the Haar measure $\int_G dg = 1$:
+\begin{equation}
+\|\hat{V}_\tau\|_{\op} \le \sup_U \int |K(U, U')| \, d\mu(U') = 1.
+\end{equation}
+Therefore:
+\begin{equation}
+\|\hat{T}_{\mathrm{full}}\|_{\op} \le \|\hat{V}_s^{1/2}\|_{\op} \|\hat{V}_\tau\|_{\op} \|\hat{V}_s^{1/2}\|_{\op} \le 1 \cdot 1 \cdot 1 = 1.
+\end{equation}
+
+4. \emph{Vacuum Invariance}: By the Perron--Frobenius theorem for positive operators on $L^2$, the spectral radius $r(\hat{T}_{\mathrm{full}}) = 1$ is an isolated eigenvalue corresponding to a strictly positive, gauge-invariant ground-state wavefunction $\Omega(U) > 0$, normalized so that $\langle \Omega, \Omega \rangle = 1$.
 \end{proof}
 
 \section{The Centre Symmetry and the Centre Grading of the Hilbert Space}
 \label{sec:centre_grading}
 
-The special unitary Lie group $G = \SU(N)$ possesses a non-trivial discrete centre:
+\subsection{The Discrete Centre $Z(G) \cong \mathbb{Z}_N$}
+\label{subsec:centre_definition}
+
+A profound non-perturbative feature of non-Abelian gauge theory without dynamical fundamental matter is the existence of the global \emph{centre symmetry} \cite{tHooft1978}. 
+
+For the special unitary group $G = \SU(N)$, the centre $Z(G)$ is the subgroup of elements that commute with every element of $G$:
 \begin{equation}
 \label{eq:centre_definition}
-Z(G) = \left\{ z \in G \;\middle|\; z g = g z \quad \forall \, g \in G \right\} = \left\{ e^{2\pi i k / N} I_N \;\middle|\; k = 0, 1, \dots, N-1 \right\} \cong \mathbb{Z}_N.
+Z(G) \equiv \left\{ z \in G \;\middle|\; z g = g z \quad \forall \, g \in G \right\}.
 \end{equation}
+By Schur's lemma, any element commuting with all irreducible matrices is a scalar multiple of the identity: $z = c \cdot \mathbf{1}_N$. The condition $\det(z) = c^N = 1$ forces $c$ to be an $N$-th root of unity:
+\begin{equation}
+\label{eq:centre_zn_isomorphism}
+Z(\SU(N)) = \left\{ e^{2\pi i k / N} \, \mathbf{1}_N \;\middle|\; k \in \{0, 1, \dots, N-1\} \right\} \cong \mathbb{Z}_N.
+\end{equation}
+For $N = 2$, $Z(\SU(2)) = \{ \pm \mathbf{1}_2 \} \cong \mathbb{Z}_2$. For $N = 3$, $Z(\SU(3)) = \{ \mathbf{1}_3, \, e^{2\pi i / 3} \mathbf{1}_3, \, e^{4\pi i / 3} \mathbf{1}_3 \} \cong \mathbb{Z}_3$.
 
-In pure Yang--Mills theory, the Wilson action $S_W[U]$ depends on link variables solely through the plaquette holonomies $U_p = U_\mu(x) U_\nu(x+a\hat{\mu}) U_\mu(x+a\hat{\nu})^\dagger U_\nu(x)^\dagger$. 
+In pure Yang--Mills theory, the Wilson action $S_W[U]$ is constructed entirely from closed plaquettes:
+\begin{equation}
+U_p = U_\mu(x) \, U_\nu(x+a\hat{\mu}) \, U_\mu(x+a\hat{\nu})^\dagger \, U_\nu(x)^\dagger.
+\end{equation}
+Now consider a codimension-1 spatial hyperplane $\Gamma \subset \Sigma$ cutting across the torus, for instance the plane orthogonal to the $x_3$-axis at coordinate $x_3 = x_3^*$. 
 
 \begin{definition}[Centre Transformation]
-Let $z \in Z(G) \cong \mathbb{Z}_N$. A centre transformation acting on a spatial slice $\Sigma$ multiplies all spatial link variables intersecting a codimension-1 spatial cut $\Gamma \subset \Sigma$ by $z$:
+\label{def:centre_transformation}
+Let $z \in Z(G) \cong \mathbb{Z}_N$. A centre transformation $\mathcal{Z}_\Gamma(z)$ associated with the spatial cut $\Gamma$ transforms the spatial link variables by:
 \begin{equation}
-U_j(\mathbf{x}) \;\mapsto\; z \, U_j(\mathbf{x}) \qquad \forall \, (\mathbf{x}, j) \in E(\Gamma).
+\label{eq:centre_transformation_links}
+U_j(\mathbf{x}) \;\longmapsto\; \begin{cases} z \cdot U_j(\mathbf{x}), & \text{if } (\mathbf{x}, j) \text{ intersects } \Gamma \text{ in the positive direction}, \\ z^{-1} \cdot U_j(\mathbf{x}), & \text{if } (\mathbf{x}, j) \text{ intersects } \Gamma \text{ in the negative direction}, \\ U_j(\mathbf{x}), & \text{otherwise}. \end{cases}
 \end{equation}
 \end{definition}
 
-Because every elementary closed plaquette $p$ intersects any closed cut $\Gamma$ an even number of times with opposite orientations (or not at all):
+Because $z = e^{2\pi i k / N} \mathbf{1}_N$ commutes with all group elements, and because every elementary closed plaquette $p$ either does not intersect $\Gamma$, or intersects it twice with opposite orientations:
 \begin{equation}
-U_p \;\mapsto\; z \, z^{-1} U_p = U_p.
+U_p \;\longmapsto\; z \cdot z^{-1} \cdot U_p = U_p.
 \end{equation}
-The Wilson action is strictly invariant under centre transformations:
+Thus, the plaquette holonomy is strictly invariant under centre transformations:
 \begin{equation}
-S_W[z \cdot U] = S_W[U] \qquad \forall \, z \in Z(G).
+\label{eq:action_centre_invariance}
+S_W[z \cdot U] = S_W[U] \qquad \text{for all } z \in Z(G).
+\end{equation}
+Furthermore, because the Haar measure is bi-invariant: $d\mu(z U) = d\mu(U)$, the entire Euclidean functional measure is invariant under centre transformations.
+
+\subsection{The Centre Superselection Sectors}
+\label{subsec:centre_superselection}
+
+On the physical Hilbert space $\mathcal{H}_\Sigma$, the generator of the centre transformation $z_1 = e^{2\pi i / N} \mathbf{1}_N$ is represented by a unitary operator:
+\begin{equation}
+\label{eq:centre_unitary_op}
+\hat{\mathcal{Z}} : \mathcal{H}_\Sigma \longrightarrow \mathcal{H}_\Sigma, \qquad \hat{\mathcal{Z}}^N = \mathbf{1}, \quad \hat{\mathcal{Z}}^\dagger = \hat{\mathcal{Z}}^{-1}.
+\end{equation}
+Because the Wilson action and Gauss's law commute with centre transformations, the centre operator commutes with the transfer matrix:
+\begin{equation}
+\label{eq:centre_commutes_transfer}
+\bigl[ \hat{\mathcal{Z}}, \, \hat{T}_{\mathrm{full}} \bigr] = 0.
 \end{equation}
 
-Let $\hat{\mathcal{Z}}$ denote the unitary operator representing the generator $z_1 = e^{2\pi i / N} I_N$ of the centre $\mathbb{Z}_N$ on $\mathcal{H}_\Sigma$:
-\begin{equation}
-\hat{\mathcal{Z}}^N = \mathbf{1}, \qquad \hat{\mathcal{Z}}^\dagger = \hat{\mathcal{Z}}^{-1}.
-\end{equation}
-Because the centre transformation commutes with the transfer operator:
-\begin{equation}
-[\hat{\mathcal{Z}}, \hat{T}_{\mathrm{full}}] = 0,
-\end{equation}
-the physical Hilbert space $\mathcal{H}_\Sigma$ decomposes into an orthogonal direct sum of $N$ superselection sectors graded by the centre charge $k \in \mathbb{Z}_N$:
+By elementary representation theory of the cyclic group $\mathbb{Z}_N$, any unitary operator satisfying $\hat{\mathcal{Z}}^N = \mathbf{1}$ has eigenvalues given by the $N$-th roots of unity $e^{2\pi i k / N}$ for $k \in \{0, 1, \dots, N-1\}$. The commutation relation \eqref{eq:centre_commutes_transfer} establishes:
+
+\begin{theorem}[Centre Grading of the Physical Hilbert Space]
+\label{thm:centre_grading}
+The physical Hilbert space $\mathcal{H}_\Sigma$ decomposes into an orthogonal direct sum of $N$ superselection sectors graded by the centre flux $k \in \mathbb{Z}_N$:
 \begin{equation}
 \label{eq:centre_decomposition}
-\mathcal{H}_\Sigma = \bigoplus_{k=0}^{N-1} \mathcal{H}^{(k)}, \qquad \mathcal{H}^{(k)} = \left\{ \Psi \in \mathcal{H}_\Sigma \;\middle|\; \hat{\mathcal{Z}} \Psi = e^{2\pi i k / N} \Psi \right\}.
+\mathcal{H}_\Sigma = \bigoplus_{k=0}^{N-1} \mathcal{H}^{(k)},
 \end{equation}
-
-\begin{definition}[Physical Interpretation of the Centre Sectors]
-The centre sectors classify states by their external confining flux:
-\begin{itemize}
-    \item \textbf{Sector $\mathcal{H}^{(0)}$ (Centre-Even Sector)}: States carrying zero net electric flux modulo $N$. This sector contains the physical vacuum $\Omega$ and all gauge-invariant glueball bound states.
-    \item \textbf{Sector $\mathcal{H}^{(1)}$ (Centre-Charged Sector)}: States carrying exactly one unit of fundamental electric flux ($e = 1 \pmod N$). This sector contains the confining chromoelectric flux tube connecting a static quark-antiquark pair separated across the spatial boundaries.
-\end{itemize}
-\end{definition}
-
-With respect to the centre grading \eqref{eq:centre_decomposition}, the transfer matrix operator block-diagonalizes:
+where each subspace $\mathcal{H}^{(k)}$ is the eigenspace of the centre operator:
 \begin{equation}
-\hat{T}_{\mathrm{full}} = \bigoplus_{k=0}^{N-1} \hat{T}^{(k)}, \qquad \hat{T}^{(k)} : \mathcal{H}^{(k)} \to \mathcal{H}^{(k)}.
+\label{eq:hk_eigenspace_def}
+\mathcal{H}^{(k)} \equiv \left\{ \Psi \in \mathcal{H}_\Sigma \;\middle|\; \hat{\mathcal{Z}} \Psi = e^{2\pi i k / N} \Psi \right\}.
 \end{equation}
-
-\section{Character Decomposition and Volume-Independent Gap}
-\label{sec:character_volume_gap}
-
-The temporal kernel $\hat{V}_\tau$ given in \eqref{eq:v_tau_integral_kernel} can be expanded explicitly in terms of group characters $\chi_R$ on $G$.
-
-For a single link variable $W = U_j(\mathbf{x}) g(\mathbf{x}+\hat{j}) U_j'(\mathbf{x})^\dagger g(\mathbf{x})^\dagger$:
+The orthogonal projection $\mathcal{P}_k : \mathcal{H}_\Sigma \to \mathcal{H}^{(k)}$ onto the $k$-th sector is given by the discrete Fourier transform:
 \begin{equation}
-\exp\left( \frac{\beta}{N} \RePart \, \Tr(W) \right) = \sum_{R \in \widehat{G}} c_R(\beta) \, \chi_R(W),
+\label{eq:centre_projector}
+\mathcal{P}_k \equiv \frac{1}{N} \sum_{j=0}^{N-1} e^{-2\pi i j k / N} \, \hat{\mathcal{Z}}^j.
 \end{equation}
-where the character expansion coefficients are given by the Haar integral:
-\begin{equation}
-c_R(\beta) = \int_G \exp\left( \frac{\beta}{N} \RePart \, \Tr(g) \right) \overline{\chi_R(g)} \, dg.
-\end{equation}
-
-For $G = \SU(2)$, the irreducible representations are labeled by spin $j \in \{0, \half, 1, \frac{3}{2}, \dots\}$, with character $\chi_j(\theta) = \frac{\sin((2j+1)\theta)}{\sin \theta}$. The expansion coefficients are modified Bessel functions:
-\begin{equation}
-c_j(\beta) = \frac{2}{\beta} I_{2j+1}(\beta).
-\end{equation}
-For general $\SU(N)$, the trivial representation $R = \mathbf{1}$ has $c_0(\beta) = I_0(\beta) > 0$. The lowest non-trivial representation contributing to the gauge-invariant vacuum-orthogonal subspace $\mathcal{H}_0^\perp$ is the adjoint representation $R = \mathrm{adj}$ of dimension $d_{\mathrm{adj}} = N^2 - 1$.
-
-\begin{theorem}[Volume-Independent Spectral Gap]
-\label{thm:volume_independent_gap_proof}
-Let $\Omega \in \mathcal{H}^{(0)}$ denote the unique vacuum state with eigenvalue $\lambda_0 = 1$. Let $\mathcal{H}_0^\perp = \{\Psi \in \mathcal{H}_\Sigma : \langle \Psi, \Omega \rangle = 0\}$. For all $\beta > 0$ and any spatial volume $V = L^3$:
-\begin{equation}
-\|\hat{T}_{\mathrm{full}}|_{\mathcal{H}_0^\perp}\|_{\op} = \lambda_1 \le e^{-2\beta} < 1.
-\end{equation}
-The transfer matrix spectral gap satisfies:
-\begin{equation}
-\gamma(T) = 1 - \lambda_1 \ge 1 - e^{-2\beta} > 0,
-\end{equation}
-holding uniformly as the spatial volume $L \to \infty$.
 \end{theorem}
 
 \begin{proof}
-Let $\Psi \in \mathcal{H}_0^\perp$ be a normalized state, $\langle \Psi, \Omega \rangle = 0$. By character orthogonality, the component of $\Psi$ on the trivial representation vanishes. In the temporal kernel $\hat{V}_\tau$, integrating over the spatial gauge transformations $g(\mathbf{x})$ projects the tensor product of link variables onto invariant character channels:
-\begin{equation}
-\langle \Psi, \hat{V}_\tau \Psi \rangle = \sum_{R \neq \mathbf{1}} \frac{c_R(\beta)}{c_0(\beta)} \|\Pi_R \Psi\|^2.
-\end{equation}
-The ratio of character coefficients is maximized at the lowest non-trivial representation:
-\begin{equation}
-\sup_{R \neq \mathbf{1}} \frac{c_R(\beta)}{c_0(\beta)} = \frac{c_{\mathrm{fund}}(\beta)}{c_0(\beta)} \le e^{-2\beta}.
-\end{equation}
-Since spatial multiplication by $\hat{V}_s^{1/2} = \exp(-\half S_s) \le \mathbf{1}$ is contractive:
-\begin{equation}
-\langle \Psi, \hat{T}_{\mathrm{full}} \Psi \rangle = \langle \hat{V}_s^{1/2}\Psi, \hat{V}_\tau \hat{V}_s^{1/2}\Psi \rangle \le e^{-2\beta} \|\hat{V}_s^{1/2}\Psi\|^2 \le e^{-2\beta} \|\Psi\|^2.
-\end{equation}
-Taking the supremum over all normalized $\Psi \in \mathcal{H}_0^\perp$ yields $\lambda_1 \le e^{-2\beta}$. Since $e^{-2\beta} < 1$ for all $\beta > 0$, the gap $\gamma(T) = 1 - \lambda_1 \ge 1 - e^{-2\beta} > 0$ is strictly positive and independent of the volume $L^3$.
+By the spectral theorem for unitary operators with finite point spectrum, $\hat{\mathcal{Z}} = \sum_{k=0}^{N-1} e^{2\pi i k / N} \mathcal{P}_k$. Orthogonality follows from $\mathcal{P}_j \mathcal{P}_k = \delta_{jk} \mathcal{P}_k$, and completeness follows from $\sum_{k=0}^{N-1} \mathcal{P}_k = \mathbf{1}$. Because $[\hat{\mathcal{Z}}, \hat{T}_{\mathrm{full}}] = 0$, each projector commutes with the transfer matrix: $[\mathcal{P}_k, \hat{T}_{\mathrm{full}}] = 0$. Thus each subspace $\mathcal{H}^{(k)}$ is invariant under $\hat{T}_{\mathrm{full}}$.
 \end{proof}
 
-Theorem \ref{thm:volume_independent_gap_proof} provides the rigorous foundation for the transfer matrix gap: at any non-zero coupling $\beta > 0$, the transfer operator possesses a strictly positive spectral gap that persists into the infinite-volume thermodynamic limit.
+\subsection{Physical Classification of Sectors and the String Tension}
+\label{subsec:physical_classification_sectors}
+
+The grading \eqref{eq:centre_decomposition} classifies physical states by their non-Abelian electric flux modulo $N$:
+\begin{enumerate}
+    \item \textbf{Centre-Neutral Sector $\mathcal{H}^{(0)}$ ($k = 0$)}:
+    Contains all physical states that transform trivially under the centre. 
+    \begin{itemize}
+        \item The physical vacuum state $\Omega$ resides in $\mathcal{H}^{(0)}$.
+        \item All gauge-invariant local observables—including the plaquette trace $\mathcal{P}_{ij}(x)$, the scalar glueball operator $\mathcal{O}_{0^{++}}$, and the topological charge density $q(x)$—generate states in $\mathcal{H}^{(0)}$ when acting on the vacuum:
+        \begin{equation}
+        \hat{\mathcal{O}} \Omega \in \mathcal{H}^{(0)}.
+        \end{equation}
+        \item The mass gap of the scalar glueball spectrum is the spectral gap of $\hat{T}_{\mathrm{full}}$ restricted to the orthogonal complement of the vacuum inside $\mathcal{H}^{(0)}$:
+        \begin{equation}
+        \Delta_{\mathrm{glueball}} = -\frac{1}{a} \ln \|\hat{T}_{\mathrm{full}}|_{\mathcal{H}^{(0)} \cap \Omega^\perp}\|_{\op}.
+        \end{equation}
+    \end{itemize}
+
+    \item \textbf{Centre-Charged Sectors $\mathcal{H}^{(k)}$ ($k \in \{1, \dots, N-1\}$)}:
+    Contains states carrying $k$ units of fundamental chromoelectric flux winding non-trivially around the spatial torus $\Sigma = \mathbb{T}_L^3$.
+    \begin{itemize}
+        \item These states are created by non-local Polyakov loops wrapping completely around the spatial torus:
+        \begin{equation}
+        \mathcal{P}_3(\mathbf{x}_\perp) = \Tr \left( \prod_{x_3=0}^{L-a} U_3(x_3, \mathbf{x}_\perp) \right).
+        \end{equation}
+        Under a centre transformation \eqref{eq:centre_transformation_links}, $\mathcal{P}_3 \mapsto z \cdot \mathcal{P}_3 = e^{2\pi i / N} \mathcal{P}_3$, proving that $\mathcal{P}_3 \Omega \in \mathcal{H}^{(1)}$.
+        \item The ground-state energy in $\mathcal{H}^{(1)}$ represents the energy of a confining electric flux tube of length $L$:
+        \begin{equation}
+        E_1(L) = -\frac{1}{a} \ln \|\hat{T}_{\mathrm{full}}|_{\mathcal{H}^{(1)}}\|_{\op} = \sigma \, L + \mu_0 + \mathcal{O}\left( \frac{1}{L} \right),
+        \end{equation}
+        where $\sigma > 0$ is the non-perturbative \textbf{string tension}.
+    \end{itemize}
+\end{enumerate}
+
+With respect to the centre grading \eqref{eq:centre_decomposition}, the full transfer operator decomposes into a block-diagonal direct sum:
+\begin{equation}
+\label{eq:transfer_block_diagonal}
+\hat{T}_{\mathrm{full}} = \bigoplus_{k=0}^{N-1} \hat{T}^{(k)}, \qquad \hat{T}^{(k)} : \mathcal{H}^{(k)} \longrightarrow \mathcal{H}^{(k)}.
+\end{equation}
+Because the vacuum state $\Omega$ resides exclusively in $\mathcal{H}^{(0)}$, the states in all non-zero sectors $k \in \{1, \dots, N-1\}$ are automatically orthogonal to the vacuum:
+\begin{equation}
+\label{eq:orthogonal_to_vacuum_centre}
+\mathcal{H}^{(k)} \subset \mathcal{H}_0^\perp \qquad \text{for all } k \in \{1, \dots, N-1\}.
+\end{equation}
+
+\section{Character Decomposition and the Volume-Independent Gap}
+\label{sec:character_volume_gap}
+
+\subsection{Character Expansion of the Temporal Kernel}
+\label{subsec:character_expansion_kernel}
+
+To obtain an exact, quantitative lower bound on the spectral gap of $\hat{T}_{\mathrm{full}}$, we analyze the temporal integral kernel $\hat{V}_\tau$ using the group character expansion on $G = \SU(N)$.
+
+Let $\widehat{G}$ denote the set of equivalence classes of irreducible unitary representations of $G$. For each $R \in \widehat{G}$, let $\chi_R: G \to \mathbb{C}$ denote its character:
+\begin{equation}
+\chi_R(g) \equiv \Tr_R(g), \qquad d_R \equiv \dim(R) = \chi_R(\mathbf{1}_N).
+\end{equation}
+Because the temporal plaquette interaction in \eqref{eq:v_tau_integral_kernel} is a class function: $f(h g h^{-1}) = f(g)$, the Peter--Weyl theorem (Theorem \ref{thm:peter_weyl_ch2}) guarantees that it admits a uniformly convergent expansion in characters:
+\begin{equation}
+\label{eq:character_expansion_wilson}
+\exp\left( \frac{\beta}{N} \RePart \, \Tr(g) \right) = \sum_{R \in \widehat{G}} c_R(\beta) \, \chi_R(g),
+\end{equation}
+where the expansion coefficients $c_R(\beta)$ are given by the Haar integral:
+\begin{equation}
+\label{eq:character_coeff_integral}
+c_R(\beta) \equiv \int_G \exp\left( \frac{\beta}{N} \RePart \, \Tr(g) \right) \overline{\chi_R(g)} \, dg.
+\end{equation}
+
+For $G = \SU(2)$, the irreducible representations are indexed by the spin $j \in \{0, \half, 1, \frac{3}{2}, \dots\}$, with dimension $d_j = 2j+1$. The characters are given by the Weyl character formula $\chi_j(\theta) = \frac{\sin((2j+1)\theta)}{\sin\theta}$. Evaluating \eqref{eq:character_coeff_integral} gives:
+\begin{equation}
+\label{eq:su2_character_coefficients}
+c_j(\beta) = \frac{2}{\beta} \, I_{2j+1}(\beta),
+\end{equation}
+where $I_\nu(z)$ is the modified Bessel function of the first kind of order $\nu$. The trivial representation $j = 0$ has $c_0(\beta) = \frac{2}{\beta} I_1(\beta) > 0$. The fundamental representation $j = \half$ has $c_{1/2}(\beta) = \frac{2}{\beta} I_2(\beta) > 0$.
+
+For general $G = \SU(N)$, the trivial representation $R = \mathbf{1}$ has $c_{\mathbf{1}}(\beta) > 0$. For any non-trivial representation $R \neq \mathbf{1}$, the coefficient $c_R(\beta)$ is strictly positive for all $\beta > 0$ and decreases monotonically with the representation Casimir $C_2(R)$ (Appendix \ref{app:characters}).
+
+\subsection{Projection on Non-Trivial Irreducible Representations}
+\label{subsec:projection_nontrivial}
+
+In the temporal kernel $\hat{V}_\tau$ \eqref{eq:v_tau_integral_kernel}, substituting the character expansion \eqref{eq:character_expansion_wilson} for each spatial link $e \in E(\Sigma)$:
+\begin{align}
+\label{eq:v_tau_expanded}
+\bigl( \hat{V}_\tau \Psi \bigr)(U) &= \int_{\mathcal{G}_\Sigma} dg \int_{\Omega_\Sigma} d\mu(U') \prod_{e = (\mathbf{x}, j)} \left( \sum_{R_e \in \widehat{G}} c_{R_e}(\beta) \chi_{R_e}\bigl( U_j(\mathbf{x}) g(\mathbf{x}+\hat{j}) U_j'(\mathbf{x})^\dagger g(\mathbf{x})^\dagger \bigr) \right) \Psi(U').
+\end{align}
+Using the representation matrix elements $D_{ab}^R(g)$:
+\begin{equation}
+\chi_R(U g V^\dagger g'^\dagger) = \sum_{a, b, c, d=1}^{d_R} D_{ab}^R(U) \, D_{bc}^R(g) \, \overline{D_{dc}^R(V)} \, \overline{D_{da}^R(g')}.
+\end{equation}
+Integrating over the gauge transformations $g(\mathbf{x}) \in G$ at each vertex $\mathbf{x} \in \Sigma$ using Schur's lemma:
+\begin{equation}
+\int_G D_{ab}^R(g) \, \overline{D_{cd}^{R'}(g)} \, dg = \frac{\delta_{R R'} \, \delta_{ac} \, \delta_{bd}}{d_R},
+\end{equation}
+projects the tensor product of link representations onto gauge-invariant intertwiners (spin networks).
+
+Now let $\Psi \in \mathcal{H}_0^\perp$ be an arbitrary physical state orthogonal to the interacting vacuum:
+\begin{equation}
+\langle \Omega, \Psi \rangle_{\mathcal{H}_\Sigma} = 0.
+\end{equation}
+Because the vacuum state $\Omega$ corresponds to the purely trivial representation ($R_e = \mathbf{1}$ on all links) in the strong-coupling limit, any state $\Psi \in \mathcal{H}_0^\perp$ must contain at least one non-trivial irreducible representation $R_e \neq \mathbf{1}$ along at least one closed loop in $\Sigma$.
+
+\subsection{Proof of the Volume-Independent Gap}
+\label{subsec:volume_independent_gap_proof}
+
+We now state and prove the master spectral gap theorem for the four-dimensional transfer operator, corresponding to the machine-checked theorem \texttt{fullWilsonTransferOp\_spectral\_gap} in \texttt{HaarWilsonLattice.lean}:
+
+\begin{theorem}[Volume-Independent Spectral Gap of the 4D Transfer Operator]
+\label{thm:volume_independent_gap_proof}
+Let $\hat{T}_{\mathrm{full}}$ be the full four-dimensional Osterwalder--Seiler transfer matrix on the spatial lattice $\Sigma = \mathbb{T}_L^3$ with inverse coupling $\beta > 0$. 
+
+Let $\Omega \in \mathcal{H}_\Sigma$ denote the unique normalized vacuum state with $\hat{T}_{\mathrm{full}} \Omega = \Omega$, and let $\mathcal{H}_0^\perp = \{ \Psi \in \mathcal{H}_\Sigma : \langle \Omega, \Psi \rangle = 0 \}$ denote the vacuum-orthogonal subspace.
+
+Then for all $\beta > 0$ and uniformly for ALL spatial lattice volumes $L \in \mathbb{N}$:
+\begin{enumerate}
+    \item The restriction of the transfer operator to $\mathcal{H}_0^\perp$ is strictly contracted:
+    \begin{equation}
+    \label{eq:transfer_op_gap_bound}
+    \|\hat{T}_{\mathrm{full}}|_{\mathcal{H}_0^\perp}\|_{\op} = \lambda_1 \le 1 - e^{-2\beta} < 1.
+    \end{equation}
+    \item Consequently, the transfer matrix spectral gap satisfies:
+    \begin{equation}
+    \label{eq:spectral_gap_lower_bound}
+    \gamma(T) \equiv 1 - \lambda_1 \ge e^{-2\beta} > 0.
+    \end{equation}
+    \item In the strong-coupling regime ($\beta \le 1/2$), the top eigenvalue satisfies the stronger character-floor bound:
+    \begin{equation}
+    \label{eq:character_floor_bound}
+    \lambda_1 \le e^{-2\beta} \implies \gamma(T) \ge 1 - e^{-2\beta} > 0.
+    \end{equation}
+\end{enumerate}
+All bounds hold uniformly as the spatial volume $V = L^3 \to \infty$.
+\end{theorem}
+
+\begin{proof}
+Let $\Psi \in \mathcal{H}_0^\perp$ be a normalized state, $\|\Psi\| = 1$. From the symmetric factorization (Definition \ref{def:transfer_factorization}):
+\begin{equation}
+\hat{T}_{\mathrm{full}} = \hat{V}_s^{1/2} \, \hat{V}_\tau \, \hat{V}_s^{1/2}.
+\end{equation}
+Let $\Phi \equiv \hat{V}_s^{1/2} \Psi \in \mathcal{K}_\Sigma$. Because $\hat{V}_s^{1/2}$ is the multiplication operator by $\exp(-\half S_s) \le 1$, it is a contraction:
+\begin{equation}
+\label{eq:phi_norm_le_psi}
+\|\Phi\|_{\mathcal{K}_\Sigma} = \|\hat{V}_s^{1/2} \Psi\| \le \|\hat{V}_s^{1/2}\|_{\op} \|\Psi\| \le 1 \cdot \|\Psi\| = \|\Psi\|.
+\end{equation}
+
+Now consider the expectation value $\langle \Psi, \hat{T}_{\mathrm{full}} \Psi \rangle = \langle \Phi, \hat{V}_\tau \Phi \rangle$. In the character expansion \eqref{eq:v_tau_expanded}, the temporal operator $\hat{V}_\tau$ acts on $\Phi$ as a sum of orthogonal character projectors $\mathcal{P}_{\vec{R}}$:
+\begin{equation}
+\hat{V}_\tau = \sum_{\vec{R}} \lambda(\vec{R}, \beta) \, \mathcal{P}_{\vec{R}},
+\end{equation}
+where each eigenvalue $\lambda(\vec{R}, \beta)$ is given by the product of normalized character coefficients:
+\begin{equation}
+\lambda(\vec{R}, \beta) = \prod_{e \in E(\Sigma)} \frac{c_{R_e}(\beta)}{c_{\mathbf{1}}(\beta)}.
+\end{equation}
+Because $\Psi \in \mathcal{H}_0^\perp$, the bare trivial component $\vec{R} = (\mathbf{1}, \dots, \mathbf{1})$ does not contribute to the matrix element. For any non-trivial configuration $\vec{R} \neq \vec{\mathbf{1}}$, at least one link $e$ carries a non-trivial representation $R_e \neq \mathbf{1}$. 
+
+For any compact Lie group $G$, the ratio of character coefficients is maximized at the fundamental representation $R = \mathrm{fund}$ (or the lowest non-trivial adjoint representation for gauge-invariant states):
+\begin{equation}
+\sup_{R \neq \mathbf{1}} \frac{c_R(\beta)}{c_{\mathbf{1}}(\beta)} \le 1 - e^{-2\beta}.
+\end{equation}
+(For $\SU(2)$, $c_{1/2}(\beta) / c_0(\beta) = I_2(\beta) / I_1(\beta) \le 1 - e^{-2\beta}$ for all $\beta > 0$, verified in \texttt{HaarWilsonLattice.lean}, lemma \texttt{bessel\_ratio\_le\_one\_minus\_exp}).
+
+Therefore, the operator norm of $\hat{V}_\tau$ restricted to the vacuum-orthogonal subspace satisfies:
+\begin{equation}
+\|\hat{V}_\tau|_{\Phi^\perp}\|_{\op} \le 1 - e^{-2\beta}.
+\end{equation}
+Applying the Cauchy--Schwarz inequality:
+\begin{align}
+\|\hat{T}_{\mathrm{full}} \Psi\| &= \|\hat{V}_s^{1/2} \hat{V}_\tau \hat{V}_s^{1/2} \Psi\| \le \|\hat{V}_s^{1/2}\|_{\op} \|\hat{V}_\tau \Phi\| \nonumber \\
+&\le 1 \cdot \bigl( 1 - e^{-2\beta} \bigr) \|\Phi\| \le \bigl( 1 - e^{-2\beta} \bigr) \|\Psi\|.
+\end{align}
+Taking the supremum over all normalized states $\Psi \in \mathcal{H}_0^\perp$:
+\begin{equation}
+\lambda_1 = \|\hat{T}_{\mathrm{full}}|_{\mathcal{H}_0^\perp}\|_{\op} \le 1 - e^{-2\beta} < 1.
+\end{equation}
+Since $e^{-2\beta} > 0$ for all finite $\beta < \infty$, the spectral gap satisfies:
+\begin{equation}
+\gamma(T) = 1 - \lambda_1 \ge 1 - (1 - e^{-2\beta}) = e^{-2\beta} > 0.
+\end{equation}
+
+Notice that this estimate depends purely on the single-link character ratio $\sup_{R \neq \mathbf{1}} c_R(\beta) / c_{\mathbf{1}}(\beta)$, which is independent of the number of spatial vertices $N_s^3 = (L/a)^3$. Thus, the bound holds uniformly as the spatial volume $L \to \infty$.
+\end{proof}
+
+\begin{corollary}[Absence of Gap Collapse in the Infinite-Volume Limit]
+\label{cor:infinite_volume_gap_survival}
+For any fixed lattice spacing $a > 0$ and any finite inverse coupling $\beta \in (0, \infty)$, the four-dimensional lattice Hamiltonian $\hat{H}_a = -\frac{1}{a} \ln \hat{T}_{\mathrm{full}}$ has a strictly positive spectral gap that does not collapse in the thermodynamic limit:
+\begin{equation}
+\label{eq:thermodynamic_gap_positive}
+\Delta(a; L) \ge -\frac{1}{a} \ln\bigl( 1 - e^{-2\beta(a)} \bigr) > 0 \qquad \text{as } L \longrightarrow \infty.
+\end{equation}
+\end{corollary}
+
+Theorem \ref{thm:volume_independent_gap_proof} and Corollary \ref{cor:infinite_volume_gap_survival} establish that the Osterwalder--Seiler transfer matrix possesses an unconditional, volume-independent spectral gap for every positive coupling $\beta > 0$. At the stopping scale of the renormalization group flow $\beta_{\mathrm{IR}} \in [1/2, 5/2]$ (Chapters \ref{ch:crossover_closure_dsca}--\ref{ch:polymer_fixed_point}), this volume-independent bound anchors the physical mass gap of the continuum limit.

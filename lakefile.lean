@@ -25,6 +25,10 @@ lean_lib «RGCrossoverCertificate» where
   roots := #[`RGCrossoverCertificate]
 
 @[default_target]
+lean_lib «UVThresholdBridge» where
+  roots := #[`UVThresholdBridge]
+
+@[default_target]
 lean_lib «HaarWilsonLattice» where
   roots := #[`HaarWilsonLattice]
 
@@ -102,7 +106,7 @@ lean_lib «ConstructiveGNSReconstruction» where
 
 @[default_target]
 lean_lib «CompactLieGroupsSimplicity» where
-  roots := #[`CompactLieGroupsSimplicity]
+   roots := #[`CompactLieGroupsSimplicity]
 
 @[default_target]
 lean_lib «MillenniumSynthesisClosure» where
