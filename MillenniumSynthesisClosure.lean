@@ -33,6 +33,7 @@ import CompactLieGroupsSimplicity
 import UVThresholdBridge
 import HypercubicPolymerCounting
 import ContinuumFieldNontriviality
+import CurvatureJetAlgebraConstructive
 
 noncomputable section
 
@@ -324,14 +325,12 @@ theorem yang_mills_su3_mass_gap.{u_H}
     hierarchy together with:
     - a `ReconstructedGNSHilbertSpace SU3 Curv` realized on `GNSMetricCompletion os`,
     - its Euclidean contraction semigroup `semi` satisfying exponential clustering at rate `os.mass_rate`,
-    - a non-zero `SO(4)`-scalar curvature polynomial `P` of classical dimension `≥ 4`, and
     - a `DirectChannelOPEWitness os ops R` at separation `R > 0`. -/
-structure ConstructiveContinuumSU3Witness
-    [CompactSimpleLieGroup (Matrix.specialUnitaryGroup (Fin 3) ℂ)] where
-  Curv : CurvaturePolynomialAlgebra (Matrix.specialUnitaryGroup (Fin 3) ℂ)
-  h_cas : Curv.casimir_adjoint = 3
-  os : OsterwalderSchraderYangMills (Matrix.specialUnitaryGroup (Fin 3) ℂ) Curv
-  H : ReconstructedGNSHilbertSpace (Matrix.specialUnitaryGroup (Fin 3) ℂ) Curv
+structure ConstructiveContinuumSU3Witness where
+  os : OsterwalderSchraderYangMills (Matrix.specialUnitaryGroup (Fin 3) ℂ)
+    YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra
+  H : ReconstructedGNSHilbertSpace (Matrix.specialUnitaryGroup (Fin 3) ℂ)
+    YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra
   unif_gns : UniformSpace (GNSPreHilbertQuotient os)
   h_gns_completion : H.HilbertSpace = @GNSMetricCompletion _ _ _ _ _ os unif_gns
   semi : ReconstructedEuclideanSemigroup H
@@ -344,12 +343,8 @@ structure ConstructiveContinuumSU3Witness
   h_finite_spec : ∃ (M : ℝ) (ψ : H.theory.domain),
     0 < M ∧ inner ℂ H.theory.vacuum (ψ : H.HilbertSpace) = 0 ∧ (ψ : H.HilbertSpace) ≠ 0 ∧
     ‖H.theory.Hamiltonian ψ‖ ≤ M * ‖(ψ : H.HilbertSpace)‖
-  P : Curv.Poly
-  hP : P ≠ 0
-  hd : 4 ≤ Curv.classicalDim P
-  hP1 : Curv.transform 1 P = P
-  hP1c : Curv.transform 1 (Curv.conj P) = Curv.conj P
-  ops : Fin 4 → ObservableLabel (Matrix.specialUnitaryGroup (Fin 3) ℂ) Curv
+  ops : Fin 4 → ObservableLabel (Matrix.specialUnitaryGroup (Fin 3) ℂ)
+    YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra
   R : ℝ
   hR : 0 < R
   ope_wit : YangMills.ContinuumFieldNontriviality.DirectChannelOPEWitness os ops R
@@ -364,7 +359,6 @@ structure ConstructiveContinuumSU3Witness
     (e) The Clay Millennium `YangMillsSU3MassGap.{0}` existence and spectral mass gap conclusion.
     Axioms: strictly `[propext, Classical.choice, Quot.sound]`, 0 sorry. -/
 theorem constructive_su3_millennium_synthesis
-    [CompactSimpleLieGroup (Matrix.specialUnitaryGroup (Fin 3) ℂ)]
     (w : ConstructiveContinuumSU3Witness) :
     (∀ {β r : ℝ}, (5 / 2 : ℝ) ≤ β → β ≤ 10000 → 0 ≤ r → r ≤ 1 / 4 →
       0 ≤ YangMills.UVThresholdBridge.gaussianRemainderMajorant β r ∧
@@ -399,7 +393,15 @@ theorem constructive_su3_millennium_synthesis
     exact YangMills.HypercubicPolymerCounting.closed_2cycle_wilson_peierls_dominates_klarner
       hne hclosed hβ
   · exact YangMills.ContinuumFieldNontriviality.phys_hilbert_infinite_dimensional
-      w.os w.H w.P w.hP w.hd (w.Curv.uv_two_point_coeff_pos w.P w.hP) w.hP1 w.hP1c
+      w.os w.H
+      YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra.tr_F_sq
+      YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra.tr_F_sq_nonzero
+      (le_of_eq YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra.tr_F_sq_dim.symm)
+      (YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra.uv_two_point_coeff_pos
+        YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra.tr_F_sq
+        YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra.tr_F_sq_nonzero)
+      (by rw [YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra.transform_id]; rfl)
+      (by rw [YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra.transform_id]; rfl)
   · exact YangMills.ContinuumFieldNontriviality.not_gaussian_of_singular_ope
       w.os w.ops w.hR w.ope_wit
   · exact YangMills.ContinuumFieldNontriviality.connectedS4_ne_zero_of_singular_ope
@@ -407,8 +409,9 @@ theorem constructive_su3_millennium_synthesis
   · have h_gap : HasMassGap (Matrix.specialUnitaryGroup (Fin 3) ℂ) w.H.HilbertSpace w.H.theory :=
       reconstructed_gns_has_mass_gap w.H w.semi w.os.mass_rate w.os.mass_rate_pos
         w.h_deriv w.h_cluster w.h_finite_spec
-    exact ⟨w.Curv, w.H.HilbertSpace, w.H.normedGroup, w.H.innerProduct, w.H.complete,
-      w.H.separable, w.H.theory, w.h_cas, h_gap⟩
+    exact ⟨YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra,
+      w.H.HilbertSpace, w.H.normedGroup, w.H.innerProduct, w.H.complete,
+      w.H.separable, w.H.theory, rfl, h_gap⟩
 
 #print axioms constructive_su3_millennium_synthesis
 

@@ -117,6 +117,10 @@ lean_lib «CompactLieGroupsSimplicity» where
    roots := #[`CompactLieGroupsSimplicity]
 
 @[default_target]
+lean_lib «CurvatureJetAlgebraConstructive» where
+  roots := #[`CurvatureJetAlgebraConstructive]
+
+@[default_target]
 lean_lib «MillenniumSynthesisClosure» where
   roots := #[`MillenniumSynthesisClosure]
 
