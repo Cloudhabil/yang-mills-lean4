@@ -29,6 +29,14 @@ lean_lib «UVThresholdBridge» where
   roots := #[`UVThresholdBridge]
 
 @[default_target]
+lean_lib «HypercubicPolymerCounting» where
+  roots := #[`HypercubicPolymerCounting]
+
+@[default_target]
+lean_lib «ContinuumFieldNontriviality» where
+  roots := #[`ContinuumFieldNontriviality]
+
+@[default_target]
 lean_lib «HaarWilsonLattice» where
   roots := #[`HaarWilsonLattice]
 
