@@ -124,6 +124,10 @@ lean_lib «CurvatureJetAlgebraConstructive» where
 lean_lib «MillenniumSynthesisClosure» where
   roots := #[`MillenniumSynthesisClosure]
 
+@[default_target]
+lean_lib «CertifiedCRGVerifier» where
+  roots := #[`CertifiedCRGVerifier]
+
 
 
 
