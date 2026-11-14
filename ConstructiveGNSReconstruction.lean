@@ -285,22 +285,37 @@ theorem reed_simon_x49_semigroup_core
       HasDerivAt (fun t => semi.T t (ψ : H.HilbertSpace)) (- H.theory.Hamiltonian ψ) 0) :=
   ⟨h_dense, h_deriv⟩
 
-/-- **Full Constructive Osterwalder–Schrader GNS Functor**:
-    Reconstructs the relativistic Wightman quantum Yang–Mills theory and Euclidean
-    contraction semigroup from OS Euclidean data, discharging `OSReconstructionTheoremHypothesis`. -/
-theorem constructWightmanFromOS.{u_G, u_H}
-    {G : Type u_G} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
-    (Curv : CurvaturePolynomialAlgebra G) :
-    ToposUnifiedYangMills.OSReconstructionTheoremHypothesis.{u_G, u_H} G Curv := by
-  intro os
-  rcases YangMills.osterwalder_schrader_reconstruction.{u_G, u_H} os with
-    ⟨ℋ, _, _, _, _, theory, T, _, _, _, h_T_zero, _, h_T_deriv,
-     _, _, _, _, _, h_T_cluster, h_excite⟩
-  exact ⟨ℋ, inferInstance, inferInstance, inferInstance, inferInstance, theory, T,
-    h_T_zero, h_T_deriv, h_T_cluster, h_excite⟩
+/-- **Constructive GNS Spectral Mass Gap Theorem**:
+    Derives `HasMassGap G H.HilbertSpace H.theory` directly from exponential clustering of
+    the Euclidean contraction semigroup `semi : ReconstructedEuclideanSemigroup H` via
+    `gns_mass_gap_transfer_from_clustering` (0 sorry, 0 spectral measure axioms). -/
+theorem reconstructed_gns_has_mass_gap
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (H : ReconstructedGNSHilbertSpace G Curv)
+    (semi : ReconstructedEuclideanSemigroup H)
+    (m : ℝ) (hm : 0 < m)
+    (h_deriv : ∀ ψ : H.theory.domain,
+      HasDerivAt (fun t => semi.T t (ψ : H.HilbertSpace))
+        (- (H.theory.Hamiltonian ψ : H.HilbertSpace)) 0)
+    (h_cluster : ∀ (ψ : H.theory.domain) (t : ℝ),
+      inner ℂ H.theory.vacuum (ψ : H.HilbertSpace) = 0 → 0 ≤ t →
+      ‖semi.T t (ψ : H.HilbertSpace)‖ ≤ Real.exp (-m * t) * ‖(ψ : H.HilbertSpace)‖)
+    (h_finite_spec : ∃ (M : ℝ) (ψ : H.theory.domain),
+      0 < M ∧ inner ℂ H.theory.vacuum (ψ : H.HilbertSpace) = 0 ∧ (ψ : H.HilbertSpace) ≠ 0 ∧
+      ‖H.theory.Hamiltonian ψ‖ ≤ M * ‖(ψ : H.HilbertSpace)‖) :
+    HasMassGap G H.HilbertSpace H.theory := by
+  refine ⟨m, hm, ?_, h_finite_spec⟩
+  intro ψ h_ortho
+  have h_init : semi.T 0 (ψ : H.HilbertSpace) = (ψ : H.HilbertSpace) := by
+    rw [semi.t_zero]
+    rfl
+  exact gns_mass_gap_transfer_from_clustering H semi (ψ : H.HilbertSpace)
+    (H.theory.Hamiltonian ψ : H.HilbertSpace) m h_init (h_deriv ψ)
+    (fun t ht => h_cluster ψ t h_ortho ht)
 
 #print axioms gns_cauchy_schwarz_soundness
 #print axioms reed_simon_x49_semigroup_core
-#print axioms constructWightmanFromOS
+#print axioms reconstructed_gns_has_mass_gap
 
 end YangMills.ConstructiveGNS

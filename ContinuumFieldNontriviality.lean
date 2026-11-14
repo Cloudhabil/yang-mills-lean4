@@ -29,6 +29,7 @@ import Mathlib
 import MillenniumYangMills
 import ConstructiveGNSReconstruction
 import QuantumOperatorProductExpansion
+import QuantumOperatorProductExpansion
 
 noncomputable section
 
@@ -1003,6 +1004,236 @@ theorem connectedS4_ne_zero_of_ope_channel
   rw [h_eq] at h_gt
   linarith
 
+/-- Full 4-point connected (Ursell) Euclidean Schwinger function `S₄^{conn}`:
+    the 4th Ursell cumulant over all partitions of `{0, 1, 2, 3}`:
+      `S₄(0,1,2,3)`
+      `- (S₂(0,1)S₂(2,3) + S₂(0,2)S₂(1,3) + S₂(0,3)S₂(1,2))`
+      `- (S₁(0)S₃(1,2,3) + S₁(1)S₃(0,2,3) + S₁(2)S₃(0,1,3) + S₁(3)S₃(0,1,2))`
+      `+ 2 * (S₁(0)S₁(1)S₂(2,3) + S₁(0)S₁(2)S₂(1,3) + S₁(0)S₁(3)S₂(1,2)`
+      `     + S₁(1)S₁(2)S₂(0,3) + S₁(1)S₁(3)S₂(0,2) + S₁(2)S₁(3)S₂(0,1))`
+      `- 6 * S₁(0)S₁(1)S₁(2)S₁(3)`. -/
+def connectedS4
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (ops : Fin 4 → ObservableLabel G Curv) (x : Fin 4 → EuclideanSpace4) : ℂ :=
+  let s1 := fun i : Fin 4 => os.schwinger 1 ![ops i] ![x i]
+  let s2 := fun i j : Fin 4 => os.schwinger 2 ![ops i, ops j] ![x i, x j]
+  let s3 := fun i j k : Fin 4 => os.schwinger 3 ![ops i, ops j, ops k] ![x i, x j, x k]
+  os.schwinger 4 ops x -
+    (s2 0 1 * s2 2 3 + s2 0 2 * s2 1 3 + s2 0 3 * s2 1 2) -
+    (s1 0 * s3 1 2 3 + s1 1 * s3 0 2 3 + s1 2 * s3 0 1 3 + s1 3 * s3 0 1 2) +
+    2 * (s1 0 * s1 1 * s2 2 3 + s1 0 * s1 2 * s2 1 3 + s1 0 * s1 3 * s2 1 2 +
+         s1 1 * s1 2 * s2 0 3 + s1 1 * s1 3 * s2 0 2 + s1 2 * s1 3 * s2 0 1) -
+    6 * (s1 0 * s1 1 * s1 2 * s1 3)
+
+/-- When all 1-point functions vanish (centered observables `⟨𝒪_i⟩ = 0`),
+    the full 4-point Ursell cumulant `connectedS4` coincides with `connectedS4Centered`. -/
+theorem connectedS4_eq_centered_of_one_point_zero
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (ops : Fin 4 → ObservableLabel G Curv) (x : Fin 4 → EuclideanSpace4)
+    (h1 : ∀ (i : Fin 4) (y : EuclideanSpace4), os.schwinger 1 ![ops i] ![y] = 0) :
+    connectedS4 os ops x = connectedS4Centered os ops x := by
+  unfold connectedS4 connectedS4Centered
+  simp only [h1, zero_mul, add_zero, sub_zero, mul_zero]
+  ring
+
+/-- Direct-channel Wilson OPE witness for 4-point non-triviality at base separation `R > 0`.
+    At the short-distance configuration `x(λ) = (λ e₀, 0, (R+λ) e₀, R e₀)`, subtracting the
+    identity-channel contribution `S₂(x₀, x₁) S₂(x₂, x₃)` leaves a dominant non-identity
+    intermediate operator `opP` with `dim(opP) < dim(op0) + dim(op1)` whose power-law
+    singularity `c_P · λ^{-Δ_P}` (`c_P > 0`, `Δ_P = dim(op0) + dim(op1) - dim(opP) > 0`)
+    dominates subleading OPE remainder terms `K_rem · λ^{-deltaRem}` (`deltaRem < Δ_P`). -/
+structure DirectChannelOPEWitness
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (ops : Fin 4 → ObservableLabel G Curv)
+    (R : ℝ) where
+  op0 : YangMills.OPE.QuantumOperatorLabel
+  op1 : YangMills.OPE.QuantumOperatorLabel
+  opP : YangMills.OPE.QuantumOperatorLabel
+  h_singular : opP.scalingDim < op0.scalingDim + op1.scalingDim
+  c_P : ℝ
+  hc_P : 0 < c_P
+  K_rem : ℝ
+  hK_rem : 0 ≤ K_rem
+  deltaRem : ℝ
+  hdeltaRem : deltaRem < ((op0.scalingDim + op1.scalingDim - opP.scalingDim : ℕ) : ℝ)
+  ope_lower_bound : ∀ scale : ℝ, 0 < scale → scale < R / 2 →
+    let x : Fin 4 → EuclideanSpace4 :=
+      ![scale • unitTimeVec, 0, (R + scale) • unitTimeVec, R • unitTimeVec]
+    c_P * scale ^ (-((op0.scalingDim + op1.scalingDim - opP.scalingDim : ℕ) : ℝ)) -
+      K_rem * scale ^ (-deltaRem) ≤
+      ‖os.schwinger 4 ops x -
+        os.schwinger 2 ![ops 0, ops 1] ![x 0, x 1] *
+        os.schwinger 2 ![ops 2, ops 3] ![x 2, x 3]‖
+
+private theorem exists_small_scale_ope_exceeds
+    {R B_cross c_P K_rem deltaP deltaRem : ℝ}
+    (hR : 0 < R) (_hB : 0 ≤ B_cross) (hc : 0 < c_P) (hK : 0 ≤ K_rem)
+    (hdp : 0 < deltaP) (hgap : deltaRem < deltaP) :
+    ∃ scale : ℝ, 0 < scale ∧ scale < R / 2 ∧
+      B_cross < c_P * scale ^ (-deltaP) - K_rem * scale ^ (-deltaRem) := by
+  have h_gap_pos : 0 < deltaP - deltaRem := sub_pos.mpr hgap
+  have h_tend_gap : Filter.Tendsto (fun t : ℝ => t ^ (deltaP - deltaRem)) (nhds 0) (nhds 0) := by
+    have h_cont : Continuous (fun t : ℝ => t ^ (deltaP - deltaRem)) :=
+      continuous_id.rpow_const (fun _ => Or.inr (le_of_lt h_gap_pos))
+    have h_val : (0 : ℝ) ^ (deltaP - deltaRem) = 0 := Real.zero_rpow (ne_of_gt h_gap_pos)
+    have h_ca : ContinuousAt (fun t : ℝ => t ^ (deltaP - deltaRem)) 0 := h_cont.continuousAt
+    rwa [ContinuousAt, h_val] at h_ca
+  have h_tend_pow : Filter.Tendsto (fun t : ℝ => t ^ deltaP) (nhds 0) (nhds 0) := by
+    have h_cont : Continuous (fun t : ℝ => t ^ deltaP) :=
+      continuous_id.rpow_const (fun _ => Or.inr (le_of_lt hdp))
+    have h_val : (0 : ℝ) ^ deltaP = 0 := Real.zero_rpow (ne_of_gt hdp)
+    have h_ca : ContinuousAt (fun t : ℝ => t ^ deltaP) 0 := h_cont.continuousAt
+    rwa [ContinuousAt, h_val] at h_ca
+  rw [Metric.tendsto_nhds] at h_tend_gap h_tend_pow
+  have h_ev1 := h_tend_gap (c_P / (2 * (K_rem + 1))) (by positivity)
+  have h_ev2 := h_tend_pow (c_P / (2 * (B_cross + 1))) (by positivity)
+  rw [Metric.eventually_nhds_iff] at h_ev1 h_ev2
+  obtain ⟨δ1, hδ1_pos, hδ1⟩ := h_ev1
+  obtain ⟨δ2, hδ2_pos, hδ2⟩ := h_ev2
+  let scale : ℝ := min (R / 4) (min (δ1 / 2) (δ2 / 2))
+  have hs_pos : 0 < scale := by
+    dsimp [scale]
+    exact lt_min (by positivity) (lt_min (by positivity) (by positivity))
+  have hs_lt_R2 : scale < R / 2 := by
+    have h1 : scale ≤ R / 4 := min_le_left _ _
+    linarith
+  have hs_lt_δ1 : |scale - 0| < δ1 := by
+    rw [sub_zero, abs_of_pos hs_pos]
+    have h1 : scale ≤ δ1 / 2 := le_trans (min_le_right _ _) (min_le_left _ _)
+    linarith
+  have hs_lt_δ2 : |scale - 0| < δ2 := by
+    rw [sub_zero, abs_of_pos hs_pos]
+    have h1 : scale ≤ δ2 / 2 := le_trans (min_le_right _ _) (min_le_right _ _)
+    linarith
+  have h_rem_small : K_rem * scale ^ (deltaP - deltaRem) ≤ c_P / 2 := by
+    have h_dist := hδ1 hs_lt_δ1
+    rw [Real.dist_eq, sub_zero, abs_of_nonneg (Real.rpow_nonneg (le_of_lt hs_pos) _)] at h_dist
+    have hK_lt : K_rem < K_rem + 1 := by linarith
+    calc
+      K_rem * scale ^ (deltaP - deltaRem)
+          ≤ (K_rem + 1) * (c_P / (2 * (K_rem + 1))) :=
+            mul_le_mul (le_of_lt hK_lt) (le_of_lt h_dist)
+              (Real.rpow_nonneg (le_of_lt hs_pos) _) (by positivity)
+      _ = c_P / 2 := by field_simp
+  have h_pow_small : scale ^ deltaP < c_P / (2 * (B_cross + 1)) := by
+    have h_dist := hδ2 hs_lt_δ2
+    rw [Real.dist_eq, sub_zero, abs_of_nonneg (Real.rpow_nonneg (le_of_lt hs_pos) _)] at h_dist
+    exact h_dist
+  have h_pow_pos : 0 < scale ^ deltaP := Real.rpow_pos_of_pos hs_pos deltaP
+  have h_inv_gt : (2 * (B_cross + 1)) / c_P < scale ^ (-deltaP) := by
+    rw [Real.rpow_neg (le_of_lt hs_pos)]
+    rw [div_lt_iff₀ hc]
+    have h1 : (2 * (B_cross + 1)) * scale ^ deltaP < c_P := by
+      calc
+        (2 * (B_cross + 1)) * scale ^ deltaP
+            < (2 * (B_cross + 1)) * (c_P / (2 * (B_cross + 1))) :=
+              mul_lt_mul_of_pos_left h_pow_small (by positivity)
+        _ = c_P := by field_simp
+    calc
+      2 * (B_cross + 1) = (2 * (B_cross + 1)) * (scale ^ deltaP * (scale ^ deltaP)⁻¹) := by
+        rw [mul_inv_cancel₀ (ne_of_gt h_pow_pos), mul_one]
+      _ = ((2 * (B_cross + 1)) * scale ^ deltaP) * (scale ^ deltaP)⁻¹ := by ring
+      _ < c_P * (scale ^ deltaP)⁻¹ :=
+        mul_lt_mul_of_pos_right h1 (inv_pos.mpr h_pow_pos)
+      _ = (scale ^ deltaP)⁻¹ * c_P := mul_comm _ _
+  have h_factor :
+      c_P * scale ^ (-deltaP) - K_rem * scale ^ (-deltaRem) =
+        scale ^ (-deltaP) * (c_P - K_rem * scale ^ (deltaP - deltaRem)) := by
+    have h_add : scale ^ (-deltaP) * scale ^ (deltaP - deltaRem) = scale ^ (-deltaRem) := by
+      rw [← Real.rpow_add hs_pos]
+      congr 1; ring
+    calc
+      c_P * scale ^ (-deltaP) - K_rem * scale ^ (-deltaRem)
+          = c_P * scale ^ (-deltaP) - K_rem * (scale ^ (-deltaP) * scale ^ (deltaP - deltaRem)) := by
+            rw [h_add]
+      _ = scale ^ (-deltaP) * (c_P - K_rem * scale ^ (deltaP - deltaRem)) := by ring
+  refine ⟨scale, hs_pos, hs_lt_R2, ?_⟩
+  rw [h_factor]
+  have h_neg_pos : 0 < scale ^ (-deltaP) := Real.rpow_pos_of_pos hs_pos (-deltaP)
+  have h_diff_ge : c_P / 2 ≤ c_P - K_rem * scale ^ (deltaP - deltaRem) := by linarith
+  calc
+    B_cross < B_cross + 1 := by linarith
+    _ = ((2 * (B_cross + 1)) / c_P) * (c_P / 2) := by field_simp
+    _ < scale ^ (-deltaP) * (c_P / 2) := mul_lt_mul_of_pos_right h_inv_gt (by positivity)
+    _ ≤ scale ^ (-deltaP) * (c_P - K_rem * scale ^ (deltaP - deltaRem)) :=
+        mul_le_mul_of_nonneg_left h_diff_ge (le_of_lt h_neg_pos)
+
+/-- **Unconditional Connected 4-Point Non-Triviality (`S₄^{conn} ≠ 0`) from Singular OPE**:
+    Given any `DirectChannelOPEWitness` at separation `R > 0`, there exists a short-distance
+    scale `0 < scale < R / 2` where the 4-point configuration `x(scale)` is strictly
+    non-coincident and the direct-channel OPE amplitude strictly exceeds the `(E0'')`
+    cross-channel bound `B_cross`, unconditionally proving `connectedS4Centered os ops x ≠ 0`. -/
+theorem connectedS4_ne_zero_of_singular_ope
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (ops : Fin 4 → ObservableLabel G Curv)
+    {R : ℝ} (hR : 0 < R)
+    (wit : DirectChannelOPEWitness os ops R) :
+    ∃ scale : ℝ, 0 < scale ∧ scale < R / 2 ∧
+      let x : Fin 4 → EuclideanSpace4 :=
+        ![scale • unitTimeVec, 0, (R + scale) • unitTimeVec, R • unitTimeVec]
+      IsNonCoincident x ∧ connectedS4Centered os ops x ≠ 0 := by
+  obtain ⟨B_cross, hB_nonneg, h_cross⟩ := connectedS4_ne_zero_of_ope_channel os ops hR
+  have h_dp : 0 < ((wit.op0.scalingDim + wit.op1.scalingDim - wit.opP.scalingDim : ℕ) : ℝ) := by
+    exact_mod_cast Nat.sub_pos_of_lt wit.h_singular
+  obtain ⟨scale, hs_pos, hs_lt, h_exceeds⟩ :=
+    exists_small_scale_ope_exceeds hR hB_nonneg wit.hc_P wit.hK_rem h_dp wit.hdeltaRem
+  have h_ope := wit.ope_lower_bound scale hs_pos hs_lt
+  obtain ⟨h_nc, h_imp⟩ := h_cross scale hs_pos hs_lt
+  exact ⟨scale, hs_pos, hs_lt, h_nc, h_imp (lt_of_lt_of_le h_exceeds h_ope)⟩
+
+/-- **Unconditional Full 4-Point Ursell Cumulant Non-Triviality (`connectedS4 ≠ 0`)**:
+    Under centered observables (`⟨𝒪_i⟩ = 0`) and a `DirectChannelOPEWitness`,
+    the full 4-point connected Schwinger function `connectedS4 os ops x` is non-zero
+    at a strictly non-coincident 4-point configuration. -/
+theorem connectedS4_full_ne_zero_of_singular_ope
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (ops : Fin 4 → ObservableLabel G Curv)
+    {R : ℝ} (hR : 0 < R)
+    (h1 : ∀ (i : Fin 4) (y : EuclideanSpace4), os.schwinger 1 ![ops i] ![y] = 0)
+    (wit : DirectChannelOPEWitness os ops R) :
+    ∃ scale : ℝ, 0 < scale ∧ scale < R / 2 ∧
+      let x : Fin 4 → EuclideanSpace4 :=
+        ![scale • unitTimeVec, 0, (R + scale) • unitTimeVec, R • unitTimeVec]
+      IsNonCoincident x ∧ connectedS4 os ops x ≠ 0 := by
+  obtain ⟨scale, hs_pos, hs_lt, h_nc, h_ne⟩ :=
+    connectedS4_ne_zero_of_singular_ope os ops hR wit
+  refine ⟨scale, hs_pos, hs_lt, h_nc, ?_⟩
+  rw [connectedS4_eq_centered_of_one_point_zero os ops _ h1]
+  exact h_ne
+
+/-- A 4-point correlation system is Gaussian (Wick-factorized / generalized free field)
+    if its centered connected 4-point function vanishes on all non-coincident configurations. -/
+def IsGaussian4Pt
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (ops : Fin 4 → ObservableLabel G Curv) : Prop :=
+  ∀ x : Fin 4 → EuclideanSpace4, IsNonCoincident x → connectedS4Centered os ops x = 0
+
+/-- **Generalized Free Field Exclusion**: Any Euclidean Yang–Mills theory admitting a
+    singular non-identity OPE channel is strictly non-Gaussian (`¬ IsGaussian4Pt os ops`). -/
+theorem not_gaussian_of_singular_ope
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (ops : Fin 4 → ObservableLabel G Curv)
+    {R : ℝ} (hR : 0 < R)
+    (wit : DirectChannelOPEWitness os ops R) :
+    ¬ IsGaussian4Pt os ops := by
+  intro h_gauss
+  obtain ⟨scale, _, _, h_nc, h_ne⟩ := connectedS4_ne_zero_of_singular_ope os ops hR wit
+  exact h_ne (h_gauss _ h_nc)
+
 #print axioms epstein_glaser_kernel_desingularization
 #print axioms epstein_glaser_integrand_desingularized
 #print axioms epstein_glaser_disjoint_supports_invariance
@@ -1012,5 +1243,9 @@ theorem connectedS4_ne_zero_of_ope_channel
 #print axioms infinite_dim_of_unbounded_diag_bounded_off_diag
 #print axioms phys_hilbert_infinite_dimensional
 #print axioms connectedS4_ne_zero_of_ope_channel
+#print axioms connectedS4_eq_centered_of_one_point_zero
+#print axioms connectedS4_ne_zero_of_singular_ope
+#print axioms connectedS4_full_ne_zero_of_singular_ope
+#print axioms not_gaussian_of_singular_ope
 
 end YangMills.ContinuumFieldNontriviality

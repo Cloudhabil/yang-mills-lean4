@@ -1591,95 +1591,6 @@ theorem std_os2_positivity {G : Type*} [TopologicalSpace G] [Group G] [CompactSi
     [CompactSimpleLieGroup G] (Curv : CurvaturePolynomialAlgebra G) :
     (standardConstructiveSchwingerHierarchy Curv).schwinger = stdSchwinger Curv := rfl
 
-/-- **Explicit Inhabitant: standardBalabanHierarchy**:
-    Constructs the canonical Bałaban constructive hierarchy bundle for any compact simple Lie group G,
-    curvature polynomial algebra Curv, and Wilson lattice lat, fulfilling Goal 3. -/
-noncomputable def standardBalabanHierarchy (G : Type*) [TopologicalSpace G] [Group G]
-    [CompactSimpleLieGroup G] (Curv : CurvaturePolynomialAlgebra G)
-    (lat : WilsonLatticeYangMills G Curv) :
-    BalabanConstructiveHierarchy G Curv lat where
-  hierarchy := standardConstructiveSchwingerHierarchy Curv
-  pipeline_params_eq := rfl
-  os1_invariance := by
-    intro n ops R v x hR hdet
-    simp only [standardConstructiveSchwingerHierarchy_schwinger]
-    cases n with
-    | zero => rfl
-    | succ n =>
-      have hn : Nat.succ n ≠ 0 := Nat.succ_ne_zero n
-      rw [stdSchwinger_pos Curv (Nat.succ n) hn, stdSchwinger_pos Curv (Nat.succ n) hn]
-  os2_positivity := by
-    intro m deg ops X c h_time
-    exact std_os2_positivity Curv m deg ops X c h_time
-  os3_symmetry := by
-    intro n σ ops x
-    simp only [standardConstructiveSchwingerHierarchy_schwinger]
-    cases n with
-    | zero => rfl
-    | succ n =>
-      have hn : Nat.succ n ≠ 0 := Nat.succ_ne_zero n
-      rw [stdSchwinger_pos Curv (Nat.succ n) hn, stdSchwinger_pos Curv (Nat.succ n) hn]
-  mass_rate :=
-    if h : ∃ B : ℝ, ∀ m_gap : ℝ, HypothesisC2_UniformLatticeGap G lat m_gap → m_gap ≤ B then
-      max (Classical.choose h) (single_pace_floor_val standardSinglePaceFloor)
-    else
-      single_pace_floor_val standardSinglePaceFloor
-  os4_clustering := by
-    intro n m ops1 ops2 X Y a hX hY ha_pos ha_norm
-    refine ⟨0, le_rfl, fun scale h_scale => ?_⟩
-    simp only [standardConstructiveSchwingerHierarchy_schwinger]
-    cases n with
-    | zero =>
-      cases m with
-      | zero =>
-        have h1 : stdSchwinger Curv (0 + 0) (safeReflectConcatLabels ops1 ops2)
-            (safeReflectConcatMixed X (translateConfig (scale • a) Y)) = 1 := rfl
-        have h2 : stdSchwinger Curv 0 (reverseConjLabels ops1) (reverseReflectConfig X) = 1 := rfl
-        have h3 : stdSchwinger Curv 0 ops2 Y = 1 := rfl
-        rw [h1, h2, h3]
-        simp
-      | succ m =>
-        have hm : Nat.succ m ≠ 0 := Nat.succ_ne_zero m
-        have h0m : 0 + Nat.succ m ≠ 0 := by omega
-        rw [stdSchwinger_pos Curv (0 + Nat.succ m) h0m,
-            std_schwinger_zero,
-            stdSchwinger_pos Curv (Nat.succ m) hm]
-        simp
-    | succ n =>
-      have hn : Nat.succ n ≠ 0 := Nat.succ_ne_zero n
-      have hnm : Nat.succ n + m ≠ 0 := by omega
-      rw [stdSchwinger_pos Curv (Nat.succ n + m) hnm,
-          stdSchwinger_pos Curv (Nat.succ n) hn]
-      simp
-  asymptotic_freedom := by
-    intro P x hP hd hx
-    have hc : Curv.uv_two_point_coeff P = 0 := Curv.uv_two_point_coeff_zero P
-    simp only [standardConstructiveSchwingerHierarchy_schwinger]
-    have h_eval : (fun (scale : ℝ) =>
-        (scale ^ (2 * Curv.classicalDim P)) * ((-Real.log scale) ^ Curv.anomalous_exponent P) *
-        (stdSchwinger Curv 2 ![.localCurv (Curv.conj P), .localCurv P] ![scale • x, 0] -
-          stdSchwinger Curv 1 ![.localCurv (Curv.conj P)] ![scale • x] *
-          stdSchwinger Curv 1 ![.localCurv P] ![0]).re) = fun _ => 0 := by
-      ext s
-      have h2 : stdSchwinger Curv 2 ![.localCurv (Curv.conj P), .localCurv P] ![s • x, 0] = 0 :=
-        stdSchwinger_pos Curv 2 (by norm_num) _ _
-      have h1a : stdSchwinger Curv 1 ![.localCurv (Curv.conj P)] ![s • x] = 0 :=
-        stdSchwinger_pos Curv 1 (by norm_num) _ _
-      have h1b : stdSchwinger Curv 1 ![.localCurv P] ![0] = 0 :=
-        stdSchwinger_pos Curv 1 (by norm_num) _ _
-      rw [h2, h1a, h1b, mul_zero, sub_zero]
-      simp
-    rw [h_eval, hc, zero_div]
-    exact tendsto_const_nhds
-  clustering_dominates_gap := by
-    intro h_ex m_gap h_gap
-    rcases h_ex with ⟨a, ha, h_beta⟩
-    have h_bdd : ∃ B : ℝ, ∀ m_gap : ℝ, HypothesisC2_UniformLatticeGap G lat m_gap → m_gap ≤ B :=
-      physical_lattice_gap_bounded lat a ha h_beta
-    rw [dif_pos h_bdd]
-    have h_le := (Classical.choose_spec h_bdd) m_gap h_gap
-    exact le_trans h_le (le_max_left _ _)
-
 /-- **Theorem (Constructive Discharge of Hypothesis C3 via Bałaban Pipeline)**:
     Wires the 10-paper constructive pipeline directly through BalabanOS2's
     reconstruction functor and discharges Hypothesis (C3) WITHOUT assuming
@@ -1740,7 +1651,6 @@ theorem balaban_master_continuum_yang_mills_mass_gap.{u_G, u_L, u_H}
 
 #print axioms balaban_constructive_pipeline_yields_os0
 #print axioms balaban_constructive_pipeline_yields_e0_double_and_single_prime
-#print axioms standardBalabanHierarchy
 #print axioms balaban_constructive_pipeline_discharges_c3
 #print axioms balaban_master_continuum_yang_mills_mass_gap
 

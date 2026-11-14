@@ -500,7 +500,7 @@ abbrev OsterwalderSchraderYangMills := YangMills.OsterwalderSchraderYangMills
     Reconstructs relativistic Wightman quantum Yang–Mills theory from Euclidean Schwinger
     distributions, establishing the 5 canonical OS II clauses and spectral gap Δ ≥ m > 0.
     Stated as a fundamental structural bridge between Euclidean and Minkowski QFT. -/
-abbrev osterwalder_schrader_reconstruction := @YangMills.osterwalder_schrader_reconstruction
+abbrev osterwalder_schrader_reconstruction.{u_G, u_H} := @YangMills.OSReconstructionStatement.{u_G, u_H}
 
 /-! ============================================================================
     PART VII: THE NON-PERTURBATIVE CLOSURE SCHEME & MASTER REDUCTION LINK
@@ -844,6 +844,7 @@ set_option linter.unusedVariables true in
 theorem master_yang_mills_mass_gap_reduction.{u_G, u_L, u_H}
     {G : Type u_G} [TopologicalSpace G] [Group G] [YangMills.CompactSimpleLieGroup G]
     {Curv : YangMills.CurvaturePolynomialAlgebra G}
+    (h_os : OSReconstructionTheoremHypothesis.{u_G, u_H} G Curv)
     (lat : WilsonLatticeYangMills.{u_G, u_L} G Curv)
     (lambda_ym : ℝ)
     (m_gap : ℝ)
@@ -859,15 +860,9 @@ theorem master_yang_mills_mass_gap_reduction.{u_G, u_L, u_H}
       0 < single_pace_floor_val q ∧
       (∀ ψ : theory.domain,
         inner ℂ theory.vacuum (ψ : ℋ) = (0 : ℂ) →
-        single_pace_floor_val q * ‖(ψ : ℋ)‖ ≤ ‖theory.Hamiltonian ψ‖) := by
-  refine master_yang_mills_mass_gap_reduction_of_os.{u_G, u_L, u_H}
-    ?_ lat lambda_ym m_gap q h_c1 h_c2 h_c3 h_c4
-  intro os
-  rcases YangMills.osterwalder_schrader_reconstruction.{u_G, u_H} os with
-    ⟨ℋ, _, _, _, _, theory, T, _, _, _, h_T_zero, _, h_T_deriv,
-     _, _, _, _, _, h_T_cluster, h_excite⟩
-  exact ⟨ℋ, inferInstance, inferInstance, inferInstance, inferInstance, theory, T,
-    h_T_zero, h_T_deriv, h_T_cluster, h_excite⟩
+        single_pace_floor_val q * ‖(ψ : ℋ)‖ ≤ ‖theory.Hamiltonian ψ‖) :=
+  master_yang_mills_mass_gap_reduction_of_os.{u_G, u_L, u_H}
+    h_os lat lambda_ym m_gap q h_c1 h_c2 h_c3 h_c4
 
 /-! ============================================================================
     PART VIII: THE OFFICIAL CLAY MILLENNIUM PRIZE PROBLEM STATEMENT
@@ -879,22 +874,22 @@ theorem master_yang_mills_mass_gap_reduction.{u_G, u_L, u_H}
     (Arthur Jaffe & Edward Witten, 2000, Section 4, p. 6; PR #7636).
     For any compact simple gauge group G, there exists a classical curvature polynomial algebra
     and a relativistic Wightman Quantum Yang–Mills theory with a strictly positive mass gap Δ > 0. -/
-abbrev yang_mills_existence_and_mass_gap :=
-  @YangMills.yang_mills_existence_and_mass_gap
+abbrev yang_mills_existence_and_mass_gap.{u_G, u_H} :=
+  @YangMills.ClayMillenniumYangMillsMassGap.{u_G, u_H}
 
 /-! ### §25 Canonical Specializations: SU(N), SU(2), and SU(3) -/
 
 /-- Canonical Specialization to SU(N) for any N ≥ 2. -/
-abbrev yang_mills_sun_mass_gap :=
-  @YangMills.yang_mills_sun_mass_gap
+abbrev yang_mills_sun_mass_gap.{u_H} :=
+  @YangMills.YangMillsSUNMassGap.{u_H}
 
 /-- Canonical Specialization to SU(2) Pure Yang–Mills Gauge Theory. -/
-abbrev yang_mills_su2_mass_gap :=
-  @YangMills.yang_mills_su2_mass_gap
+abbrev yang_mills_su2_mass_gap.{u_H} :=
+  @YangMills.YangMillsSU2MassGap.{u_H}
 
 /-- Canonical Specialization to SU(3) (Quantum Chromodynamics Gluon Sector). -/
-abbrev yang_mills_su3_mass_gap :=
-  @YangMills.yang_mills_su3_mass_gap
+abbrev yang_mills_su3_mass_gap.{u_H} :=
+  @YangMills.YangMillsSU3MassGap.{u_H}
 
 /-- Derivation of Canonical Specialization to SU(N) from Universal Existence. -/
 abbrev yang_mills_sun_mass_gap_of_universal :=

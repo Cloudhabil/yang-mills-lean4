@@ -818,6 +818,7 @@ theorem master_continuum_wightman_yang_mills_mass_gap_of_os_reconstruction.{u_G,
     (ch : NormalizedGaugeCharacter G)
     (lambda_ym beta_ir : ℝ) (h_lambda : 0 < lambda_ym) (h_ir : 0 < beta_ir)
     (q : SinglePaceFloorData)
+    (h_os : OSReconstructionTheoremHypothesis.{u_G, u_H} G Curv)
     (lat : WilsonLatticeYangMills.{u_G, u_L} G Curv)
     (h_lat_beta : lat.beta_lat = (pureHaarWilsonLattice G Curv ch lambda_ym beta_ir).beta_lat)
     (h_lat_c2 : HypothesisC2_UniformLatticeGap G lat (single_pace_floor_val q))
@@ -829,15 +830,8 @@ theorem master_continuum_wightman_yang_mills_mass_gap_of_os_reconstruction.{u_G,
       0 < single_pace_floor_val q ∧
       (∀ ψ : theory.domain,
         inner ℂ theory.vacuum (ψ : ℋ) = (0 : ℂ) →
-        single_pace_floor_val q * ‖(ψ : ℋ)‖ ≤ ‖theory.Hamiltonian ψ‖) := by
-  have h_os : OSReconstructionTheoremHypothesis.{u_G, u_H} G Curv := by
-    intro os
-    rcases YangMills.osterwalder_schrader_reconstruction.{u_G, u_H} os with
-      ⟨ℋ, _, _, _, _, theory, T, _, _, _, h_T_zero, _, h_T_deriv,
-       _, _, _, _, _, h_T_cluster, h_excite⟩
-    exact ⟨ℋ, inferInstance, inferInstance, inferInstance, inferInstance, theory, T,
-      h_T_zero, h_T_deriv, h_T_cluster, h_excite⟩
-  exact master_continuum_wightman_yang_mills_mass_gap Curv ch lambda_ym beta_ir
+        single_pace_floor_val q * ‖(ψ : ℋ)‖ ≤ ‖theory.Hamiltonian ψ‖) :=
+  master_continuum_wightman_yang_mills_mass_gap Curv ch lambda_ym beta_ir
     h_lambda h_ir q h_os lat h_lat_beta h_lat_c2 h_c3
 
 /-! ============================================================================
@@ -850,26 +844,28 @@ class StandardCurvatureAlgebra (G : Type*)
   standardCurv : YangMills.CurvaturePolynomialAlgebra G
 
 /-- Specialized curvature algebra class locking the adjoint Casimir invariant C₂(G) to N for SU(N). -/
-class SUNCurvatureAlgebra (N : ℕ) [Fact (2 ≤ N)] where
+class SUNCurvatureAlgebra (N : ℕ) [Fact (2 ≤ N)] [YangMills.CompactSimpleLieGroup (YangMills.SUN N)] where
   standardCurv : YangMills.CurvaturePolynomialAlgebra (YangMills.SUN N)
   casimir_eq : standardCurv.casimir_adjoint = N
 
 /-- SU(2) specialization with C₂(SU(2)) = 2. -/
-abbrev SU2CurvatureAlgebra := SUNCurvatureAlgebra 2
+abbrev SU2CurvatureAlgebra [YangMills.CompactSimpleLieGroup (YangMills.SUN 2)] := SUNCurvatureAlgebra 2
 
 /-- SU(3) specialization with C₂(SU(3)) = 3. -/
-abbrev SU3CurvatureAlgebra := SUNCurvatureAlgebra 3
+abbrev SU3CurvatureAlgebra [YangMills.CompactSimpleLieGroup (YangMills.SUN 3)] := SUNCurvatureAlgebra 3
 
 /-- Direct constructor of `SUNCurvatureAlgebra N` from curvature algebra and Casimir equality. -/
 @[instance_reducible] def sunCurvatureAlgebraOfCasimir (N : ℕ) [Fact (2 ≤ N)]
+    [YangMills.CompactSimpleLieGroup (YangMills.SUN N)]
     (Curv : YangMills.CurvaturePolynomialAlgebra (YangMills.SUN N))
     (h_cas : Curv.casimir_adjoint = N) : SUNCurvatureAlgebra N where
   standardCurv := Curv
   casimir_eq := h_cas
 
 /-- Typeclass instance translating `SUNCurvatureAlgebra N` to general `StandardCurvatureAlgebra`. -/
-instance (priority := low) (N : ℕ) [Fact (2 ≤ N)] [h : SUNCurvatureAlgebra N]
-    [YangMills.CompactSimpleLieGroup (YangMills.SUN N)] :
+instance (priority := low) (N : ℕ) [Fact (2 ≤ N)]
+    [YangMills.CompactSimpleLieGroup (YangMills.SUN N)]
+    [h : SUNCurvatureAlgebra N] :
     StandardCurvatureAlgebra (YangMills.SUN N) where
   standardCurv := h.standardCurv
 
@@ -1076,6 +1072,7 @@ theorem constructive_pipeline_mass_gap.{u_G, u_H}
     [CompactSpace G] [T2Space G] [SecondCountableTopology G]
     [MeasurableSpace G] [BorelSpace G]
     (B : ConstructiveYangMillsBundle G)
+    (h_os : ToposUnifiedYangMills.OSReconstructionTheoremHypothesis.{u_G, u_H} G B.Curv)
     (h_lat_c2 : ToposUnifiedYangMills.HypothesisC2_UniformLatticeGap G B.lattice (ToposUnifiedYangMills.single_pace_floor_val B.q))
     (h_c3 : ToposUnifiedYangMills.HypothesisC3_ContinuumLimitPreservesGap G B.Curv B.lattice B.lambda_ym) :
     ∃ (ℋ : Type u_H) (_ : NormedAddCommGroup ℋ) (_ : InnerProductSpace ℂ ℋ)
@@ -1087,7 +1084,7 @@ theorem constructive_pipeline_mass_gap.{u_G, u_H}
         inner ℂ theory.vacuum (ψ : ℋ) = (0 : ℂ) →
         ToposUnifiedYangMills.single_pace_floor_val B.q * ‖(ψ : ℋ)‖ ≤ ‖theory.Hamiltonian ψ‖) := by
   exact master_continuum_wightman_yang_mills_mass_gap_of_os_reconstruction.{u_G, u_G, u_H}
-    B.Curv B.ch B.lambda_ym B.beta_ir B.h_lambda B.h_ir B.q B.lattice rfl h_lat_c2 h_c3
+    B.Curv B.ch B.lambda_ym B.beta_ir B.h_lambda B.h_ir B.q h_os B.lattice rfl h_lat_c2 h_c3
 
 /-- **Universal Constructive Pipeline Complete Reduction Theorem (`0 sorryAx`)**:
     Given any constructive Yang-Mills bundle `B` and OS reconstruction hypothesis `h_os`,
@@ -1141,6 +1138,7 @@ theorem constructive_pipeline_complete_solution.{u_G, u_H}
     [CompactSpace G] [T2Space G] [SecondCountableTopology G]
     [MeasurableSpace G] [BorelSpace G]
     (B : ConstructiveYangMillsBundle G)
+    (h_os : ToposUnifiedYangMills.OSReconstructionTheoremHypothesis.{u_G, u_H} G B.Curv)
     (h_lat_c2 : ToposUnifiedYangMills.HypothesisC2_UniformLatticeGap G B.lattice (ToposUnifiedYangMills.single_pace_floor_val B.q))
     (h_c3 : ToposUnifiedYangMills.HypothesisC3_ContinuumLimitPreservesGap G B.Curv B.lattice B.lambda_ym) :
     ∃ (ℋ : Type u_H) (_ : NormedAddCommGroup ℋ) (_ : InnerProductSpace ℂ ℋ)
@@ -1160,15 +1158,8 @@ theorem constructive_pipeline_complete_solution.{u_G, u_H}
         r_seq 0 ≤ B.P.r_max →
         (∀ k < N, B.P.beta_ir ≤ beta_seq k) →
         (∀ k < N, r_seq (k + 1) ≤ B.P.theta * r_seq k + B.P.C_mayer * (r_seq k) ^ 2 + B.P.C_vert / beta_seq k) →
-        ∀ k ≤ N, r_seq k ≤ B.P.r_max) := by
-  have h_os : ToposUnifiedYangMills.OSReconstructionTheoremHypothesis.{u_G, u_H} G B.Curv := by
-    intro os
-    rcases YangMills.osterwalder_schrader_reconstruction.{u_G, u_H} os with
-      ⟨ℋ, _, _, _, _, theory, T, _, _, _, h_T_zero, _, h_T_deriv,
-       _, _, _, _, _, h_T_cluster, h_excite⟩
-    exact ⟨ℋ, inferInstance, inferInstance, inferInstance, inferInstance, theory, T,
-      h_T_zero, h_T_deriv, h_T_cluster, h_excite⟩
-  exact constructive_pipeline_complete_reduction_of_os.{u_G, u_H} B h_os h_lat_c2 h_c3
+        ∀ k ≤ N, r_seq k ≤ B.P.r_max) :=
+  constructive_pipeline_complete_reduction_of_os.{u_G, u_H} B h_os h_lat_c2 h_c3
 
 /-- **Universal Constructive Millennium Reduction Theorem (`0 sorryAx`)**:
     Given any constructive Yang-Mills bundle `B`, reduces the Clay Millennium Prize
@@ -1199,6 +1190,7 @@ theorem constructive_millennium_solution.{u_G, u_H}
     [CompactSpace G] [T2Space G] [SecondCountableTopology G]
     [MeasurableSpace G] [BorelSpace G]
     (B : ConstructiveYangMillsBundle G)
+    (h_os : ToposUnifiedYangMills.OSReconstructionTheoremHypothesis.{u_G, u_H} G B.Curv)
     (h_lat_c2 : ToposUnifiedYangMills.HypothesisC2_UniformLatticeGap G B.lattice (ToposUnifiedYangMills.single_pace_floor_val B.q))
     (h_c3 : ToposUnifiedYangMills.HypothesisC3_ContinuumLimitPreservesGap G B.Curv B.lattice B.lambda_ym) :
     ∃ (Curv : YangMills.CurvaturePolynomialAlgebra G)
@@ -1206,7 +1198,7 @@ theorem constructive_millennium_solution.{u_G, u_H}
       (_ : CompleteSpace ℋ) (_ : TopologicalSpace.SeparableSpace ℋ)
       (theory : YangMills.WightmanQuantumYangMills G ℋ Curv),
       YangMills.HasMassGap G ℋ theory := by
-  rcases constructive_pipeline_mass_gap.{u_G, u_H} B h_lat_c2 h_c3 with
+  rcases constructive_pipeline_mass_gap.{u_G, u_H} B h_os h_lat_c2 h_c3 with
     ⟨ℋ, _, _, _, _, theory, h_gap, _, _⟩
   exact ⟨B.Curv, ℋ, inferInstance, inferInstance, inferInstance, inferInstance, theory, h_gap⟩
 
@@ -1239,6 +1231,7 @@ theorem su2_constructive_reduction_of_os.{u_H}
 theorem su2_constructive_pipeline_solution.{u_H}
     [YangMills.CompactSimpleLieGroup YangMills.SU2]
     (Curv : YangMills.CurvaturePolynomialAlgebra YangMills.SU2)
+    (h_os : ToposUnifiedYangMills.OSReconstructionTheoremHypothesis.{0, u_H} YangMills.SU2 Curv)
     (h_lat_c2 : ToposUnifiedYangMills.HypothesisC2_UniformLatticeGap YangMills.SU2
       (su2ConstructiveBundle Curv).lattice
       (ToposUnifiedYangMills.single_pace_floor_val ToposUnifiedYangMills.standardSinglePaceFloor))
@@ -1252,7 +1245,7 @@ theorem su2_constructive_pipeline_solution.{u_H}
       (∀ ψ : theory.domain,
         inner ℂ theory.vacuum (ψ : ℋ) = (0 : ℂ) →
         ToposUnifiedYangMills.single_pace_floor_val ToposUnifiedYangMills.standardSinglePaceFloor * ‖(ψ : ℋ)‖ ≤ ‖theory.Hamiltonian ψ‖) :=
-  constructive_pipeline_mass_gap.{0, u_H} (su2ConstructiveBundle Curv) h_lat_c2 h_c3
+  constructive_pipeline_mass_gap.{0, u_H} (su2ConstructiveBundle Curv) h_os h_lat_c2 h_c3
 
 /-- Constructive Casimir Mass Gap Theorem for SU(2) matching `yang_mills_su2_mass_gap`. -/
 theorem su2_constructive_casimir_mass_gap.{u_H}
@@ -1339,6 +1332,7 @@ theorem su2_constructive_millennium_reduction_of_os.{u_H}
 theorem su2_constructive_complete_solution.{u_H}
     [YangMills.CompactSimpleLieGroup YangMills.SU2]
     (Curv : YangMills.CurvaturePolynomialAlgebra YangMills.SU2)
+    (h_os : ToposUnifiedYangMills.OSReconstructionTheoremHypothesis.{0, u_H} YangMills.SU2 Curv)
     (h_lat_c2 : ToposUnifiedYangMills.HypothesisC2_UniformLatticeGap YangMills.SU2
       (su2ConstructiveBundle Curv).lattice
       (ToposUnifiedYangMills.single_pace_floor_val ToposUnifiedYangMills.standardSinglePaceFloor))
@@ -1362,13 +1356,14 @@ theorem su2_constructive_complete_solution.{u_H}
         (∀ k < N, (su2ConstructiveBundle Curv).P.beta_ir ≤ beta_seq k) →
         (∀ k < N, r_seq (k + 1) ≤ (su2ConstructiveBundle Curv).P.theta * r_seq k + (su2ConstructiveBundle Curv).P.C_mayer * (r_seq k) ^ 2 + (su2ConstructiveBundle Curv).P.C_vert / beta_seq k) →
         ∀ k ≤ N, r_seq k ≤ (su2ConstructiveBundle Curv).P.r_max) :=
-  constructive_pipeline_complete_solution.{0, u_H} (su2ConstructiveBundle Curv) h_lat_c2 h_c3
+  constructive_pipeline_complete_solution.{0, u_H} (su2ConstructiveBundle Curv) h_os h_lat_c2 h_c3
 
 /-- Constructive Millennium Solution Theorem for SU(2) Coupled to Upstream OS-II Reconstruction. -/
 theorem su2_constructive_millennium_solution.{u_H}
     [YangMills.CompactSimpleLieGroup YangMills.SU2]
     (Curv : YangMills.CurvaturePolynomialAlgebra YangMills.SU2)
     (h_cas : Curv.casimir_adjoint = 2)
+    (h_os : ToposUnifiedYangMills.OSReconstructionTheoremHypothesis.{0, u_H} YangMills.SU2 Curv)
     (h_lat_c2 : ToposUnifiedYangMills.HypothesisC2_UniformLatticeGap YangMills.SU2
       (su2ConstructiveBundle Curv).lattice
       (ToposUnifiedYangMills.single_pace_floor_val ToposUnifiedYangMills.standardSinglePaceFloor))
@@ -1380,7 +1375,7 @@ theorem su2_constructive_millennium_solution.{u_H}
       (theory : YangMills.WightmanQuantumYangMills YangMills.SU2 ℋ Curv'),
       Curv'.casimir_adjoint = 2 ∧
       YangMills.HasMassGap YangMills.SU2 ℋ theory := by
-  rcases su2_constructive_pipeline_solution Curv h_lat_c2 h_c3 with
+  rcases su2_constructive_pipeline_solution Curv h_os h_lat_c2 h_c3 with
     ⟨ℋ, _, _, _, _, theory, h_gap, _, _⟩
   exact ⟨Curv, ℋ, inferInstance, inferInstance, inferInstance, inferInstance, theory, h_cas, h_gap⟩
 
@@ -1434,6 +1429,7 @@ theorem su3_constructive_pipeline_solution.{u_H}
     [YangMills.CompactSimpleLieGroup YangMills.SU3]
     (Curv : YangMills.CurvaturePolynomialAlgebra YangMills.SU3)
     (ch : HaarWilsonLattice.NormalizedGaugeCharacter YangMills.SU3)
+    (h_os : ToposUnifiedYangMills.OSReconstructionTheoremHypothesis.{0, u_H} YangMills.SU3 Curv)
     (h_lat_c2 : ToposUnifiedYangMills.HypothesisC2_UniformLatticeGap YangMills.SU3
       (su3ConstructiveBundle Curv ch).lattice
       (ToposUnifiedYangMills.single_pace_floor_val ToposUnifiedYangMills.standardSinglePaceFloor))
@@ -1447,7 +1443,7 @@ theorem su3_constructive_pipeline_solution.{u_H}
       (∀ ψ : theory.domain,
         inner ℂ theory.vacuum (ψ : ℋ) = (0 : ℂ) →
         ToposUnifiedYangMills.single_pace_floor_val ToposUnifiedYangMills.standardSinglePaceFloor * ‖(ψ : ℋ)‖ ≤ ‖theory.Hamiltonian ψ‖) :=
-  constructive_pipeline_mass_gap.{0, u_H} (su3ConstructiveBundle Curv ch) h_lat_c2 h_c3
+  constructive_pipeline_mass_gap.{0, u_H} (su3ConstructiveBundle Curv ch) h_os h_lat_c2 h_c3
 
 /-- Constructive Casimir Mass Gap Theorem for SU(3) matching `yang_mills_su3_mass_gap`. -/
 theorem su3_constructive_casimir_mass_gap.{u_H}
@@ -1538,6 +1534,7 @@ theorem su3_constructive_complete_solution.{u_H}
     [YangMills.CompactSimpleLieGroup YangMills.SU3]
     (Curv : YangMills.CurvaturePolynomialAlgebra YangMills.SU3)
     (ch : HaarWilsonLattice.NormalizedGaugeCharacter YangMills.SU3)
+    (h_os : ToposUnifiedYangMills.OSReconstructionTheoremHypothesis.{0, u_H} YangMills.SU3 Curv)
     (h_lat_c2 : ToposUnifiedYangMills.HypothesisC2_UniformLatticeGap YangMills.SU3
       (su3ConstructiveBundle Curv ch).lattice
       (ToposUnifiedYangMills.single_pace_floor_val ToposUnifiedYangMills.standardSinglePaceFloor))
@@ -1561,7 +1558,7 @@ theorem su3_constructive_complete_solution.{u_H}
         (∀ k < N, (su3ConstructiveBundle Curv ch).P.beta_ir ≤ beta_seq k) →
         (∀ k < N, r_seq (k + 1) ≤ (su3ConstructiveBundle Curv ch).P.theta * r_seq k + (su3ConstructiveBundle Curv ch).P.C_mayer * (r_seq k) ^ 2 + (su3ConstructiveBundle Curv ch).P.C_vert / beta_seq k) →
         ∀ k ≤ N, r_seq k ≤ (su3ConstructiveBundle Curv ch).P.r_max) :=
-  constructive_pipeline_complete_solution.{0, u_H} (su3ConstructiveBundle Curv ch) h_lat_c2 h_c3
+  constructive_pipeline_complete_solution.{0, u_H} (su3ConstructiveBundle Curv ch) h_os h_lat_c2 h_c3
 
 /-- Constructive Millennium Solution Theorem for SU(3) Coupled to Upstream OS-II Reconstruction. -/
 theorem su3_constructive_millennium_solution.{u_H}
@@ -1569,6 +1566,7 @@ theorem su3_constructive_millennium_solution.{u_H}
     (Curv : YangMills.CurvaturePolynomialAlgebra YangMills.SU3)
     (ch : HaarWilsonLattice.NormalizedGaugeCharacter YangMills.SU3)
     (h_cas : Curv.casimir_adjoint = 3)
+    (h_os : ToposUnifiedYangMills.OSReconstructionTheoremHypothesis.{0, u_H} YangMills.SU3 Curv)
     (h_lat_c2 : ToposUnifiedYangMills.HypothesisC2_UniformLatticeGap YangMills.SU3
       (su3ConstructiveBundle Curv ch).lattice
       (ToposUnifiedYangMills.single_pace_floor_val ToposUnifiedYangMills.standardSinglePaceFloor))
@@ -1580,7 +1578,7 @@ theorem su3_constructive_millennium_solution.{u_H}
       (theory : YangMills.WightmanQuantumYangMills YangMills.SU3 ℋ Curv'),
       Curv'.casimir_adjoint = 3 ∧
       YangMills.HasMassGap YangMills.SU3 ℋ theory := by
-  rcases su3_constructive_pipeline_solution Curv ch h_lat_c2 h_c3 with
+  rcases su3_constructive_pipeline_solution Curv ch h_os h_lat_c2 h_c3 with
     ⟨ℋ, _, _, _, _, theory, h_gap, _, _⟩
   exact ⟨Curv, ℋ, inferInstance, inferInstance, inferInstance, inferInstance, theory, h_cas, h_gap⟩
 
@@ -1635,6 +1633,7 @@ theorem sun_constructive_pipeline_solution.{u_H} (N : ℕ) [Fact (2 ≤ N)]
     [YangMills.CompactSimpleLieGroup (YangMills.SUN N)]
     (Curv : YangMills.CurvaturePolynomialAlgebra (YangMills.SUN N))
     (ch : HaarWilsonLattice.NormalizedGaugeCharacter (YangMills.SUN N))
+    (h_os : ToposUnifiedYangMills.OSReconstructionTheoremHypothesis.{0, u_H} (YangMills.SUN N) Curv)
     (h_lat_c2 : ToposUnifiedYangMills.HypothesisC2_UniformLatticeGap (YangMills.SUN N)
       (sunConstructiveBundle N Curv ch).lattice
       (ToposUnifiedYangMills.single_pace_floor_val ToposUnifiedYangMills.standardSinglePaceFloor))
@@ -1648,7 +1647,7 @@ theorem sun_constructive_pipeline_solution.{u_H} (N : ℕ) [Fact (2 ≤ N)]
       (∀ ψ : theory.domain,
         inner ℂ theory.vacuum (ψ : ℋ) = (0 : ℂ) →
         ToposUnifiedYangMills.single_pace_floor_val ToposUnifiedYangMills.standardSinglePaceFloor * ‖(ψ : ℋ)‖ ≤ ‖theory.Hamiltonian ψ‖) :=
-  constructive_pipeline_mass_gap.{0, u_H} (sunConstructiveBundle N Curv ch) h_lat_c2 h_c3
+  constructive_pipeline_mass_gap.{0, u_H} (sunConstructiveBundle N Curv ch) h_os h_lat_c2 h_c3
 
 /-- Constructive Casimir Mass Gap Theorem for SU(N) matching `yang_mills_sun_mass_gap`. -/
 theorem sun_constructive_casimir_mass_gap.{u_H} (N : ℕ) [Fact (2 ≤ N)]
@@ -1739,6 +1738,7 @@ theorem sun_constructive_complete_solution.{u_H} (N : ℕ) [Fact (2 ≤ N)]
     [YangMills.CompactSimpleLieGroup (YangMills.SUN N)]
     (Curv : YangMills.CurvaturePolynomialAlgebra (YangMills.SUN N))
     (ch : HaarWilsonLattice.NormalizedGaugeCharacter (YangMills.SUN N))
+    (h_os : ToposUnifiedYangMills.OSReconstructionTheoremHypothesis.{0, u_H} (YangMills.SUN N) Curv)
     (h_lat_c2 : ToposUnifiedYangMills.HypothesisC2_UniformLatticeGap (YangMills.SUN N)
       (sunConstructiveBundle N Curv ch).lattice
       (ToposUnifiedYangMills.single_pace_floor_val ToposUnifiedYangMills.standardSinglePaceFloor))
@@ -1762,7 +1762,7 @@ theorem sun_constructive_complete_solution.{u_H} (N : ℕ) [Fact (2 ≤ N)]
         (∀ k < N_scale, (sunConstructiveBundle N Curv ch).P.beta_ir ≤ beta_seq k) →
         (∀ k < N_scale, r_seq (k + 1) ≤ (sunConstructiveBundle N Curv ch).P.theta * r_seq k + (sunConstructiveBundle N Curv ch).P.C_mayer * (r_seq k) ^ 2 + (sunConstructiveBundle N Curv ch).P.C_vert / beta_seq k) →
         ∀ k ≤ N_scale, r_seq k ≤ (sunConstructiveBundle N Curv ch).P.r_max) :=
-  constructive_pipeline_complete_solution.{0, u_H} (sunConstructiveBundle N Curv ch) h_lat_c2 h_c3
+  constructive_pipeline_complete_solution.{0, u_H} (sunConstructiveBundle N Curv ch) h_os h_lat_c2 h_c3
 
 /-- Constructive Millennium Solution Theorem for SU(N) Coupled to Upstream OS-II Reconstruction. -/
 theorem sun_constructive_millennium_solution.{u_H} (N : ℕ) [Fact (2 ≤ N)]
@@ -1770,6 +1770,7 @@ theorem sun_constructive_millennium_solution.{u_H} (N : ℕ) [Fact (2 ≤ N)]
     (Curv : YangMills.CurvaturePolynomialAlgebra (YangMills.SUN N))
     (ch : HaarWilsonLattice.NormalizedGaugeCharacter (YangMills.SUN N))
     (h_cas : Curv.casimir_adjoint = N)
+    (h_os : ToposUnifiedYangMills.OSReconstructionTheoremHypothesis.{0, u_H} (YangMills.SUN N) Curv)
     (h_lat_c2 : ToposUnifiedYangMills.HypothesisC2_UniformLatticeGap (YangMills.SUN N)
       (sunConstructiveBundle N Curv ch).lattice
       (ToposUnifiedYangMills.single_pace_floor_val ToposUnifiedYangMills.standardSinglePaceFloor))
@@ -1781,7 +1782,7 @@ theorem sun_constructive_millennium_solution.{u_H} (N : ℕ) [Fact (2 ≤ N)]
       (theory : YangMills.WightmanQuantumYangMills (YangMills.SUN N) ℋ Curv'),
       Curv'.casimir_adjoint = N ∧
       YangMills.HasMassGap (YangMills.SUN N) ℋ theory := by
-  rcases sun_constructive_pipeline_solution N Curv ch h_lat_c2 h_c3 with
+  rcases sun_constructive_pipeline_solution N Curv ch h_os h_lat_c2 h_c3 with
     ⟨ℋ, _, _, _, _, theory, h_gap, _, _⟩
   exact ⟨Curv, ℋ, inferInstance, inferInstance, inferInstance, inferInstance, theory, h_cas, h_gap⟩
 

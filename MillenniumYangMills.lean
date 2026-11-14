@@ -116,14 +116,43 @@ class CompactSimpleLieGroup (G : Type*) [TopologicalSpace G] [Group G] : Prop ex
     IsTopologicalGroup G where
   /-- Compactness of the underlying group space $G$ -/
   is_compact : IsCompact (Set.univ : Set G)
-  /-- Compatible algebraic Lie algebra condition: existence of an associated finite-dimensional real
-      Lie algebra $\mathfrak{g} = \mathrm{Lie}(G)$ with Lie bracket and adjoint representation. -/
+  /-- Connectedness of the underlying group space $G$ -/
+  is_connected : IsConnected (Set.univ : Set G)
+  /-- $G$ is non-abelian -/
+  non_abelian : ∃ g h : G, g * h ≠ h * g
+  /-- Simplicity up to the discrete center: every normal subgroup is either $\top$ or finite central -/
+  normal_subgroups_central :
+    ∀ (N : Subgroup G), N.Normal → N = ⊤ ∨ (N ≤ Subgroup.center G ∧ Finite N)
+  /-- The discrete center $Z(G)$ is finite -/
+  finite_center : Finite (Subgroup.center G)
+  /-- Existence of a non-trivial fundamental representation character $\chi_{\mathrm{fund}}$ of dimension $\ge 2$ -/
+  has_fundamental_character :
+    ∃ χ : ClassFunction G, 2 ≤ (χ.toFun 1).re ∧ ∃ g : G, χ.toFun g ≠ χ.toFun 1
+  /-- $G$ admits an actual compatible real-analytic Lie group structure modeled on a finite-dimensional Euclidean space -/
+  admits_lie_group : AdmitsLieGroupStructure G
+  /-- Compatible algebraic-topological Lie algebra condition: existence of an associated finite-dimensional real
+      Lie algebra $\mathfrak{g} = \mathrm{Lie}(G)$ endowed with its canonical real normed space topology,
+      an exponential map generating 1-parameter subgroups that is a genuine local homeomorphism at the origin with
+      continuous local inverse $\log$, and an adjoint representation whose infinitesimal generator recovers the Lie bracket. -/
   has_lie_algebra :
     ∃ (Lie : Type) (_ : LieRing Lie) (_ : LieAlgebra ℝ Lie) (_ : FiniteDimensional ℝ Lie)
-      (adjoint_action : G → Lie →ₗ[ℝ] Lie),
+      (_ : NormedAddCommGroup Lie) (_ : NormedSpace ℝ Lie) (_ : ContinuousSMul ℝ Lie)
+      (adjoint_action : G → Lie →ₗ[ℝ] Lie)
+      (exp : Lie → G) (log : G → Lie),
+      1 < Module.finrank ℝ Lie ∧
+      Continuous exp ∧ exp 0 = 1 ∧
+      (∀ (x : Lie) (s t : ℝ), exp ((s + t) • x) = exp (s • x) * exp (t • x)) ∧
       adjoint_action 1 = LinearMap.id ∧
-        (∀ (g h : G) (X : Lie), adjoint_action (g * h) X = adjoint_action g (adjoint_action h X)) ∧
-        (∀ (g : G) (X Y : Lie), adjoint_action g ⁅X, Y⁆ = ⁅adjoint_action g X, adjoint_action g Y⁆)
+      (∀ (g h : G) (X : Lie), adjoint_action (g * h) X = adjoint_action g (adjoint_action h X)) ∧
+      (∀ (g : G) (X Y : Lie), adjoint_action g ⁅X, Y⁆ = ⁅adjoint_action g X, adjoint_action g Y⁆) ∧
+      (∀ (g : G) (X : Lie), exp (adjoint_action g X) = g * exp X * g⁻¹) ∧
+      (∀ X Y : Lie, HasDerivAt (fun t : ℝ => adjoint_action (exp (t • X)) Y) ⁅X, Y⁆ 0) ∧
+      ∃ (U : Set Lie) (V : Set G),
+        IsOpen U ∧ (0 : Lie) ∈ U ∧ IsOpen V ∧ (1 : G) ∈ V ∧
+        Set.BijOn exp U V ∧ ContinuousOn log V ∧
+        (∀ x ∈ U, log (exp x) = x) ∧ (∀ g ∈ V, exp (log g) = g) ∧
+        ∀ ⦃x⦄, x ∈ U → ∀ ⦃O : Set Lie⦄, IsOpen O → x ∈ O →
+          exp '' (U ∩ O) ∈ nhds (exp x)
 
 /-- The Special Unitary Group $\mathrm{SU}(N)$ for $N \ge 2$, defined via Mathlib's
 `Matrix.specialUnitaryGroup (Fin N) ℂ` (unitary $N \times N$ complex matrices of determinant $1$). -/
@@ -186,6 +215,9 @@ theorem sun_is_compact (N : ℕ) : IsCompact (Set.univ : Set (SUN N)) := by
     rw [← hS_eq] at hS_compact
     exact isCompact_iff_compactSpace.mp hS_compact
   exact isCompact_univ
+
+/-- Every `SUN N` is a `CompactSpace` unconditionally. -/
+instance sun_compactSpace (N : ℕ) : CompactSpace (SUN N) := ⟨sun_is_compact N⟩
 
 /-- Canonical topological group instance on $\mathrm{SU}(N)$ induced from matrix multiplication and adjoint involution. -/
 instance (priority := high) sun_isTopologicalGroup (N : ℕ) :
@@ -320,14 +352,10 @@ theorem suLie_has_lie_algebra (N : ℕ) :
 
 end LieGroups
 
-/-- Standard Lie-theoretic theorem: For every $N \ge 2$, the special unitary group $\mathrm{SU}(N)$
-is a compact simple Lie group. -/
-theorem sun_compactSimpleLieGroup (N : ℕ) [Fact (2 ≤ N)] :
-    CompactSimpleLieGroup (SUN N) where
-  is_compact := sun_is_compact N
-  has_lie_algebra := LieGroups.suLie_has_lie_algebra N
-
-attribute [instance] sun_compactSimpleLieGroup
+/-- Open Lie-theoretic statement (PR 7636): For every $N \ge 2$, the special unitary group $\mathrm{SU}(N)$
+is a compact, connected, non-abelian simple Lie group satisfying all 8 conditions of `CompactSimpleLieGroup`. -/
+def SunCompactSimpleLieGroupStatement (N : ℕ) [Fact (2 ≤ N)] : Prop :=
+  CompactSimpleLieGroup (SUN N)
 
 /- ### 2. Spacetime Geometry, WithLp Coercions, and the Poincaré Group -/
 
@@ -566,79 +594,409 @@ theorem adjoint_casimir_derived_from_killing (N : ℕ) [Fact (2 ≤ N)] :
     ∃ C2 : ℕ, C2 = N ∧ 2 ≤ C2 :=
   ⟨N, rfl, Fact.out⟩
 
+/-- Specification of the graded commutative algebra of classical gauge-invariant local differential polynomials
+in the Lie-algebra-valued Yang–Mills curvature two-form $F_{\mu\nu} = \partial_\mu A_\nu - \partial_\nu A_\mu + [A_\mu, A_\nu]$
+and its covariant derivatives $D_{\alpha_1} \cdots D_{\alpha_k} F_{\mu\nu}$ (Jaffe–Witten §4, p. 6). -/
 structure CurvaturePolynomialAlgebra (G : Type*) [TopologicalSpace G] [Group G]
     [CompactSimpleLieGroup G] where
-  Poly : Type := StandardPoly
+  /-- Type of classical gauge-invariant local differential polynomials in $(F, D F, D^2 F, \dots)$ -/
+  Poly : Type
   [commRing : CommRing Poly]
   [algebra : Algebra ℂ Poly]
   [nontrivial : Nontrivial Poly]
+
+  /-- Star involution / Hermitian conjugation on classical curvature polynomials -/
+  conj : Poly → Poly
+  conj_involutive : ∀ P : Poly, conj (conj P) = P
+  conj_one : conj 1 = 1
+  conj_add : ∀ P Q : Poly, conj (P + Q) = conj P + conj Q
+  conj_mul : ∀ P Q : Poly, conj (P * Q) = conj P * conj Q
+  conj_smul : ∀ (c : ℂ) (P : Poly), conj (c • P) = starRingEnd ℂ c • conj P
+
+  /-- Ascending $\mathbb{N}$-filtration $\mathcal{F}_d \mathcal{P}$ on gauge-invariant curvature polynomials -/
+  polyFiltration : ℕ → Submodule ℂ Poly
+  polyFiltration_mono : Monotone polyFiltration
+
+  /-- Classical mass/scaling dimension $\dim(P) \in \mathbb{N}$ ($\dim(F_{\mu\nu}) = 2$, $\dim(D_\mu) = 1$) -/
+  classicalDim : Poly → ℕ
+  dim_zero : classicalDim 0 = 0
+  dim_one : classicalDim 1 = 0
+  dim_conj : ∀ P : Poly, classicalDim (conj P) = classicalDim P
+  dim_smul : ∀ (c : ℂ) (P : Poly), c ≠ 0 → classicalDim (c • P) = classicalDim P
+
+  /-- Exact bidirectional bridge linking filtration and scaling dimension:
+      $P \in \mathcal{F}_d \mathcal{P} \iff \dim(P) \le d$, sealing disconnection exploits -/
+  mem_polyFiltration_iff_dim_le : ∀ (d : ℕ) (P : Poly), P ∈ polyFiltration d ↔ classicalDim P ≤ d
+
+  /-- Ultrametric subadditivity under addition -/
+  dim_add_le : ∀ P Q : Poly, classicalDim (P + Q) ≤ max (classicalDim P) (classicalDim Q)
+  /-- Multiplicative subadditivity holding unconditionally (including at zero) -/
+  dim_mul_le : ∀ P Q : Poly, classicalDim (P * Q) ≤ classicalDim P + classicalDim Q
+  /-- Exact logarithmic additivity on non-zero polynomials (consistent at zero) -/
+  dim_mul : ∀ P Q : Poly, P ≠ 0 → Q ≠ 0 → P * Q ≠ 0 →
+    classicalDim (P * Q) = classicalDim P + classicalDim Q
+
+  /-- Finite-dimensional real Lie algebra $\mathfrak{g} = \mathrm{Lie}(G)$ of the gauge group $G$ -/
   Lie : Type
   [lieRingLie : LieRing Lie]
   [lieAlgebraLie : LieAlgebra ℝ Lie]
+  [finDimLie : FiniteDimensional ℝ Lie]
+  /-- Canonical vector-space topology on `Lie` -/
+  [topologicalSpaceLie : TopologicalSpace Lie]
+  [t2SpaceLie : T2Space Lie]
+  [topologicalAddGroupLie : IsTopologicalAddGroup Lie]
+  [continuousSMulLie : ContinuousSMul ℝ Lie]
+
+  /-- Adjoint action of $G$ on $\mathfrak{g}$ as Lie algebra automorphisms -/
+  adjoint_action : G → Lie →ₗ[ℝ] Lie
+  adjoint_action_one : adjoint_action 1 = LinearMap.id
+  adjoint_action_mul : ∀ (g h : G) (X : Lie),
+    adjoint_action (g * h) X = adjoint_action g (adjoint_action h X)
+  adjoint_action_bracket : ∀ (g : G) (X Y : Lie),
+    adjoint_action g ⁅X, Y⁆ = ⁅adjoint_action g X, adjoint_action g Y⁆
+
+  /-- Normalized invariant positive-definite inner product $\langle X, Y \rangle_{\mathfrak{g}}$ -/
+  lie_inner : Lie →ₗ[ℝ] Lie →ₗ[ℝ] ℝ
+  lie_inner_symm : ∀ X Y : Lie, lie_inner X Y = lie_inner Y X
+  lie_inner_pos : ∀ X : Lie, X ≠ 0 → 0 < lie_inner X X
+  lie_inner_ad_inv : ∀ (g : G) (X Y : Lie),
+    lie_inner (adjoint_action g X) (adjoint_action g Y) = lie_inner X Y
+
+  /-- Canonical scale lock via a minimal $\mathfrak{su}(2)$ generator triple $(X, Y, Z)$ -/
+  su2_triple : ∃ (X Y Z : Lie),
+    ⁅X, Y⁆ = Z ∧ ⁅Y, Z⁆ = X ∧ ⁅Z, X⁆ = Y ∧ lie_inner X X = 1 ∧
+    ∀ X' Y' Z' : Lie, X' ≠ 0 → ⁅X', Y'⁆ = Z' → ⁅Y', Z'⁆ = X' → ⁅Z', X'⁆ = Y' →
+      1 ≤ lie_inner X' X'
+
+  /-- Adjoint quadratic Casimir invariant $C_2(G) \in \mathbb{N}$ of $G$ ($C_2(\mathrm{SU}(N)) = N$) -/
   casimir_adjoint : ℕ
   casimir_adjoint_pos : 2 ≤ casimir_adjoint
+
+  /-- Intrinsic Killing trace identity: $\mathrm{Tr}(\mathrm{ad}_X \circ \mathrm{ad}_Y) = - C_2(G) \langle X, Y \rangle_{\mathfrak{g}}$. -/
+  killing_casimir_identity : ∀ X Y : Lie,
+    let adX := LieAlgebra.ad ℝ Lie X
+    let adY := LieAlgebra.ad ℝ Lie Y
+    LinearMap.trace ℝ Lie (adX.comp adY) = - (casimir_adjoint : ℝ) * lie_inner X Y
+
+  /-- Exponential map $\exp : \mathfrak{g} \to G$ -/
+  exp : Lie → G
+  exp_zero : exp 0 = 1
+  exp_add_of_commute : ∀ X Y : Lie, ⁅X, Y⁆ = 0 → exp (X + Y) = exp X * exp Y
+  exp_continuous : Continuous exp
+
+  /-- Local homeomorphism at the origin -/
+  exp_local_homeomorph :
+    ∃ (U : Set Lie) (V : Set G),
+      IsOpen U ∧ (0 : Lie) ∈ U ∧ IsOpen V ∧ (1 : G) ∈ V ∧
+      Set.BijOn exp U V ∧ ContinuousOn exp U ∧
+      ∀ ⦃x⦄, x ∈ U → ∀ ⦃O : Set Lie⦄, IsOpen O → x ∈ O →
+        exp '' (U ∩ O) ∈ nhds (exp x)
+
+  /-- Universal property of $\mathfrak{g} = \mathrm{Lie}(G)$: every continuous 1-parameter
+      subgroup $\gamma : \mathbb{R} \to G$ is uniquely generated by a vector $X \in \mathrm{Lie}$. -/
+  exp_one_param_bijection :
+    ∀ γ : Multiplicative ℝ →* G, Continuous γ →
+      ∃! X : Lie, ∀ t : ℝ, γ (Multiplicative.ofAdd t) = exp (t • X)
+
+  /-- Adjoint conjugation identity: $g \exp(X) g^{-1} = \exp(\mathrm{Ad}_g(X))$ -/
+  exp_adjoint_conj : ∀ (g : G) (X : Lie),
+    exp (adjoint_action g X) = g * exp X * g⁻¹
+
+  /-- Infinitesimal generator of `adjoint_action` -/
+  hasDerivAt_adjoint_exp : ∀ X Y : Lie,
+    HasDerivAt (fun t : ℝ => adjoint_action (exp (t • X)) Y) ⁅X, Y⁆ 0
+
+  /-- One-loop asymptotic freedom coefficient $b_0 = \frac{11 C_2(G)}{48\pi^2} > 0$ strictly determined by $G$ -/
   beta_b0 : ℝ
+  beta_b0_eq : beta_b0 = (11 * (casimir_adjoint : ℝ)) / (48 * Real.pi ^ 2)
   beta_b0_pos : 0 < beta_b0
-  conj : Poly → Poly
-  conj_involutive : ∀ P : Poly, conj (conj P) = P
-  classicalDim : Poly → ℕ
+
+  /-- Universal commutative differential polynomial algebra $\mathcal{P}_{\mathrm{coord}} = \mathbb{C}[\partial^\alpha A_\mu^a]$ -/
+  CoordPoly : Type
+  [commRingCoord : CommRing CoordPoly]
+  [algebraCoord : Algebra ℂ CoordPoly]
+
+  /-- Formal spacetime partial derivatives $\partial_\mu$ on coordinate differential polynomials -/
+  coordDeriv : Fin 4 → CoordPoly →ₗ[ℂ] CoordPoly
+  coordDeriv_comm : ∀ (μ ν : Fin 4) (f : CoordPoly),
+    coordDeriv μ (coordDeriv ν f) = coordDeriv ν (coordDeriv μ f)
+  coordDeriv_leibniz : ∀ (μ : Fin 4) (f g : CoordPoly),
+    coordDeriv μ (f * g) = coordDeriv μ f * g + f * coordDeriv μ g
+
+  /-- Classical gauge potential coordinate generators $A_\mu(X) = \langle X, A_\mu \rangle_{\mathfrak{g}} \in \mathcal{P}_{\mathrm{coord}}$ -/
+  A_coord : Fin 4 → Lie →ₗ[ℝ] CoordPoly
+
+  /-- Universal free differential-polynomial property of `CoordPoly` -/
+  coord_jet_universal : ∀ (jet : List (Fin 4) → Fin 4 → (Lie →ₗ[ℝ] ℂ)),
+    (∀ (α β : List (Fin 4)), α.Perm β → jet α = jet β) →
+    ∃ (ev : CoordPoly →+* ℂ),
+      (∀ c : ℂ, ev (algebraMap ℂ CoordPoly c) = c) ∧
+      (∀ (α : List (Fin 4)) (ν : Fin 4) (X : Lie),
+        ev (α.foldr (fun μ P => coordDeriv μ P) (A_coord ν X)) = jet α ν X)
+
+  /-- `CoordPoly` is generated as a differential $\mathbb{C}$-algebra by `A_coord` and `coordDeriv` -/
+  CoordPoly_generated : ∀ (S : Subalgebra ℂ CoordPoly),
+    (∀ (μ : Fin 4) (X : Lie), A_coord μ X ∈ S) →
+    (∀ (μ : Fin 4) (f : CoordPoly), f ∈ S → coordDeriv μ f ∈ S) →
+    S = ⊤
+
+  /-- Faithful $\mathbb{C}$-algebra embedding of `Poly` into `CoordPoly` -/
+  poly_to_coord : Poly →+* CoordPoly
+  poly_to_coord_injective : Function.Injective poly_to_coord
+  poly_to_coord_algebraMap : ∀ c : ℂ,
+    poly_to_coord (algebraMap ℂ Poly c) = algebraMap ℂ CoordPoly c
+
+  /-- Space of $\mathfrak{g}$-valued classical covariant curvature differential polynomials -/
+  LiePoly : Type
+  [addCommGroupLie : AddCommGroup LiePoly]
+  [moduleLie : Module ℂ LiePoly]
+  [bracketLiePoly : Bracket LiePoly LiePoly]
+
+  /-- Faithful coordinate component evaluation identifying `LiePoly` with a differential Lie subalgebra -/
+  lie_comp : LiePoly →ₗ[ℂ] (Lie →ₗ[ℝ] CoordPoly)
+  lie_comp_injective : Function.Injective lie_comp
+
+  /-- Classical adjoint gauge action of $G$ on Lie-algebra-valued polynomials -/
+  gauge_action : G → LiePoly →ₗ[ℂ] LiePoly
+  gauge_action_one : ∀ X : LiePoly, gauge_action 1 X = X
+  gauge_action_mul : ∀ (g h : G) (X : LiePoly),
+    gauge_action (g * h) X = gauge_action g (gauge_action h X)
+
+  /-- Ascending $\mathbb{N}$-filtration $\mathcal{F}_d \mathcal{L}$ on `LiePoly` -/
+  lieFiltration : ℕ → Submodule ℂ LiePoly
+  lieFiltration_mono : Monotone lieFiltration
+
+  /-- Scaling dimension grading on Lie-algebra-valued differential polynomials -/
+  classicalDimLie : LiePoly → ℕ
+  dimLie_zero : classicalDimLie 0 = 0
+  classicalDimLie_smul : ∀ (c : ℂ) (A : LiePoly), c ≠ 0 → classicalDimLie (c • A) = classicalDimLie A
+  classicalDimLie_add_le : ∀ A B : LiePoly,
+    classicalDimLie (A + B) ≤ max (classicalDimLie A) (classicalDimLie B)
+
+  /-- Exact bidirectional bridge linking `lieFiltration` and `classicalDimLie` -/
+  mem_lieFiltration_iff_dim_le : ∀ (d : ℕ) (A : LiePoly), A ∈ lieFiltration d ↔ classicalDimLie A ≤ d
+  /-- Sub-additivity of classical scaling dimension under the Lie bracket on `LiePoly` -/
+  classicalDimLie_bracket_le : ∀ A B : LiePoly,
+    classicalDimLie ⁅A, B⁆ ≤ classicalDimLie A + classicalDimLie B
+
+  /-- Classical Yang–Mills curvature two-form generators $F_{\mu\nu} \in \mathrm{LiePoly}$ of dimension $2$ -/
+  F : Fin 4 → Fin 4 → LiePoly
+  F_antisymm : ∀ μ ν : Fin 4, F μ ν = - F ν μ
+  F_dim : ∀ μ ν : Fin 4, μ ≠ ν → classicalDimLie (F μ ν) = 2
+
+  /-- Non-degeneracy: non-zero curvature for distinct spacetime indices -/
+  F_nonzero : ∀ μ ν : Fin 4, μ ≠ ν → F μ ν ≠ 0
+
+  /-- Canonical scalar curvature component $F_{\mu\nu}(X) = \langle X, F_{\mu\nu} \rangle_{\mathfrak{g}} \in \mathcal{P}_{\mathrm{coord}}$ -/
+  F_comp : Fin 4 → Fin 4 → Lie →ₗ[ℝ] CoordPoly
+  F_comp_def : ∀ (μ ν : Fin 4) (X : Lie), F_comp μ ν X = lie_comp (F μ ν) X
+  F_comp_antisymm : ∀ (μ ν : Fin 4) (X : Lie), F_comp μ ν X = - F_comp ν μ X
+  F_comp_injective : ∀ (μ ν : Fin 4), μ ≠ ν → Function.Injective (F_comp μ ν)
+
+  /-- Classical spacetime covariant derivative generators $D_\alpha$ of dimension $1$ -/
+  covDeriv : Fin 4 → LiePoly →ₗ[ℂ] LiePoly
+  covDeriv_dim_le : ∀ (μ : Fin 4) (X : LiePoly), classicalDimLie (covDeriv μ X) ≤ classicalDimLie X + 1
+  covDeriv_dim : ∀ (μ : Fin 4) (X : LiePoly), X ≠ 0 → covDeriv μ X ≠ 0 →
+    classicalDimLie (covDeriv μ X) = classicalDimLie X + 1
+  covDeriv_gauge_equivariant : ∀ (g : G) (μ : Fin 4) (X : LiePoly),
+    gauge_action g (covDeriv μ X) = covDeriv μ (gauge_action g X)
+  covDeriv_lie_leibniz : ∀ (μ : Fin 4) (A B : LiePoly),
+    covDeriv μ ⁅A, B⁆ = ⁅covDeriv μ A, B⁆ + ⁅A, covDeriv μ B⁆
+  bianchi_identity_comp : ∀ (l μ ν : Fin 4) (X : Lie),
+    lie_comp (covDeriv l (F μ ν) + covDeriv μ (F ν l) + covDeriv ν (F l μ)) X = 0
+  bianchi_identity : ∀ (l μ ν : Fin 4),
+    covDeriv l (F μ ν) + covDeriv μ (F ν l) + covDeriv ν (F l μ) = 0
+  ricci_commutator : ∀ (μ ν : Fin 4) (A : LiePoly),
+    covDeriv μ (covDeriv ν A) - covDeriv ν (covDeriv μ A) = ⁅F μ ν, A⁆
+
+  /-- `LiePoly` is generated as a differential Lie algebra over `ℂ` by `F` and `covDeriv` -/
+  LiePoly_generated : ∀ (S : Submodule ℂ LiePoly),
+    (∀ (μ ν : Fin 4), F μ ν ∈ S) →
+    (∀ (μ : Fin 4) (A : LiePoly), A ∈ S → covDeriv μ A ∈ S) →
+    (∀ A B : LiePoly, A ∈ S → B ∈ S → ⁅A, B⁆ ∈ S) →
+    S = ⊤
+
+  /-- Gauge-invariant trace pairing contracting two Lie-algebra-valued polynomials into `Poly` -/
+  trace_pair : LiePoly → LiePoly → Poly
+  trace_pair_add_left : ∀ X1 X2 Y : LiePoly, trace_pair (X1 + X2) Y = trace_pair X1 Y + trace_pair X2 Y
+  trace_pair_smul_left : ∀ (c : ℂ) (X Y : LiePoly), trace_pair (c • X) Y = c • trace_pair X Y
+  trace_pair_symm : ∀ X Y : LiePoly, trace_pair X Y = trace_pair Y X
+  trace_pair_gauge_invariant : ∀ (g : G) (X Y : LiePoly),
+    trace_pair (gauge_action g X) (gauge_action g Y) = trace_pair X Y
+  trace_pair_ad_invariant : ∀ A X Y : LiePoly,
+    trace_pair ⁅A, X⁆ Y + trace_pair X ⁅A, Y⁆ = 0
+
+  /-- Higher-degree gauge-invariant multilinear contraction -/
+  inv_contract :
+    ∀ (m : ℕ) (T : MultilinearMap ℝ (fun _ : Fin m => Lie) ℝ),
+      (∀ (g : G) (v : Fin m → Lie), T (fun k => adjoint_action g (v k)) = T v) →
+      MultilinearMap ℂ (fun _ : Fin m => LiePoly) Poly
+  inv_contract_gauge_invariant :
+    ∀ (m : ℕ) (T : MultilinearMap ℝ (fun _ : Fin m => Lie) ℝ)
+      (hT : ∀ (g : G) (v : Fin m → Lie), T (fun k => adjoint_action g (v k)) = T v)
+      (g : G) (Φ : Fin m → LiePoly),
+      inv_contract m T hT (fun k => gauge_action g (Φ k)) = inv_contract m T hT Φ
+  inv_contract_ad_invariant :
+    ∀ (m : ℕ) (T : MultilinearMap ℝ (fun _ : Fin m => Lie) ℝ)
+      (hT : ∀ (g : G) (v : Fin m → Lie), T (fun k => adjoint_action g (v k)) = T v)
+      (A : LiePoly) (Φ : Fin m → LiePoly),
+      ∑ k : Fin m, inv_contract m T hT (Function.update Φ k ⁅A, Φ k⁆) = 0
+
+  /-- Exact classical identification of `F`, `covDeriv`, `⁅·, ·⁆`, `trace_pair`, and `inv_contract` -/
+  F_and_trace_from_Lie : ∃ (d : ℕ) (B : Fin d → Lie),
+    0 < d ∧
+    (∀ i j : Fin d, lie_inner (B i) (B j) = if i = j then 1 else 0) ∧
+    (∀ X : Lie, X = ∑ i : Fin d, lie_inner X (B i) • B i) ∧
+    (∀ (μ ν : Fin 4) (X : Lie),
+      F_comp μ ν X =
+        coordDeriv μ (A_coord ν X) - coordDeriv ν (A_coord μ X) +
+        ∑ i : Fin d, ∑ j : Fin d,
+          ((lie_inner X ⁅B i, B j⁆ : ℝ) : ℂ) • (A_coord μ (B i) * A_coord ν (B j))) ∧
+    (∀ (μ : Fin 4) (Φ : LiePoly) (X : Lie),
+      lie_comp (covDeriv μ Φ) X =
+        coordDeriv μ (lie_comp Φ X) +
+        ∑ i : Fin d, ∑ j : Fin d,
+          ((lie_inner X ⁅B i, B j⁆ : ℝ) : ℂ) • (A_coord μ (B i) * lie_comp Φ (B j))) ∧
+    (∀ (Φ Ψ : LiePoly) (X : Lie),
+      lie_comp ⁅Φ, Ψ⁆ X =
+        ∑ i : Fin d, ∑ j : Fin d,
+          ((lie_inner X ⁅B i, B j⁆ : ℝ) : ℂ) • (lie_comp Φ (B i) * lie_comp Ψ (B j))) ∧
+    (∀ (Φ Ψ : LiePoly),
+      poly_to_coord (trace_pair Φ Ψ) =
+        ∑ i : Fin d, ∑ j : Fin d,
+          ((lie_inner (B i) (B j) : ℝ) : ℂ) • (lie_comp Φ (B i) * lie_comp Ψ (B j))) ∧
+    (∀ (m : ℕ) (T : MultilinearMap ℝ (fun _ : Fin m => Lie) ℝ)
+       (hT : ∀ (g : G) (v : Fin m → Lie), T (fun k => adjoint_action g (v k)) = T v)
+       (Φ : Fin m → LiePoly),
+      poly_to_coord (inv_contract m T hT Φ) =
+        ∑ idx : Fin m → Fin d,
+          ((T (fun k => B (idx k)) : ℝ) : ℂ) • ∏ k : Fin m, lie_comp (Φ k) (B (idx k)))
+  trace_pair_dim_le : ∀ X Y : LiePoly,
+    classicalDim (trace_pair X Y) ≤ classicalDimLie X + classicalDimLie Y
+  trace_pair_F_dim : ∀ μ ν : Fin 4, μ ≠ ν →
+    classicalDim (trace_pair (F μ ν) (F μ ν)) = 4
+  inv_contract_dim_le :
+    ∀ (m : ℕ) (T : MultilinearMap ℝ (fun _ : Fin m => Lie) ℝ)
+      (hT : ∀ (g : G) (v : Fin m → Lie), T (fun k => adjoint_action g (v k)) = T v)
+      (Φ : Fin m → LiePoly),
+      classicalDim (inv_contract m T hT Φ) ≤ ∑ k : Fin m, classicalDimLie (Φ k)
+  inv_contract_F_dim :
+    ∀ (m : ℕ) (T : MultilinearMap ℝ (fun _ : Fin m => Lie) ℝ)
+      (hT : ∀ (g : G) (v : Fin m → Lie), T (fun k => adjoint_action g (v k)) = T v)
+      (μ ν : Fin m → Fin 4),
+      (∀ k : Fin m, μ k ≠ ν k) →
+      inv_contract m T hT (fun k => F (μ k) (ν k)) ≠ 0 →
+      classicalDim (inv_contract m T hT (fun k => F (μ k) (ν k))) = 2 * m
+  /-- Generation of `Poly` by `trace_pair` and `inv_contract` -/
+  Poly_generated_by_inv_contract : ∀ (S : Submodule ℂ Poly),
+    (1 ∈ S) →
+    (∀ X Y : LiePoly, trace_pair X Y ∈ S) →
+    (∀ (m : ℕ) (T : MultilinearMap ℝ (fun _ : Fin m => Lie) ℝ)
+       (hT : ∀ (g : G) (v : Fin m → Lie), T (fun k => adjoint_action g (v k)) = T v)
+       (Φ : Fin m → LiePoly),
+       inv_contract m T hT Φ ∈ S) →
+    (∀ P Q : Poly, P ∈ S → Q ∈ S → P * Q ∈ S) →
+    S = ⊤
+
+  /-- Tensorial representation action of spacetime transformations on `LiePoly` -/
+  transformLie : Matrix (Fin 4) (Fin 4) ℝ → LiePoly →ₗ[ℂ] LiePoly
+  transformLie_id : transformLie 1 = LinearMap.id
+  transformLie_mul : ∀ (R1 R2 : Matrix (Fin 4) (Fin 4) ℝ),
+    R1.transpose * minkowskiMetric * R1 = minkowskiMetric →
+    R2.transpose * minkowskiMetric * R2 = minkowskiMetric →
+    transformLie (R1 * R2) = (transformLie R1).comp (transformLie R2)
+  transformLie_F : ∀ (R : Matrix (Fin 4) (Fin 4) ℝ) (μ ν : Fin 4),
+    R.transpose * minkowskiMetric * R = minkowskiMetric →
+    transformLie R (F μ ν) =
+      ∑ μ' : Fin 4, ∑ ν' : Fin 4, ((R μ' μ * R ν' ν : ℝ) : ℂ) • F μ' ν'
+  transformLie_covDeriv : ∀ (R : Matrix (Fin 4) (Fin 4) ℝ) (μ : Fin 4) (Φ : LiePoly),
+    R.transpose * minkowskiMetric * R = minkowskiMetric →
+    transformLie R (covDeriv μ Φ) =
+      ∑ μ' : Fin 4, ((R μ' μ : ℝ) : ℂ) • covDeriv μ' (transformLie R Φ)
+  transformLie_bracket : ∀ (R : Matrix (Fin 4) (Fin 4) ℝ) (Φ Ψ : LiePoly),
+    transformLie R ⁅Φ, Ψ⁆ = ⁅transformLie R Φ, transformLie R Ψ⁆
+
+  /-- Lorentz representation action of $\mathrm{SO}^+(1,3)$ (and Euclidean $\mathrm{SO}(4)$) on local polynomials -/
   transform : Matrix (Fin 4) (Fin 4) ℝ → Poly →ₗ[ℂ] Poly
+  transform_id : transform 1 = LinearMap.id
+  transform_mul : ∀ (R1 R2 : Matrix (Fin 4) (Fin 4) ℝ),
+    R1.transpose * minkowskiMetric * R1 = minkowskiMetric →
+    R2.transpose * minkowskiMetric * R2 = minkowskiMetric →
+    transform (R1 * R2) = (transform R1).comp (transform R2)
+  transform_one : ∀ (R : Matrix (Fin 4) (Fin 4) ℝ), transform R 1 = 1
+  transform_prod : ∀ (R : Matrix (Fin 4) (Fin 4) ℝ) (P Q : Poly),
+    transform R (P * Q) = transform R P * transform R Q
+  transform_trace_pair : ∀ (R : Matrix (Fin 4) (Fin 4) ℝ) (Φ Ψ : LiePoly),
+    transform R (trace_pair Φ Ψ) = trace_pair (transformLie R Φ) (transformLie R Ψ)
+  transform_inv_contract :
+    ∀ (R : Matrix (Fin 4) (Fin 4) ℝ) (m : ℕ) (T : MultilinearMap ℝ (fun _ : Fin m => Lie) ℝ)
+      (hT : ∀ (g : G) (v : Fin m → Lie), T (fun k => adjoint_action g (v k)) = T v)
+      (Φ : Fin m → LiePoly),
+      transform R (inv_contract m T hT Φ) = inv_contract m T hT (fun k => transformLie R (Φ k))
+  transform_dim : ∀ (R : Matrix (Fin 4) (Fin 4) ℝ) (P : Poly),
+    classicalDim (transform R P) ≤ classicalDim P
+  conj_inv_contract_F :
+    ∀ (m : ℕ) (T : MultilinearMap ℝ (fun _ : Fin m => Lie) ℝ)
+      (hT : ∀ (g : G) (v : Fin m → Lie), T (fun k => adjoint_action g (v k)) = T v)
+      (μ ν : Fin m → Fin 4),
+      conj (inv_contract m T hT (fun k => F (μ k) (ν k))) =
+        inv_contract m T hT (fun k => F (μ k) (ν k))
+
+  /-- Distinguished scalar Lagrangian density $\mathrm{Tr}(F_{\mu\nu} F^{\mu\nu})$ of scaling dimension $4$ -/
+  tr_F_sq : Poly
+  tr_F_sq_nonzero : tr_F_sq ≠ 0
+  tr_F_sq_dim : classicalDim tr_F_sq = 4
+  tr_F_sq_self_conj : conj tr_F_sq = tr_F_sq
+  tr_F_sq_def : tr_F_sq =
+    ∑ μ : Fin 4, ∑ ν : Fin 4,
+      ((minkowskiMetric μ μ * minkowskiMetric ν ν : ℝ) : ℂ) • trace_pair (F μ ν) (F μ ν)
+
+  /-- Distinguished symmetric classical stress-energy tensor $T_{\mu\nu}$ of scaling dimension $4$ -/
   stress_energy : Fin 4 → Fin 4 → Poly
-  uv_two_point_coeff : Poly → ℝ := fun _ => 0
-  uv_two_point_coeff_zero : ∀ P, uv_two_point_coeff P = 0 := by intro _; rfl
-  anomalous_exponent : Poly → ℝ := fun _ => 0
-  ope_coeff : Poly → Poly → Poly → EuclideanSpace4 → ℂ := fun _ _ _ _ => 1
+  stress_energy_symm : ∀ μ ν : Fin 4, stress_energy μ ν = stress_energy ν μ
+  stress_energy_dim : ∀ μ ν : Fin 4, classicalDim (stress_energy μ ν) = 4
+  stress_energy_00_nonzero : stress_energy 0 0 ≠ 0
+  stress_energy_self_conj : ∀ μ ν : Fin 4, conj (stress_energy μ ν) = stress_energy μ ν
+  stress_energy_def : ∀ μ ν : Fin 4,
+    stress_energy μ ν =
+      ∑ α : Fin 4, ((-minkowskiMetric α α : ℝ) : ℂ) • trace_pair (F μ α) (F ν α) +
+        ((minkowskiMetric μ ν / 4 : ℝ) : ℂ) • tr_F_sq
+
+  /-- Number of gluon degrees of freedom $\dim_{\mathbb{R}}(\mathfrak{g})$ -/
+  dim_gauge : ℕ := Module.finrank ℝ Lie
+
+  /-- Leading perturbative UV normalization constant $c_P > 0$ -/
+  uv_two_point_coeff : Poly → ℝ
+  uv_two_point_coeff_pos : ∀ P : Poly, P ≠ 0 → 0 < uv_two_point_coeff P
+  /-- Perturbative identification for $\mathrm{Tr}(F^2)$ -/
+  uv_two_point_tr_F_sq_eq : uv_two_point_coeff tr_F_sq = 48 * (dim_gauge : ℝ) / (Real.pi ^ 4)
+
+  /-- One-loop anomalous dimension exponent $\gamma_P = \gamma_P^{(0)} / (2 b_0)$ -/
+  anomalous_exponent : Poly → ℝ
+  anomalous_tr_F_sq : anomalous_exponent tr_F_sq = 0
+  anomalous_stress_energy : ∀ μ ν : Fin 4, anomalous_exponent (stress_energy μ ν) = 0
+
+  /-- Perturbative Operator Product Expansion (OPE) short-distance Wilson coefficient -/
+  ope_coeff : Poly → Poly → Poly → EuclideanSpace4 → ℂ
+  ope_coeff_scaling : ∀ (P Q R : Poly) (scale : ℝ) (z : EuclideanSpace4),
+    0 < scale →
+    ope_coeff P Q R (scale • z) =
+      (scale : ℂ) ^ ((classicalDim R : ℤ) - (classicalDim P : ℤ) - (classicalDim Q : ℤ)) *
+        ope_coeff P Q R z
 
 attribute [instance] CurvaturePolynomialAlgebra.commRing
 attribute [instance] CurvaturePolynomialAlgebra.algebra
 attribute [instance] CurvaturePolynomialAlgebra.nontrivial
+attribute [instance] CurvaturePolynomialAlgebra.addCommGroupLie
+attribute [instance] CurvaturePolynomialAlgebra.moduleLie
+attribute [instance] CurvaturePolynomialAlgebra.bracketLiePoly
 attribute [instance] CurvaturePolynomialAlgebra.lieRingLie
 attribute [instance] CurvaturePolynomialAlgebra.lieAlgebraLie
-
-noncomputable def sunCurvatureAlgebra (N : ℕ) [Fact (2 ≤ N)] : CurvaturePolynomialAlgebra (SUN N) where
-  Poly := StandardPoly
-  commRing := inferInstance
-  algebra := inferInstance
-  nontrivial := inferInstance
-  Lie := LieGroups.suLie N
-  lieRingLie := inferInstance
-  lieAlgebraLie := inferInstance
-  casimir_adjoint := (adjoint_casimir_derived_from_killing N).choose
-  casimir_adjoint_pos := (adjoint_casimir_derived_from_killing N).choose_spec.2
-  beta_b0 := (11 * (N : ℝ)) / (48 * Real.pi ^ 2)
-  beta_b0_pos := by
-    have hN : 0 < (N : ℝ) := by
-      have : 2 ≤ N := Fact.out
-      positivity
-    have hpi : 0 < Real.pi := Real.pi_pos
-    positivity
-  conj := standardConj
-  conj_involutive := standardConj_involutive
-  classicalDim := standardDim
-  transform := standardTransform
-  stress_energy := standardStressEnergy
-
-noncomputable def standardCurvatureAlgebra (G : Type*) [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G] : CurvaturePolynomialAlgebra G where
-  Poly := StandardPoly
-  commRing := inferInstance
-  algebra := inferInstance
-  nontrivial := inferInstance
-  Lie := LieGroups.suLie 2
-  lieRingLie := inferInstance
-  lieAlgebraLie := inferInstance
-  casimir_adjoint := (adjoint_casimir_derived_from_killing 2).choose
-  casimir_adjoint_pos := (adjoint_casimir_derived_from_killing 2).choose_spec.2
-  beta_b0 := 1
-  beta_b0_pos := Real.zero_lt_one
-  conj := standardConj
-  conj_involutive := standardConj_involutive
-  classicalDim := standardDim
-  transform := standardTransform
-  stress_energy := standardStressEnergy
-
-theorem standardCurvatureAlgebra_casimir_eq (N : ℕ) [Fact (2 ≤ N)] :
-    (sunCurvatureAlgebra N).casimir_adjoint = N :=
-  (adjoint_casimir_derived_from_killing N).choose_spec.1
+attribute [instance] CurvaturePolynomialAlgebra.finDimLie
+attribute [instance] CurvaturePolynomialAlgebra.topologicalSpaceLie
+attribute [instance] CurvaturePolynomialAlgebra.t2SpaceLie
+attribute [instance] CurvaturePolynomialAlgebra.topologicalAddGroupLie
+attribute [instance] CurvaturePolynomialAlgebra.continuousSMulLie
 
 theorem biconditional_trace_compatibility (N : ℕ) (μ ν : Fin 4) (h_ne : μ ≠ ν) (X Y : LieGroups.suLie N) :
     trace_pair N (F_comp N μ ν X) (F_comp N μ ν Y) = 0 ↔ suLie_inner N X Y = 0 :=
@@ -712,15 +1070,256 @@ structure WightmanQuantumYangMills (G : Type*) (ℋ : Type*)
     [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
     [NormedAddCommGroup ℋ] [InnerProductSpace ℂ ℋ] [CompleteSpace ℋ] [SeparableSpace ℋ]
     (Curv : CurvaturePolynomialAlgebra G) where
+  /-- Dense Poincaré-invariant linear subspace $\mathcal{D} \subset \mathcal{H}$ -/
   domain : Submodule ℂ ℋ
   domain_dense : Dense (domain : Set ℋ)
+
+  /-- The normalized physical vacuum ground state $\Omega \in \mathcal{D}$ -/
   vacuum : ℋ
   vacuum_in_domain : vacuum ∈ domain
   vacuum_normalized : ‖vacuum‖ = 1
+
+  /-- (W1) Unitary representation of the restricted Poincaré group $\mathcal{P}_+^\uparrow$ -/
+  poincare_rep : PoincareGroup → (ℋ →L[ℂ] ℋ)
+  poincare_id : poincare_rep PoincareGroup.id = ContinuousLinearMap.id ℂ ℋ
+  /-- Full semidirect group homomorphism law: $U(g_1 g_2) = U(g_1) U(g_2)$ -/
+  poincare_mul : ∀ g1 g2 g3 : PoincareGroup,
+    PoincareGroup.IsProduct g1 g2 g3 →
+    poincare_rep g3 = (poincare_rep g1).comp (poincare_rep g2)
+  poincare_unitary : ∀ (g : PoincareGroup) (ψ φ : ℋ),
+    inner ℂ (poincare_rep g ψ) (poincare_rep g φ) = (inner ℂ ψ φ : ℂ)
+  poincare_domain_invariant : ∀ (g : PoincareGroup) (ψ : ℋ),
+    ψ ∈ domain → poincare_rep g ψ ∈ domain
+  poincare_vacuum_invariant : ∀ g : PoincareGroup, poincare_rep g vacuum = vacuum
+
+  /-- Unbounded symmetric Energy-Momentum generators $P^\mu = (H, \mathbf{P})$ on $\mathcal{D}$ -/
   Hamiltonian : domain →ₗ[ℂ] ℋ
+  Momentum : Fin 3 → (domain →ₗ[ℂ] ℋ)
+  hamiltonian_domain_invariant : ∀ ψ : domain, Hamiltonian ψ ∈ domain
+  momentum_domain_invariant : ∀ (i : Fin 3) (ψ : domain), Momentum i ψ ∈ domain
+  hamiltonian_symmetric : ∀ ψ φ : domain,
+    inner ℂ (Hamiltonian ψ) (φ : ℋ) = (inner ℂ (ψ : ℋ) (Hamiltonian φ) : ℂ)
+  momentum_symmetric : ∀ (i : Fin 3) (ψ φ : domain),
+    inner ℂ (Momentum i ψ) (φ : ℋ) = (inner ℂ (ψ : ℋ) (Momentum i φ) : ℂ)
+
+  /-- Mutual commutativity of the four translation generators $[H, P^i] = 0$ and $[P^i, P^j] = 0$ on $\mathcal{D}$ -/
+  hamiltonian_momentum_commute : ∀ (i : Fin 3) (ψ : domain),
+    Hamiltonian ⟨Momentum i ψ, momentum_domain_invariant i ψ⟩ =
+    Momentum i ⟨Hamiltonian ψ, hamiltonian_domain_invariant ψ⟩
+  momentum_commute : ∀ (i j : Fin 3) (ψ : domain),
+    Momentum i ⟨Momentum j ψ, momentum_domain_invariant j ψ⟩ =
+    Momentum j ⟨Momentum i ψ, momentum_domain_invariant i ψ⟩
+
+  /-- Stone's Theorem / Infinitesimal Generator Law on all of $\mathcal{D}$ -/
+  hamiltonian_generator : ∀ (ψ : domain),
+    HasDerivAt (fun t : ℝ => poincare_rep (PoincareGroup.ofTranslation (vec4 t 0 0 0)) (ψ : ℋ))
+      ((-Complex.I) • Hamiltonian ψ) 0
+  momentum_generator : ∀ (i : Fin 3) (ψ : domain),
+    HasDerivAt (fun s : ℝ => poincare_rep (PoincareGroup.ofTranslation (spatialVec i s)) (ψ : ℋ))
+      (Complex.I • Momentum i ψ) 0
+
+  /-- Ground-State Condition: $H\Omega = 0$ and $\mathbf{P}\Omega = 0$ (Zero vacuum energy) -/
   hamiltonian_vacuum : Hamiltonian ⟨vacuum, vacuum_in_domain⟩ = 0
-  poincare_rep : PoincareGroup → (ℋ →L[ℂ] ℋ) := fun _ => ContinuousLinearMap.id ℂ ℋ
-  local_field_form : Curv.Poly → MinkowskiSpace → domain → domain → ℂ := fun _ _ _ _ => 0
+  momentum_vacuum : ∀ i : Fin 3, Momentum i ⟨vacuum, vacuum_in_domain⟩ = 0
+
+  /-- Vacuum Isolation and Uniqueness: $\ker(H) \cap \mathcal{D} = \mathbb{C}\Omega$ -/
+  vacuum_unique : ∀ ψ : domain, Hamiltonian ψ = 0 → ∃ c : ℂ, (ψ : ℋ) = c • vacuum
+
+  /-- (W2) Relativistic Spectral Condition -/
+  spectral_condition : ∀ ψ : domain,
+    ofCoords ![ (inner ℂ (ψ : ℋ) (Hamiltonian ψ)).re,
+                (inner ℂ (ψ : ℋ) (Momentum 0 ψ)).re,
+                (inner ℂ (ψ : ℋ) (Momentum 1 ψ)).re,
+                (inner ℂ (ψ : ℋ) (Momentum 2 ψ)).re ] ∈ ClosedForwardLightCone
+
+  /-- Operator-Valued Tempered Distributions $\mathcal{O}_P(f)$ -/
+  smeared_field : Curv.Poly →ₗ[ℂ] (SchwartzMap MinkowskiSpace ℂ →ₗ[ℂ] (domain →ₗ[ℂ] domain))
+
+  /-- Temperedness (Continuity) -/
+  smeared_field_tempered : ∀ (P : Curv.Poly) (ψ φ : domain),
+    ∃ (C : ℝ) (k : ℕ), 0 < C ∧
+      ∀ f : SchwartzMap MinkowskiSpace ℂ,
+        ‖inner ℂ (φ : ℋ) (smeared_field P f ψ : ℋ)‖ ≤ C * SchwartzMap.seminorm ℝ k k f
+
+  /-- Faithful Representation -/
+  smeared_field_non_trivial : ∀ (P : Curv.Poly),
+    P ≠ 0 → ∃ (f : SchwartzMap MinkowskiSpace ℂ),
+      (smeared_field P f ⟨vacuum, vacuum_in_domain⟩ : ℋ) ≠ 0
+
+  /-- (W4) Vacuum Cyclicity under Smeared Local Fields -/
+  smeared_field_cyclic :
+    Dense ((Submodule.span ℂ (Set.range (fun ops : List (Curv.Poly × SchwartzMap MinkowskiSpace ℂ) =>
+      (applySmearedFieldList Curv domain smeared_field ops
+        ⟨vacuum, vacuum_in_domain⟩ : ℋ)))) : Set ℋ)
+
+  /-- Action of Poincaré transformations on Schwartz test functions -/
+  test_poincare_action : PoincareGroup → (SchwartzMap MinkowskiSpace ℂ →ₗ[ℂ] SchwartzMap MinkowskiSpace ℂ)
+  test_poincare_action_apply : ∀ (g : PoincareGroup) (f : SchwartzMap MinkowskiSpace ℂ) (x : MinkowskiSpace),
+    test_poincare_action g f (euclideanTransform g.lorentz g.translation x) = f x
+
+  /-- (W1) Poincaré Covariance of Smeared Local Fields -/
+  smeared_field_poincare_covariant :
+    ∀ (g : PoincareGroup) (P : Curv.Poly) (f : SchwartzMap MinkowskiSpace ℂ) (ψ : domain),
+      poincare_rep g (smeared_field P f ψ : ℋ) =
+        (smeared_field (Curv.transform g.lorentz P) (test_poincare_action g f)
+          ⟨poincare_rep g (ψ : ℋ), poincare_domain_invariant g (ψ : ℋ) ψ.2⟩ : ℋ)
+
+  /-- (W3) Microcausality (Locality) of Smeared Fields -/
+  smeared_field_local :
+    ∀ (P Q : Curv.Poly) (f g : SchwartzMap MinkowskiSpace ℂ),
+      SchwartzSpacelikeSeparated f g →
+      (smeared_field P f).comp (smeared_field Q g) =
+      (smeared_field Q g).comp (smeared_field P f)
+
+  /-- Local Stress-Energy Tensor Symmetry -/
+  stress_tensor_symmetric : ∀ (μ ν : Fin 4) (f : SchwartzMap MinkowskiSpace ℂ),
+    smeared_field (Curv.stress_energy μ ν) f =
+    smeared_field (Curv.stress_energy ν μ) f
+
+  /-- Stress-Energy Generator Property -/
+  stress_tensor_generates_hamiltonian : ∀ (ψ : domain),
+    ∃ (seq : ℕ → SchwartzMap MinkowskiSpace ℂ),
+      Filter.Tendsto (fun k => (smeared_field (Curv.stress_energy 0 0) (seq k) ψ : ℋ))
+        Filter.atTop (nhds (Hamiltonian ψ))
+
+  /-- Stress-Energy Momentum Generator Property -/
+  stress_tensor_generates_momentum : ∀ (i : Fin 3) (ψ : domain),
+    ∃ (seq : ℕ → SchwartzMap MinkowskiSpace ℂ),
+      Filter.Tendsto (fun k => (smeared_field (Curv.stress_energy 0 (Fin.succ i)) (seq k) ψ : ℋ))
+        Filter.atTop (nhds (Momentum i ψ))
+
+  /-- Pointwise field matrix element (sesquilinear form on `domain × domain`) -/
+  local_field_form : Curv.Poly → MinkowskiSpace → domain → domain → ℂ
+  local_field_form_smul_left : ∀ P x (c : ℂ) (φ ψ : domain),
+    local_field_form P x (c • φ) ψ = starRingEnd ℂ c * local_field_form P x φ ψ
+  local_field_form_add_left : ∀ P x (φ1 φ2 ψ : domain),
+    local_field_form P x (φ1 + φ2) ψ = local_field_form P x φ1 ψ + local_field_form P x φ2 ψ
+  local_field_form_smul_right : ∀ P x (c : ℂ) (φ ψ : domain),
+    local_field_form P x φ (c • ψ) = c * local_field_form P x φ ψ
+  local_field_form_add_right : ∀ P x (φ ψ1 ψ2 : domain),
+    local_field_form P x φ (ψ1 + ψ2) = local_field_form P x φ ψ1 + local_field_form P x φ ψ2
+
+  /-- Streater–Wightman Axiom 2 (Field Hermiticity Involution) -/
+  local_field_form_conj : ∀ (P : Curv.Poly) (x : MinkowskiSpace) (φ ψ : domain),
+    local_field_form (Curv.conj P) x φ ψ = starRingEnd ℂ (local_field_form P x ψ φ)
+
+  /-- Compatibility between smeared operator-valued distribution and pointwise sesquilinear form -/
+  smeared_field_form_compatibility : ∀ (P : Curv.Poly) (f : SchwartzMap MinkowskiSpace ℂ)
+    (φ ψ : domain),
+    inner ℂ (φ : ℋ) (smeared_field P f ψ : ℋ) =
+      ∫ x : MinkowskiSpace, (f x) * (local_field_form P x φ ψ)
+
+  /-- Local Conservation of the Stress-Energy Tensor $\partial^\mu T_{\mu\nu}(x) = 0$ -/
+  stress_tensor_conserved : ∀ (ν : Fin 4) (x : MinkowskiSpace) (φ ψ : domain),
+    ∃ (dT : Fin 4 → ℂ),
+      (∀ μ : Fin 4,
+        HasDerivAt
+          (fun s : ℝ =>
+            local_field_form (Curv.stress_energy μ ν)
+              (ofCoords (fun α => toCoords x α + (if α = μ then s else 0))) φ ψ)
+          (dT μ) 0) ∧
+      ∑ μ : Fin 4, ((minkowskiMetric μ μ : ℝ) : ℂ) * dT μ = 0
+
+  /-- The vacuum Wightman two-point correlation function $\mathcal{W}_2(P, Q)(x)$ -/
+  wightman_two_point : Curv.Poly → Curv.Poly → { x : MinkowskiSpace // x ≠ 0 } → ℂ
+
+  /-- Distributional compatibility between `wightman_two_point` and smeared operators -/
+  wightman_two_point_smeared_compatibility :
+    ∀ (P Q : Curv.Poly) (f g : SchwartzMap MinkowskiSpace ℂ),
+      Disjoint (tsupport (f : MinkowskiSpace → ℂ)) (tsupport (g : MinkowskiSpace → ℂ)) →
+      inner ℂ (vacuum : ℋ)
+        (smeared_field P f (smeared_field Q g ⟨vacuum, vacuum_in_domain⟩) : ℋ) =
+        ∫ x : MinkowskiSpace, ∫ y : MinkowskiSpace,
+          (f x) * (g y) * (if hxy : x - y ≠ 0 then wightman_two_point P Q ⟨x - y, hxy⟩ else 0)
+
+  /-- Pointwise two-field sesquilinear form $\mathcal{F}_2(P, Q; x, y)(\varphi, \psi)$ -/
+  local_two_field_form :
+    Curv.Poly → Curv.Poly → { p : MinkowskiSpace × MinkowskiSpace // p.1 ≠ p.2 } →
+    domain → domain → ℂ
+
+  /-- Compatibility between two smeared field operators and `local_two_field_form` -/
+  smeared_two_field_form_compatibility :
+    ∀ (P Q : Curv.Poly) (f g : SchwartzMap MinkowskiSpace ℂ) (φ ψ : domain),
+      Disjoint (tsupport (f : MinkowskiSpace → ℂ)) (tsupport (g : MinkowskiSpace → ℂ)) →
+      inner ℂ (φ : ℋ) (smeared_field P f (smeared_field Q g ψ) : ℋ) =
+        ∫ x : MinkowskiSpace, ∫ y : MinkowskiSpace,
+          (f x) * (g y) * (if hxy : x ≠ y then local_two_field_form P Q ⟨(x, y), hxy⟩ φ ψ else 0)
+
+  /-- Identification of `local_two_field_form` vacuum expectation with `wightman_two_point` -/
+  wightman_two_point_eq_local_two_field_vacuum :
+    ∀ (P Q : Curv.Poly) (x y : MinkowskiSpace) (hxy : x ≠ y),
+      local_two_field_form P Q ⟨(x, y), hxy⟩ ⟨vacuum, vacuum_in_domain⟩ ⟨vacuum, vacuum_in_domain⟩ =
+        wightman_two_point P Q ⟨x - y, sub_ne_zero.mpr hxy⟩
+
+  /-- Short-Distance Asymptotic Freedom of Local Curvature Correlators -/
+  short_distance_asymptotic_freedom :
+    ∀ (P : Curv.Poly) (x : MinkowskiSpace) (hx : x ≠ 0),
+      SpacelikeSeparated x 0 →
+      P ≠ 0 → 4 ≤ Curv.classicalDim P →
+      let d := Curv.classicalDim P
+      let γ := Curv.anomalous_exponent P
+      let c_P := Curv.uv_two_point_coeff P
+      let vac : domain := ⟨vacuum, vacuum_in_domain⟩
+      Filter.Tendsto
+        (fun (scale : ℝ) =>
+          if h_scale : scale ≠ 0 then
+            have h_scaled : scale • x ≠ 0 := smul_ne_zero h_scale hx
+            (scale ^ (2 * d)) * ((-Real.log scale) ^ γ) *
+            (wightman_two_point (Curv.conj P) P ⟨scale • x, h_scaled⟩ -
+              local_field_form (Curv.conj P) (scale • x) vac vac *
+                local_field_form P 0 vac vac).re
+          else 0)
+        (nhdsWithin 0 (Set.Ioi 0))
+        (nhds (c_P / ((-minkowskiInner x x) ^ d)))
+
+  /-- Short-Distance Operator Product Expansion (OPE) -/
+  operator_product_expansion :
+    ∀ (P Q : Curv.Poly) (D : ℕ) (x : MinkowskiSpace) (hx : x ≠ 0),
+      SpacelikeSeparated x 0 →
+      Curv.classicalDim P + Curv.classicalDim Q ≤ D →
+      ∃ (basis : Finset Curv.Poly) (vev : Curv.Poly → ℂ),
+        (∀ R ∈ basis, Curv.classicalDim R ≤ D) ∧
+        Filter.Tendsto
+          (fun (scale : ℝ) =>
+            if h_scale : scale ≠ 0 then
+              have h_scaled : scale • x ≠ 0 := smul_ne_zero h_scale hx
+              (scale ^ (Curv.classicalDim P + Curv.classicalDim Q - D : ℤ)) *
+              ‖wightman_two_point P Q ⟨scale • x, h_scaled⟩ -
+                 ∑ R ∈ basis, (Curv.ope_coeff P Q R (scale • x)) * vev R‖
+            else 0)
+          (nhdsWithin 0 (Set.Ioi 0))
+          (nhds 0)
+
+  /-- Non-Local Gauge-Invariant Wilson Loop Operators $W(\gamma, \chi) : \mathcal{D} \to \mathcal{H}$ -/
+  wilson_operator : ClosedLoop4D → ClassFunction G → (domain →ₗ[ℂ] ℋ)
+  wilson_domain_invariant : ∀ gamma chi (ψ : domain), wilson_operator gamma chi ψ ∈ domain
+
+  /-- Poincaré Covariance of Wilson Loops -/
+  wilson_poincare_covariant :
+    ∀ (g : PoincareGroup) (gamma : ClosedLoop4D) (chi : ClassFunction G) (ψ : domain),
+      poincare_rep g (wilson_operator gamma chi ψ) =
+        wilson_operator (PoincareGroup.actLoop g gamma) chi
+          ⟨poincare_rep g (ψ : ℋ), poincare_domain_invariant g (ψ : ℋ) ψ.2⟩
+
+  /-- Microcausality of Wilson Loops -/
+  wilson_microcausality : ∀ (gamma1 gamma2 : ClosedLoop4D) (chi1 chi2 : ClassFunction G),
+    LoopsSpacelikeSeparated gamma1 gamma2 →
+    ∀ ψ : domain,
+      wilson_operator gamma1 chi1 ⟨wilson_operator gamma2 chi2 ψ, wilson_domain_invariant gamma2 chi2 ψ⟩ =
+      wilson_operator gamma2 chi2 ⟨wilson_operator gamma1 chi1 ψ, wilson_domain_invariant gamma1 chi1 ψ⟩
+
+  /-- Trivial holonomy on constant 4D point loops -/
+  wilson_const_loop : ∀ (x : MinkowskiSpace) (chi : ClassFunction G) (ψ : domain),
+    wilson_operator (ClosedLoop4D.const x) chi ψ = (chi.toFun 1) • (ψ : ℋ)
+
+  /-- Orientation reversal of a 4D loop corresponds to the Hermitian adjoint -/
+  wilson_reverse_adjoint : ∀ (gamma : ClosedLoop4D) (chi : ClassFunction G) (ψ φ : domain),
+    inner ℂ (wilson_operator gamma chi ψ) (φ : ℋ) =
+      inner ℂ (ψ : ℋ) (wilson_operator (ClosedLoop4D.reverse gamma) (ClassFunction.conj chi) φ)
+
+  /-- Trivial representation holonomy -/
+  wilson_const_char : ∀ (gamma : ClosedLoop4D) (c : ℂ) (ψ : domain),
+    wilson_operator gamma (ClassFunction.const G c) ψ = c • (ψ : ℋ)
 
 /- ### 4. The Mass Gap -/
 
@@ -1084,168 +1683,98 @@ theorem standardHamU_ortho_norm (m : ℝ) (hm : 0 ≤ m) (ψ : standardH2U.{u_st
   rw [standardHamU_ortho m ψ h_ortho]
   simp only [norm_smul, Complex.norm_real, Real.norm_of_nonneg hm]
 
-noncomputable def standardTheoryU.{u_G, u_H} (G : Type u_G) [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
-    (Curv : CurvaturePolynomialAlgebra G) (m : ℝ) :
-    WightmanQuantumYangMills G standardH2U.{u_H} Curv where
-  domain := ⊤
-  domain_dense := by
-    rw [Submodule.top_coe]
-    exact dense_univ
-  vacuum := standardVacU.{u_H}
-  vacuum_in_domain := Submodule.mem_top
-  vacuum_normalized := standardVacU_norm
-  Hamiltonian := standardHamDomU.{u_H} m
-  hamiltonian_vacuum := standardHamDomU_vac m
-  poincare_rep := fun _ => ContinuousLinearMap.id ℂ standardH2U.{u_H}
-  local_field_form := fun _ _ _ _ => 0
-
-theorem standard_has_mass_gapU.{u_G, u_H} (G : Type u_G) [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
-    (Curv : CurvaturePolynomialAlgebra G) (m : ℝ) (hm : 0 < m) :
-    HasMassGap G standardH2U.{u_H} (standardTheoryU G Curv m) := by
-  have h_mem : standardExciteU.{u_H} ∈ (standardTheoryU G Curv m).domain := Submodule.mem_top
-  refine ⟨m, hm, fun ψ h_ortho => ?_, ?_⟩
-  · change m * ‖(ψ : standardH2U.{u_H})‖ ≤ ‖standardHamU m (ψ : standardH2U.{u_H})‖
-    rw [standardHamU_ortho_norm m hm.le (ψ : standardH2U.{u_H}) h_ortho]
-  · refine ⟨m, ⟨standardExciteU.{u_H}, h_mem⟩, hm, ?_, ?_, ?_⟩
-    · change inner ℂ standardVacU.{u_H} standardExciteU.{u_H} = 0
-      simp [inner, standardVacU, standardExciteU]
-    · intro h_zero
-      change standardExciteU = 0 at h_zero
-      have h1 : standardExciteU.{u_H} (ULift.up 1) = 1 := by simp [standardExciteU]
-      have h2 : (0 : standardH2U.{u_H}) (ULift.up 1) = 0 := rfl
-      rw [h_zero] at h1
-      exact one_ne_zero (h1.symm.trans h2)
-    · change ‖standardHamU m standardExciteU.{u_H}‖ ≤ m * ‖standardExciteU.{u_H}‖
-      have h_ortho_ex : inner ℂ standardVacU.{u_H} standardExciteU.{u_H} = (0 : ℂ) := by
-        simp [inner, standardVacU, standardExciteU]
-      rw [standardHamU_ortho_norm m hm.le standardExciteU.{u_H} h_ortho_ex]
-
-/-- **Osterwalder–Schrader Reconstruction Theorem** (OS I, 1973; OS II, 1975, pp. 282, 287):
-Any Euclidean Yang–Mills theory `os : OsterwalderSchraderYangMills G Curv` satisfying the
-uniform linear growth condition ($\text{E}0'$), multilinearity, Euclidean invariance (E1), mixed-degree reflection
-positivity (E2), permutation symmetry (E3), full exponential clustering (E4) with rate `os.mass_rate`,
-and short-distance asymptotic freedom reconstructs a relativistic `WightmanQuantumYangMills G ℋ Curv`
-equipped with a self-adjoint Euclidean contraction semigroup `euclidean_contraction` ($e^{-tH}$) and
-a positive-time embedding `os_embed` satisfying the six canonical OS II conditions:
-1. OS Gram identity on strictly time-ordered positive configurations:
-   $\langle \mathrm{embed}(X), \mathrm{embed}(Y) \rangle = S_{n+m}(\Theta X^\star, Y)$,
-2. Vacuum identification: $\mathrm{embed}(0, \text{ops}_0, X_0) = \Omega$,
-3. Density: the complex linear span of strictly time-ordered positive configurations is dense in $\mathcal{H}$,
-4. Contraction semigroup & spatial translation intertwining:
-   $\mathrm{embed}(X + (t, \mathbf{a})) = e^{-tH} U(0, \mathbf{a}) \mathrm{embed}(X)$ for all $t \ge 0$,
-5. Field insertion compatibility (OS II, p. 287): prepending a field insertion $(P, (t, \mathbf{a}))$
-   at Euclidean time $t > 0$ equals evolving by $e^{-tH}$ and evaluating the reconstructed sesquilinear
-   field form `theory.local_field_form P a`, which is linked to `theory.smeared_field` via test-function integration,
-6. Hamiltonian spectral gap on $(\mathbb{C}\Omega)^\perp$ bounded below by `os.mass_rate` ($\Delta \ge m > 0$). -/
-theorem osterwalder_schrader_reconstruction.{u_G, u_H}
+/-- **Osterwalder–Schrader Reconstruction Statement** (OS I, 1973; OS II, 1975, pp. 282, 287; PR 7636):
+Formalizes the proposition that any Euclidean Yang–Mills theory `os : OsterwalderSchraderYangMills G Curv`
+reconstructs a relativistic `WightmanQuantumYangMills G ℋ Curv` satisfying all six canonical OS II conditions
+and `HasMassGap G ℋ theory`. -/
+def OSReconstructionStatement.{u_G, u_H}
     {G : Type u_G} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
     {Curv : CurvaturePolynomialAlgebra G}
-    (os : OsterwalderSchraderYangMills G Curv) :
-    ∃ (ℋ : Type u_H) (_ : NormedAddCommGroup ℋ) (_ : InnerProductSpace ℂ ℋ)
-      (_ : CompleteSpace ℋ) (_ : SeparableSpace ℋ)
-      (theory : WightmanQuantumYangMills G ℋ Curv)
-      (euclidean_contraction : ℝ → (ℋ →L[ℂ] ℋ))
-      (euclidean_contraction_dom : ℝ → theory.domain → theory.domain)
-      (_os_embed : (n : ℕ) → (Fin n → ObservableLabel G Curv) →
-        (Fin n → EuclideanSpace4) → theory.domain),
-      (∀ (t : ℝ) (ψ : theory.domain),
-         (euclidean_contraction_dom t ψ : ℋ) = euclidean_contraction t (ψ : ℋ)) ∧
-      (euclidean_contraction 0 = ContinuousLinearMap.id ℂ ℋ) ∧
-      True ∧
-      (∀ ψ : theory.domain,
-         HasDerivAt (fun t : ℝ => euclidean_contraction t (ψ : ℋ))
-           (- theory.Hamiltonian ψ) 0) ∧
-      True ∧
-      True ∧
-      True ∧
-      True ∧
-      True ∧
-      (∀ ψ : theory.domain,
-        inner ℂ theory.vacuum (ψ : ℋ) = (0 : ℂ) →
-        ∀ t : ℝ, 0 ≤ t →
-          ‖euclidean_contraction t (ψ : ℋ)‖ ≤ Real.exp (-os.mass_rate * t) * ‖(ψ : ℋ)‖) ∧
-      (∃ (M : ℝ) (ψ : theory.domain),
-        0 < M ∧ inner ℂ theory.vacuum (ψ : ℋ) = (0 : ℂ) ∧ (ψ : ℋ) ≠ 0 ∧
-        ‖theory.Hamiltonian ψ‖ ≤ M * ‖(ψ : ℋ)‖) := by
-  have h_mem : standardExciteU.{u_H} ∈ (standardTheoryU G Curv os.mass_rate).domain := Submodule.mem_top
-  refine ⟨standardH2U.{u_H}, inferInstance, inferInstance, inferInstance, inferInstance,
-    standardTheoryU G Curv os.mass_rate,
-    contract2U os.mass_rate,
-    fun t ψ => ⟨contract2U os.mass_rate t ψ.1, Submodule.mem_top⟩,
-    fun _ _ _ => ⟨standardVacU.{u_H}, Submodule.mem_top⟩,
-    fun _ _ => rfl,
-    contract2U_zero os.mass_rate,
-    trivial,
-    fun ψ => contract2U_deriv os.mass_rate (ψ : standardH2U.{u_H}),
-    trivial, trivial, trivial, trivial, trivial,
-    fun ψ h_ortho t ht => contract2U_cluster os.mass_rate os.mass_rate_pos os.mass_rate le_rfl (ψ : standardH2U.{u_H}) h_ortho t ht,
-    ⟨os.mass_rate, ⟨standardExciteU.{u_H}, h_mem⟩, os.mass_rate_pos,
-      by
-        change inner ℂ standardVacU.{u_H} standardExciteU.{u_H} = 0
-        simp [inner, standardVacU, standardExciteU],
-      by
-        intro h_zero
-        change standardExciteU = 0 at h_zero
-        have h1 : standardExciteU.{u_H} (ULift.up 1) = 1 := by simp [standardExciteU]
-        have h2 : (0 : standardH2U.{u_H}) (ULift.up 1) = 0 := rfl
-        rw [h_zero] at h1
-        exact one_ne_zero (h1.symm.trans h2),
-      by
-        change ‖standardHamU os.mass_rate standardExciteU.{u_H}‖ ≤ os.mass_rate * ‖standardExciteU.{u_H}‖
-        have h_ortho_ex : inner ℂ standardVacU.{u_H} standardExciteU.{u_H} = (0 : ℂ) := by
-          simp [inner, standardVacU, standardExciteU]
-        rw [standardHamU_ortho_norm os.mass_rate os.mass_rate_pos.le standardExciteU.{u_H} h_ortho_ex]⟩⟩
+    (os : OsterwalderSchraderYangMills G Curv) : Prop :=
+  ∃ (ℋ : Type u_H) (_ : NormedAddCommGroup ℋ) (_ : InnerProductSpace ℂ ℋ)
+    (_ : CompleteSpace ℋ) (_ : SeparableSpace ℋ)
+    (theory : WightmanQuantumYangMills G ℋ Curv)
+    (euclidean_contraction : ℝ → (ℋ →L[ℂ] ℋ))
+    (euclidean_contraction_dom : ℝ → theory.domain → theory.domain)
+    (os_embed : (n : ℕ) → (Fin n → ObservableLabel G Curv) →
+      (Fin n → EuclideanSpace4) → theory.domain),
+    (∀ (t : ℝ) (ψ : theory.domain),
+       (euclidean_contraction_dom t ψ : ℋ) = euclidean_contraction t (ψ : ℋ)) ∧
+    (euclidean_contraction 0 = ContinuousLinearMap.id ℂ ℋ) ∧
+    (∀ (t1 t2 : ℝ), 0 ≤ t1 → 0 ≤ t2 →
+       euclidean_contraction (t1 + t2) =
+         (euclidean_contraction t1).comp (euclidean_contraction t2)) ∧
+    (∀ ψ : theory.domain,
+       HasDerivWithinAt (fun t : ℝ => euclidean_contraction t (ψ : ℋ))
+         (- theory.Hamiltonian ψ) (Set.Ici 0) 0) ∧
+    (∀ (n m : ℕ) (ops1 : Fin n → ObservableLabel G Curv)
+       (ops2 : Fin m → ObservableLabel G Curv)
+       (X : Fin n → EuclideanSpace4) (Y : Fin m → EuclideanSpace4),
+       StrictlyTimeOrderedPos X →
+       StrictlyTimeOrderedPos Y →
+       inner ℂ (os_embed n ops1 X : ℋ) (os_embed m ops2 Y : ℋ) =
+         os.schwinger (n + m) (safeReflectConcatLabels ops1 ops2)
+           (safeReflectConcatMixed X Y)) ∧
+    (∀ (ops0 : Fin 0 → ObservableLabel G Curv) (X0 : Fin 0 → EuclideanSpace4),
+       (os_embed 0 ops0 X0 : ℋ) = theory.vacuum) ∧
+    Dense (Submodule.span ℂ
+      { ψ : ℋ | ∃ (n : ℕ) (ops : Fin n → ObservableLabel G Curv)
+        (X : Fin n → EuclideanSpace4),
+        StrictlyTimeOrderedPos X ∧ ψ = (os_embed n ops X : ℋ) } : Set ℋ) ∧
+    (∀ (n : ℕ) (ops : Fin n → ObservableLabel G Curv)
+       (X : Fin n → EuclideanSpace4) (t : ℝ) (a : MinkowskiSpace),
+       StrictlyTimeOrderedPos X → 0 ≤ t → toCoords a 0 = 0 →
+       (os_embed n ops (euclideanShift t a X) : ℋ) =
+         euclidean_contraction t
+           (theory.poincare_rep (PoincareGroup.ofTranslation a) (os_embed n ops X : ℋ))) ∧
+    (∀ (n m : ℕ) (ops1 : Fin n → ObservableLabel G Curv)
+       (ops2 : Fin m → ObservableLabel G Curv)
+       (X : Fin n → EuclideanSpace4) (Y : Fin m → EuclideanSpace4)
+       (P : Curv.Poly) (t : ℝ) (a : MinkowskiSpace),
+       StrictlyTimeOrderedPos X → StrictlyTimeOrderedPos Y → 0 < t → toCoords a 0 = 0 →
+       inner ℂ (os_embed n ops1 X : ℋ)
+         (os_embed (m + 1) (Fin.cons (.localCurv P) ops2)
+           (Fin.cons (vec4 t (toCoords a 1) (toCoords a 2) (toCoords a 3)) (euclideanShift t a Y)) : ℋ) =
+       theory.local_field_form P a
+         (euclidean_contraction_dom t (os_embed n ops1 X))
+         (os_embed m ops2 Y)) ∧
+    (∀ ψ : theory.domain,
+      inner ℂ theory.vacuum (ψ : ℋ) = (0 : ℂ) →
+      os.mass_rate * ‖(ψ : ℋ)‖ ≤ ‖theory.Hamiltonian ψ‖) ∧
+    HasMassGap G ℋ theory
 
 /- ### 6. The Official Clay Millennium Prize Problem Statement -/
 
 /-- **Clay Millennium Prize Problem: 4D Yang–Mills Existence and Mass Gap**
-(Arthur Jaffe & Edward Witten, 2000, Section 4, p. 6) -/
-theorem yang_mills_existence_and_mass_gap.{u_H}
-    (G : Type*) [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G] :
-    ∃ (Curv : CurvaturePolynomialAlgebra G)
-      (ℋ : Type u_H) (_ : NormedAddCommGroup ℋ) (_ : InnerProductSpace ℂ ℋ)
-      (_ : CompleteSpace ℋ) (_ : SeparableSpace ℋ)
-      (theory : WightmanQuantumYangMills G ℋ Curv),
-      HasMassGap G ℋ theory :=
-  ⟨standardCurvatureAlgebra G, standardH2U.{u_H}, inferInstance, inferInstance, inferInstance, inferInstance,
-   standardTheoryU G (standardCurvatureAlgebra G) 1,
-   standard_has_mass_gapU G (standardCurvatureAlgebra G) 1 Real.zero_lt_one⟩
+(Arthur Jaffe & Edward Witten, 2000, Section 4, p. 6; PR 7636) -/
+def ClayMillenniumYangMillsMassGap.{u_G, u_H}
+    (G : Type u_G) [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G] : Prop :=
+  ∃ (Curv : CurvaturePolynomialAlgebra G)
+    (ℋ : Type u_H) (_ : NormedAddCommGroup ℋ) (_ : InnerProductSpace ℂ ℋ)
+    (_ : CompleteSpace ℋ) (_ : SeparableSpace ℋ)
+    (theory : WightmanQuantumYangMills G ℋ Curv),
+    HasMassGap G ℋ theory
 
 /-- Canonical Specialization to $\mathrm{SU}(N)$ for any $N \ge 2$ -/
-theorem yang_mills_sun_mass_gap.{u_H} (N : ℕ) [Fact (2 ≤ N)] :
-    ∃ (Curv : CurvaturePolynomialAlgebra (SUN N))
-      (ℋ : Type u_H) (_ : NormedAddCommGroup ℋ) (_ : InnerProductSpace ℂ ℋ)
-      (_ : CompleteSpace ℋ) (_ : SeparableSpace ℋ)
-      (theory : WightmanQuantumYangMills (SUN N) ℋ Curv),
-      Curv.casimir_adjoint = N ∧
-      HasMassGap (SUN N) ℋ theory :=
-  ⟨sunCurvatureAlgebra N, standardH2U.{u_H}, inferInstance, inferInstance, inferInstance, inferInstance,
-   standardTheoryU (SUN N) (sunCurvatureAlgebra N) 1,
-   standardCurvatureAlgebra_casimir_eq N,
-   standard_has_mass_gapU (SUN N) (sunCurvatureAlgebra N) 1 Real.zero_lt_one⟩
+def YangMillsSUNMassGap.{u_H} (N : ℕ) [Fact (2 ≤ N)] [CompactSimpleLieGroup (SUN N)] : Prop :=
+  ∃ (Curv : CurvaturePolynomialAlgebra (SUN N))
+    (ℋ : Type u_H) (_ : NormedAddCommGroup ℋ) (_ : InnerProductSpace ℂ ℋ)
+    (_ : CompleteSpace ℋ) (_ : SeparableSpace ℋ)
+    (theory : WightmanQuantumYangMills (SUN N) ℋ Curv),
+    Curv.casimir_adjoint = N ∧
+    HasMassGap (SUN N) ℋ theory
 
 /-- Canonical Specialization to $\mathrm{SU}(2)$ Pure Yang–Mills Gauge Theory -/
-theorem yang_mills_su2_mass_gap.{u_H} :
-    ∃ (Curv : CurvaturePolynomialAlgebra SU2)
-      (ℋ : Type u_H) (_ : NormedAddCommGroup ℋ) (_ : InnerProductSpace ℂ ℋ)
-      (_ : CompleteSpace ℋ) (_ : SeparableSpace ℋ)
-      (theory : WightmanQuantumYangMills SU2 ℋ Curv),
-      Curv.casimir_adjoint = 2 ∧
-      HasMassGap SU2 ℋ theory :=
-  yang_mills_sun_mass_gap 2
+def YangMillsSU2MassGap.{u_H} [CompactSimpleLieGroup SU2] : Prop :=
+  YangMillsSUNMassGap.{u_H} 2
 
 /-- Canonical Specialization to $\mathrm{SU}(3)$ (Quantum Chromodynamics Gluon Sector) -/
-theorem yang_mills_su3_mass_gap.{u_H} :
-    ∃ (Curv : CurvaturePolynomialAlgebra SU3)
-      (ℋ : Type u_H) (_ : NormedAddCommGroup ℋ) (_ : InnerProductSpace ℂ ℋ)
-      (_ : CompleteSpace ℋ) (_ : SeparableSpace ℋ)
-      (theory : WightmanQuantumYangMills SU3 ℋ Curv),
-      Curv.casimir_adjoint = 3 ∧
-      HasMassGap SU3 ℋ theory :=
-  yang_mills_sun_mass_gap 3
+def YangMillsSU3MassGap.{u_H} [CompactSimpleLieGroup SU3] : Prop :=
+  YangMillsSUNMassGap.{u_H} 3
 
 /-- Derivation of Canonical Specialization to $\mathrm{SU}(N)$ from Universal Existence -/
 theorem yang_mills_sun_mass_gap_of_universal.{u} (N : ℕ) [Fact (2 ≤ N)]
+    [CompactSimpleLieGroup (SUN N)]
     (h_univ : ∀ (G : Type) [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G],
       ∃ (Curv : CurvaturePolynomialAlgebra G)
         (ℋ : Type u) (_ : NormedAddCommGroup ℋ) (_ : InnerProductSpace ℂ ℋ)
@@ -1259,10 +1788,9 @@ theorem yang_mills_sun_mass_gap_of_universal.{u} (N : ℕ) [Fact (2 ≤ N)]
       HasMassGap (SUN N) ℋ theory :=
   h_univ (SUN N)
 
-#print axioms yang_mills_su3_mass_gap
-#print axioms osterwalder_schrader_reconstruction
-#print axioms standardCurvatureAlgebra
+#print axioms sun_is_compact
+#print axioms yang_mills_sun_mass_gap_of_universal
 #print axioms trace_pair_biconditional_compatibility
-#print axioms standardCurvatureAlgebra_casimir_eq
+#print axioms biconditional_trace_compatibility
 
 end YangMills

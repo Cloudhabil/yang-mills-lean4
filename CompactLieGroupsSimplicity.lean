@@ -512,18 +512,8 @@ theorem sun3_is_connected : is_connected (SUN 3) := by
     PART VIII: UNIVERSAL COMPACT SIMPLE GAUGE BUNDLE EXTENSIONS
     ============================================================================ -/
 
-/-- Proof that SU(N) satisfies the CompactSimpleLieGroup typeclass for all N ≥ 2. -/
-theorem sun_is_compactSimpleLieGroup (N : ℕ) [Fact (2 ≤ N)] :
-    CompactSimpleLieGroup (SUN N) :=
-  sun_compactSimpleLieGroup N
-
-/-- Unconditional proof of `CompactSimpleLieGroup (SUN 2)` with ZERO sorry. -/
-instance sun2_compactSimpleLieGroup : CompactSimpleLieGroup (SUN 2) :=
-  sun_compactSimpleLieGroup 2
-
-/-- Unconditional proof of `CompactSimpleLieGroup (SUN 3)` with ZERO sorry. -/
-instance sun3_compactSimpleLieGroup : CompactSimpleLieGroup (SUN 3) :=
-  sun_compactSimpleLieGroup 3
+/-- Open Lie-theoretic statement (PR 7636) that SU(N) satisfies `CompactSimpleLieGroup (SUN N)` for all N ≥ 2. -/
+abbrev sun_is_compactSimpleLieGroup := @YangMills.SunCompactSimpleLieGroupStatement
 
 /-- SU(N) gauge bundle for any N ≥ 2. -/
 def su_gauge_bundle (N : ℕ) (hN : 2 ≤ N) : CompactSimpleGaugeBundle :=
@@ -570,9 +560,6 @@ theorem universal_compact_simple_gauge_extension (t : CompactSimpleLieType) :
   intro B
   exact ⟨B.oneLoopBeta_pos, B.centerOrder_pos, B.non_abelian⟩
 
-#print axioms sun_is_compactSimpleLieGroup
-#print axioms sun2_compactSimpleLieGroup
-#print axioms sun3_compactSimpleLieGroup
 #print axioms su2_is_nonabelian
 #print axioms su3_is_nonabelian
 #print axioms su2_has_fundamental_character
