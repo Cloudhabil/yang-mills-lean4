@@ -71,6 +71,33 @@ def osSesquilinearForm
     (safeReflectConcatLabels f.ops g.ops)
     (safeReflectConcatMixed f.X g.X)
 
+/-- Canonical sesquilinear OS reflection form `sesqOS` on positive-time states,
+    defined from `os.schwinger` and `safeReflectConcatMixed`. -/
+def sesqOS
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (f g : PositiveTimeTestData G Curv) : ℂ :=
+  osSesquilinearForm os f g
+
+/-- Non-negativity of the diagonal OS reflection form `0 ≤ Re ⟨ψ, ψ⟩_OS`,
+    proved directly from `os.os2_reflection_positivity`. -/
+theorem sesqOS_nonneg
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (ψ : PositiveTimeTestData G Curv) :
+    0 ≤ (sesqOS os ψ ψ).re := by
+  have h_e2 := os.os2_reflection_positivity 1
+    (fun _ => ψ.deg)
+    (fun _ => ψ.ops)
+    (fun _ => ψ.X)
+    (fun _ => (1 : ℂ))
+    (fun _ i => ψ.h_pos i)
+  have h_univ : (Finset.univ : Finset (Fin 1)) = {0} := rfl
+  simp only [h_univ, Finset.sum_singleton, map_one, one_mul] at h_e2
+  exact h_e2
+
 /-- Vacuum normalization: ⟨Ω, Ω⟩_OS = S₀ = 1. -/
 theorem osSesquilinearForm_vacuum_norm_one
     {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
@@ -164,11 +191,98 @@ theorem gns_cauchy_schwarz_soundness
   dsimp [toPreHilbert]
   exact Quotient.eq
 
+private noncomputable def gnsRawDist
+    {G : Type} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (f g : PositiveTimeTestData G Curv) : ℝ :=
+  ⨆ w : PositiveTimeTestData G Curv, min 1 ‖sesqOS os f w - sesqOS os g w‖
+
+private theorem gnsRawDist_bddAbove
+    {G : Type} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (f g : PositiveTimeTestData G Curv) :
+    BddAbove (Set.range fun w : PositiveTimeTestData G Curv =>
+      min 1 ‖sesqOS os f w - sesqOS os g w‖) :=
+  ⟨1, Set.forall_mem_range.mpr fun _ => min_le_left _ _⟩
+
+private theorem gnsRawDist_congr
+    {G : Type} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    {f f' g g' : PositiveTimeTestData G Curv}
+    (hf : StateEquivalence os f f') (hg : StateEquivalence os g g') :
+    gnsRawDist os f g = gnsRawDist os f' g' := by
+  unfold gnsRawDist sesqOS
+  congr 1
+  ext w
+  rw [hf w, hg w]
+
+/-- Canonical `MetricSpace` structure on `GNSPreHilbertQuotient os` induced by `sesqOS`. -/
+@[instance_reducible]
+noncomputable def gnsPreHilbertMetricSpace
+    {G : Type} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv) :
+    MetricSpace (GNSPreHilbertQuotient os) where
+  dist := Quotient.lift₂ (gnsRawDist os)
+    (fun _ _ _ _ hf hg => gnsRawDist_congr os hf hg)
+  dist_self := Quotient.ind fun f => by
+    change gnsRawDist os f f = 0
+    simp [gnsRawDist]
+  dist_comm := Quotient.ind₂ fun f g => by
+    change gnsRawDist os f g = gnsRawDist os g f
+    unfold gnsRawDist
+    congr 1
+    ext w
+    rw [norm_sub_rev]
+  dist_triangle := fun x y z => by
+    refine Quotient.inductionOn₃ x y z fun f g h => ?_
+    change gnsRawDist os f h ≤ gnsRawDist os f g + gnsRawDist os g h
+    have : Nonempty (PositiveTimeTestData G Curv) := ⟨vacuumTestData G Curv⟩
+    refine ciSup_le fun w => ?_
+    have h_tri : min 1 ‖sesqOS os f w - sesqOS os h w‖ ≤
+        min 1 ‖sesqOS os f w - sesqOS os g w‖ + min 1 ‖sesqOS os g w - sesqOS os h w‖ := by
+      rcases le_total 1 ‖sesqOS os f w - sesqOS os g w‖ with hfg | hfg
+      · rw [min_eq_left hfg]
+        exact (min_le_left _ _).trans (le_add_of_nonneg_right (le_min zero_le_one (norm_nonneg _)))
+      · rcases le_total 1 ‖sesqOS os g w - sesqOS os h w‖ with hgh | hgh
+        · rw [min_eq_left hgh]
+          exact (min_le_left _ _).trans (le_add_of_nonneg_left (le_min zero_le_one (norm_nonneg _)))
+        · rw [min_eq_right hfg, min_eq_right hgh]
+          exact (min_le_right _ _).trans (norm_sub_le_norm_sub_add_norm_sub _ _ _)
+    exact h_tri.trans (add_le_add
+      (le_ciSup (gnsRawDist_bddAbove os f g) w)
+      (le_ciSup (gnsRawDist_bddAbove os g h) w))
+  eq_of_dist_eq_zero := fun {x y} hxy => by
+    refine Quotient.inductionOn₂ x y (fun f g hfg => ?_) hxy
+    change gnsRawDist os f g = 0 at hfg
+    apply Quotient.sound
+    intro w
+    have hle : min 1 ‖sesqOS os f w - sesqOS os g w‖ ≤ 0 := by
+      rw [← hfg]
+      exact le_ciSup (gnsRawDist_bddAbove os f g) w
+    have h_nonneg : 0 ≤ min 1 ‖sesqOS os f w - sesqOS os g w‖ :=
+      le_min zero_le_one (norm_nonneg _)
+    have hmin0 : min 1 ‖sesqOS os f w - sesqOS os g w‖ = 0 := le_antisymm hle h_nonneg
+    rcases min_eq_iff.mp hmin0 with ⟨h1, _⟩ | ⟨hnorm0, _⟩
+    · norm_num at h1
+    · exact sub_eq_zero.mp (norm_eq_zero.mp hnorm0)
+
+/-- Canonical `UniformSpace` on `GNSPreHilbertQuotient os` constructed from `sesqOS`. -/
+noncomputable instance gnsPreHilbertUniformSpace
+    {G : Type} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv) :
+    UniformSpace (GNSPreHilbertQuotient os) :=
+  (gnsPreHilbertMetricSpace os).toUniformSpace
+
 /-- Canonical metric completion ℋ = UniformSpace.Completion ℋ₀ of the GNS quotient pre-Hilbert space. -/
 def GNSMetricCompletion
     {G : Type} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
     {Curv : CurvaturePolynomialAlgebra G}
-    (os : OsterwalderSchraderYangMills G Curv) [UniformSpace (GNSPreHilbertQuotient os)] :=
+    (os : OsterwalderSchraderYangMills G Curv) :=
   UniformSpace.Completion (GNSPreHilbertQuotient os)
 
 /-! ============================================================================

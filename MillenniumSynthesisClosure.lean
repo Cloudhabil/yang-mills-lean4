@@ -325,14 +325,13 @@ theorem yang_mills_su3_mass_gap.{u_H}
     hierarchy together with:
     - a `ReconstructedGNSHilbertSpace SU3 Curv` realized on `GNSMetricCompletion os`,
     - its Euclidean contraction semigroup `semi` satisfying exponential clustering at rate `os.mass_rate`,
-    - a `DirectChannelOPEWitness os ops R` at separation `R > 0`. -/
+    - a `DirectChannelOPEWitness os (fun _ : Fin 4 => ObservableLabel.localCurv su3CurvaturePolynomialAlgebra.tr_F_sq) 1` at unit separation `R = 1`. -/
 structure ConstructiveContinuumSU3Witness where
   os : OsterwalderSchraderYangMills (Matrix.specialUnitaryGroup (Fin 3) ℂ)
     YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra
   H : ReconstructedGNSHilbertSpace (Matrix.specialUnitaryGroup (Fin 3) ℂ)
     YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra
-  unif_gns : UniformSpace (GNSPreHilbertQuotient os)
-  h_gns_completion : H.HilbertSpace = @GNSMetricCompletion _ _ _ _ _ os unif_gns
+  h_gns_completion : H.HilbertSpace = GNSMetricCompletion os
   semi : ReconstructedEuclideanSemigroup H
   h_deriv : ∀ ψ : H.theory.domain,
     HasDerivAt (fun t => semi.T t (ψ : H.HilbertSpace))
@@ -343,11 +342,16 @@ structure ConstructiveContinuumSU3Witness where
   h_finite_spec : ∃ (M : ℝ) (ψ : H.theory.domain),
     0 < M ∧ inner ℂ H.theory.vacuum (ψ : H.HilbertSpace) = 0 ∧ (ψ : H.HilbertSpace) ≠ 0 ∧
     ‖H.theory.Hamiltonian ψ‖ ≤ M * ‖(ψ : H.HilbertSpace)‖
-  ops : Fin 4 → ObservableLabel (Matrix.specialUnitaryGroup (Fin 3) ℂ)
-    YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra
-  R : ℝ
-  hR : 0 < R
-  ope_wit : YangMills.ContinuumFieldNontriviality.DirectChannelOPEWitness os ops R
+  ope_wit : YangMills.ContinuumFieldNontriviality.DirectChannelOPEWitness os
+    (fun _ : Fin 4 => ObservableLabel.localCurv
+      YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra.tr_F_sq) 1
+
+/-- Canonical 4-tuple of scalar glueball `Tr(F²)` observables for `SU(3)`. -/
+noncomputable def su3ScalarGlueballOps4 :
+    Fin 4 → ObservableLabel (Matrix.specialUnitaryGroup (Fin 3) ℂ)
+      YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra :=
+  fun _ : Fin 4 => ObservableLabel.localCurv
+    YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra.tr_F_sq
 
 /-- **Master Constructive SU(3) Millennium Synthesis Theorem**:
     Eliminates tautological `P → P` hypotheses by wiring the constructive pipeline modules
@@ -373,14 +377,14 @@ theorem constructive_su3_millennium_synthesis
         Real.exp (-β * (γ.card : ℝ)) < Real.exp (-10) ∧
         Real.exp (-β * (γ.card : ℝ)) < (1 : ℝ) / 2401) ∧
     (¬ FiniteDimensional ℂ w.H.HilbertSpace) ∧
-    (¬ YangMills.ContinuumFieldNontriviality.IsGaussian4Pt w.os w.ops) ∧
-    (∃ scale : ℝ, 0 < scale ∧ scale < w.R / 2 ∧
+    (¬ YangMills.ContinuumFieldNontriviality.IsGaussian4Pt w.os su3ScalarGlueballOps4) ∧
+    (∃ scale : ℝ, 0 < scale ∧ scale < (1 : ℝ) / 2 ∧
       let x : Fin 4 → EuclideanSpace4 :=
         ![scale • YangMills.ContinuumFieldNontriviality.unitTimeVec, 0,
-          (w.R + scale) • YangMills.ContinuumFieldNontriviality.unitTimeVec,
-          w.R • YangMills.ContinuumFieldNontriviality.unitTimeVec]
+          ((1 : ℝ) + scale) • YangMills.ContinuumFieldNontriviality.unitTimeVec,
+          (1 : ℝ) • YangMills.ContinuumFieldNontriviality.unitTimeVec]
       YangMills.ContinuumFieldNontriviality.IsNonCoincident x ∧
-      YangMills.ContinuumFieldNontriviality.connectedS4Centered w.os w.ops x ≠ 0) ∧
+      YangMills.ContinuumFieldNontriviality.connectedS4Centered w.os su3ScalarGlueballOps4 x ≠ 0) ∧
     YangMills.YangMillsSU3MassGap.{0} := by
   refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · intro β r hβ_lo hβ_hi hr_lo hr_hi
@@ -403,9 +407,9 @@ theorem constructive_su3_millennium_synthesis
       (by rw [YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra.transform_id]; rfl)
       (by rw [YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra.transform_id]; rfl)
   · exact YangMills.ContinuumFieldNontriviality.not_gaussian_of_singular_ope
-      w.os w.ops w.hR w.ope_wit
+      w.os su3ScalarGlueballOps4 (by norm_num : (0 : ℝ) < 1) w.ope_wit
   · exact YangMills.ContinuumFieldNontriviality.connectedS4_ne_zero_of_singular_ope
-      w.os w.ops w.hR w.ope_wit
+      w.os su3ScalarGlueballOps4 (by norm_num : (0 : ℝ) < 1) w.ope_wit
   · have h_gap : HasMassGap (Matrix.specialUnitaryGroup (Fin 3) ℂ) w.H.HilbertSpace w.H.theory :=
       reconstructed_gns_has_mass_gap w.H w.semi w.os.mass_rate w.os.mass_rate_pos
         w.h_deriv w.h_cluster w.h_finite_spec

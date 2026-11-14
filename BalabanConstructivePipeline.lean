@@ -1279,6 +1279,53 @@ noncomputable def wilsonLatticeSchwingerFunction (G : Type*) [TopologicalSpace G
     (obs : Fin n → ((Fin B → G) → ℂ)) : ℂ :=
   ∫ U, (∏ i : Fin n, obs i U) ∂(wilsonLatticeFunctionalMeasure G B S_W Z)
 
+/-- **Step 1: 0-point normalization S₀ = 1 for the Wilson lattice Schwinger function**
+    when `Z = ∫ U, Real.exp (- S_W U) ∂(wilsonLatticeHaarMeasure G B)` is non-zero. -/
+theorem wilsonLatticeSchwingerFunction_zero (G : Type*) [TopologicalSpace G] [Group G]
+    [IsTopologicalGroup G] [CompactSpace G] [T2Space G] [MeasurableSpace G] [BorelSpace G]
+    (B : ℕ) (S_W : (Fin B → G) → ℝ) (Z : ℝ)
+    (hZ : Z = ∫ U, Real.exp (- S_W U) ∂(wilsonLatticeHaarMeasure G B))
+    (hZ_ne : Z ≠ 0) (obs : Fin 0 → ((Fin B → G) → ℂ)) :
+    wilsonLatticeSchwingerFunction G B S_W Z 0 obs = 1 := by
+  unfold wilsonLatticeSchwingerFunction wilsonLatticeFunctionalMeasure
+  simp only [Fin.prod_univ_zero, MeasureTheory.integral_const, Complex.real_smul, mul_one]
+  have h_int : Integrable (fun U => Real.exp (- S_W U)) (wilsonLatticeHaarMeasure G B) := by
+    by_contra h_not
+    have h0 := MeasureTheory.integral_undef h_not
+    rw [h0] at hZ
+    exact hZ_ne hZ
+  have h_nonneg : ∀ᵐ U ∂(wilsonLatticeHaarMeasure G B), 0 ≤ Real.exp (- S_W U) :=
+    Filter.Eventually.of_forall fun U => (Real.exp_pos _).le
+  have hZ_nonneg : 0 ≤ Z := hZ ▸ MeasureTheory.integral_nonneg fun U => (Real.exp_pos _).le
+  have hZ_pos : 0 < Z := lt_of_le_of_ne hZ_nonneg hZ_ne.symm
+  have h_lintegral :
+      (∫⁻ U, ENNReal.ofReal (Real.exp (- S_W U)) ∂(wilsonLatticeHaarMeasure G B)) =
+        ENNReal.ofReal Z := by
+    rw [hZ]
+    exact (MeasureTheory.ofReal_integral_eq_lintegral_ofReal h_int h_nonneg).symm
+  have h_real :
+      ((ENNReal.ofReal (1 / Z)) • ((wilsonLatticeHaarMeasure G B).withDensity
+        (fun U => ENNReal.ofReal (Real.exp (- S_W U))))).real Set.univ = 1 := by
+    rw [MeasureTheory.Measure.real_def, MeasureTheory.Measure.smul_apply,
+      MeasureTheory.withDensity_apply _ MeasurableSet.univ,
+      MeasureTheory.setLIntegral_univ, h_lintegral, smul_eq_mul,
+      ← ENNReal.ofReal_mul (one_div_nonneg.mpr hZ_pos.le),
+      one_div_mul_cancel hZ_ne, ENNReal.ofReal_one, ENNReal.toReal_one]
+  rw [h_real]
+  norm_num
+
+/-- **Step 1: Permutation Symmetry (OS3)** for the Wilson lattice Schwinger function. -/
+theorem wilsonLatticeSchwingerFunction_os3 (G : Type*) [TopologicalSpace G] [Group G]
+    [IsTopologicalGroup G] [CompactSpace G] [T2Space G] [MeasurableSpace G] [BorelSpace G]
+    (B : ℕ) (S_W : (Fin B → G) → ℝ) (Z : ℝ) (n : ℕ) (σ : Equiv.Perm (Fin n))
+    (obs : Fin n → ((Fin B → G) → ℂ)) :
+    wilsonLatticeSchwingerFunction G B S_W Z n (obs ∘ σ) =
+      wilsonLatticeSchwingerFunction G B S_W Z n obs := by
+  unfold wilsonLatticeSchwingerFunction
+  congr 1
+  ext U
+  exact Fintype.prod_equiv σ _ _ (fun _ => rfl)
+
 /-- Pointwise n-point Schwinger correlation functions on non-coincident configurations -/
 def stdSchwinger {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
     (Curv : CurvaturePolynomialAlgebra G) (n : ℕ)
