@@ -330,6 +330,134 @@ structure ReconstructedEuclideanSemigroup
   t_zero : T 0 = ContinuousLinearMap.id ℂ H.HilbertSpace
   t_add : ∀ t1 t2 : ℝ, 0 ≤ t1 → 0 ≤ t2 → T (t1 + t2) = (T t1).comp (T t2)
   is_contraction : ∀ (t : ℝ), 0 ≤ t → ‖T t‖ ≤ 1
+  is_symmetric : ∀ (t : ℝ), 0 ≤ t → ∀ (φ ψ : H.HilbertSpace),
+    inner ℂ (T t φ) ψ = inner ℂ φ (T t ψ)
+  m_rate : ℝ
+  m_rate_pos : 0 < m_rate
+  matrix_element_clustering : ∀ (ψ : H.HilbertSpace),
+    inner ℂ H.theory.vacuum ψ = 0 →
+    ∃ C : ℝ, 0 ≤ C ∧ ∀ (t : ℝ), 0 ≤ t →
+      ‖inner ℂ ψ (T t ψ)‖ ≤ C * Real.exp (-m_rate * t)
+
+/-- **Iterated Cauchy–Schwarz Semigroup Exponential Decay**:
+    From symmetry `⟨T(t)φ, ψ⟩ = ⟨φ, T(t)ψ⟩` and matrix-element clustering
+    `|⟨ψ, T(t)ψ⟩| ≤ C_ψ exp(-m t)` on `(ℂΩ)ᗮ`, iterated Cauchy–Schwarz
+    `‖T(t)ψ‖² = ⟨ψ, T(2t)ψ⟩ ≤ ‖ψ‖ ‖T(2t)ψ‖` eliminates the prefactor `C_ψ` and proves
+    `‖T(t)ψ‖ ≤ exp(-m t) ‖ψ‖` for all `ψ ⊥ Ω` and `t ≥ 0`. -/
+theorem semigroup_exp_decay_of_symmetric_contraction_clustering
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (H : ReconstructedGNSHilbertSpace G Curv)
+    (semi : ReconstructedEuclideanSemigroup H)
+    (ψ : H.HilbertSpace) (t : ℝ)
+    (h_ortho : inner ℂ H.theory.vacuum ψ = 0) (ht : 0 ≤ t) :
+    ‖semi.T t ψ‖ ≤ Real.exp (-semi.m_rate * t) * ‖ψ‖ := by
+  have h_step : ∀ (s : ℝ), 0 ≤ s → ∀ (φ : H.HilbertSpace),
+      ‖semi.T s φ‖ ^ 2 ≤ ‖φ‖ * ‖semi.T (2 * s) φ‖ := by
+    intro s hs φ
+    have h_sq : ‖semi.T s φ‖ ^ 2 = (inner ℂ (semi.T s φ) (semi.T s φ)).re := by
+      symm
+      rw [inner_self_eq_norm_sq_to_K]
+      norm_cast
+    have h_symm : inner ℂ (semi.T s φ) (semi.T s φ) = inner ℂ φ (semi.T (2 * s) φ) := by
+      rw [semi.is_symmetric s hs φ (semi.T s φ)]
+      have h2s : 2 * s = s + s := by ring
+      rw [h2s, semi.t_add s s hs hs]
+      rfl
+    rw [h_sq, h_symm]
+    exact le_trans (Complex.re_le_norm _) (norm_inner_le_norm φ (semi.T (2 * s) φ))
+  have h_iter : ∀ (k : ℕ),
+      ‖semi.T t ψ‖ ^ (2 ^ k) ≤ ‖ψ‖ ^ (2 ^ k - 1) * ‖semi.T ((2 ^ k : ℝ) * t) ψ‖ := by
+    intro k
+    induction k with
+    | zero => simp
+    | succ k ih =>
+      have h_nonneg : 0 ≤ ‖semi.T t ψ‖ ^ (2 ^ k) := pow_nonneg (norm_nonneg _) _
+      have h_sq_le := pow_le_pow_left₀ h_nonneg ih 2
+      have h_pow_eq : (‖semi.T t ψ‖ ^ (2 ^ k)) ^ 2 = ‖semi.T t ψ‖ ^ (2 ^ (k + 1)) := by
+        rw [← pow_mul, pow_succ]
+      rw [h_pow_eq, mul_pow, ← pow_mul] at h_sq_le
+      have h_s : 0 ≤ (2 ^ k : ℝ) * t := mul_nonneg (by positivity) ht
+      have h_st := h_step ((2 ^ k : ℝ) * t) h_s ψ
+      have h2k : 2 * ((2 ^ k : ℝ) * t) = (2 ^ (k + 1) : ℝ) * t := by
+        rw [pow_succ]; ring
+      rw [h2k] at h_st
+      have h_mul := mul_le_mul_of_nonneg_left h_st (pow_nonneg (norm_nonneg ψ) ((2 ^ k - 1) * 2))
+      refine le_trans h_sq_le (le_trans h_mul ?_)
+      have h_exp : (2 ^ k - 1) * 2 + 1 = 2 ^ (k + 1) - 1 := by
+        have h1 : 1 ≤ 2 ^ k := Nat.one_le_pow k 2 (by norm_num)
+        rw [pow_succ]
+        omega
+      rw [← mul_assoc, ← pow_succ, h_exp]
+  obtain ⟨C, _hC_nonneg, h_mat⟩ := semi.matrix_element_clustering ψ h_ortho
+  have h_mat_sq : ∀ k : ℕ,
+      ‖semi.T ((2 ^ k : ℝ) * t) ψ‖ ^ 2 ≤ C * Real.exp (-semi.m_rate * ((2 ^ (k + 1) : ℝ) * t)) := by
+    intro k
+    have hs : 0 ≤ (2 ^ k : ℝ) * t := mul_nonneg (by positivity) ht
+    have h_sq : ‖semi.T ((2 ^ k : ℝ) * t) ψ‖ ^ 2 =
+        (inner ℂ ψ (semi.T ((2 ^ (k + 1) : ℝ) * t) ψ)).re := by
+      have h_n : ‖semi.T ((2 ^ k : ℝ) * t) ψ‖ ^ 2 =
+          (inner ℂ (semi.T ((2 ^ k : ℝ) * t) ψ) (semi.T ((2 ^ k : ℝ) * t) ψ)).re := by
+        symm
+        rw [inner_self_eq_norm_sq_to_K]
+        norm_cast
+      rw [h_n, semi.is_symmetric _ hs]
+      have h2k : (2 ^ (k + 1) : ℝ) * t = (2 ^ k : ℝ) * t + (2 ^ k : ℝ) * t := by
+        rw [pow_succ]; ring
+      rw [h2k, semi.t_add _ _ hs hs]
+      rfl
+    rw [h_sq]
+    have h2k_nonneg : 0 ≤ (2 ^ (k + 1) : ℝ) * t := mul_nonneg (by positivity) ht
+    exact le_trans (Complex.re_le_norm _) (h_mat _ h2k_nonneg)
+  by_cases hψ : ψ = 0
+  · subst hψ; simp
+  have hψ_pos : 0 < ‖ψ‖ := norm_pos_iff.mpr hψ
+  have h_den_pos : 0 < Real.exp (-semi.m_rate * t) * ‖ψ‖ :=
+    mul_pos (Real.exp_pos _) hψ_pos
+  let r : ℝ := ‖semi.T t ψ‖ / (Real.exp (-semi.m_rate * t) * ‖ψ‖)
+  suffices hr : r ≤ 1 by
+    exact (div_le_one h_den_pos).mp hr
+  by_contra hr_gt
+  push_neg at hr_gt
+  have h_upper : ∀ k : ℕ, r ^ (2 ^ (k + 1)) ≤ C / ‖ψ‖ ^ 2 := by
+    intro k
+    have h_pow_k := h_iter k
+    have h_sq_k := pow_le_pow_left₀ (pow_nonneg (norm_nonneg _) _) h_pow_k 2
+    have h_lhs : (‖semi.T t ψ‖ ^ (2 ^ k)) ^ 2 = ‖semi.T t ψ‖ ^ (2 ^ (k + 1)) := by
+      rw [← pow_mul, pow_succ]
+    rw [h_lhs, mul_pow, ← pow_mul] at h_sq_k
+    have h_m := mul_le_mul_of_nonneg_left (h_mat_sq k) (pow_nonneg hψ_pos.le ((2 ^ k - 1) * 2))
+    have h_comb := le_trans h_sq_k h_m
+    have h_exp_pow : (Real.exp (-semi.m_rate * t)) ^ (2 ^ (k + 1)) =
+        Real.exp (-semi.m_rate * ((2 ^ (k + 1) : ℝ) * t)) := by
+      rw [← Real.exp_nat_mul]
+      congr 1
+      push_cast
+      ring
+    have h_den_pow_pos : 0 < (Real.exp (-semi.m_rate * t) * ‖ψ‖) ^ (2 ^ (k + 1)) :=
+      pow_pos h_den_pos _
+    rw [div_pow, mul_pow, h_exp_pow]
+    rw [div_le_div_iff₀ (mul_pos (Real.exp_pos _) (pow_pos hψ_pos _)) (sq_pos_of_pos hψ_pos)]
+    have h_exp2 : (2 ^ k - 1) * 2 + 2 = 2 ^ (k + 1) := by
+      have h1 : 1 ≤ 2 ^ k := Nat.one_le_pow k 2 (by norm_num)
+      rw [pow_succ]; omega
+    have h_rhs_eq :
+        ‖ψ‖ ^ ((2 ^ k - 1) * 2) * (C * Real.exp (-semi.m_rate * ((2 ^ (k + 1) : ℝ) * t))) * ‖ψ‖ ^ 2 =
+        C * (Real.exp (-semi.m_rate * ((2 ^ (k + 1) : ℝ) * t)) * ‖ψ‖ ^ (2 ^ (k + 1))) := by
+      calc ‖ψ‖ ^ ((2 ^ k - 1) * 2) * (C * Real.exp (-semi.m_rate * ((2 ^ (k + 1) : ℝ) * t))) * ‖ψ‖ ^ 2
+        _ = C * (Real.exp (-semi.m_rate * ((2 ^ (k + 1) : ℝ) * t)) * (‖ψ‖ ^ ((2 ^ k - 1) * 2) * ‖ψ‖ ^ 2)) := by ring
+        _ = C * (Real.exp (-semi.m_rate * ((2 ^ (k + 1) : ℝ) * t)) * ‖ψ‖ ^ (2 ^ (k + 1))) := by
+            rw [← pow_add, h_exp2]
+    rw [← h_rhs_eq]
+    exact mul_le_mul_of_nonneg_right h_comb (sq_nonneg _)
+  have h_tend : Filter.Tendsto (fun k : ℕ => r ^ (2 ^ (k + 1))) Filter.atTop Filter.atTop := by
+    refine (tendsto_pow_atTop_atTop_of_one_lt hr_gt).comp ?_
+    exact Filter.tendsto_atTop_atTop.mpr fun b => ⟨b, fun k hk => by
+      have h_lt : k + 1 < 2 ^ (k + 1) := Nat.lt_pow_self (by norm_num : 1 < 2)
+      omega⟩
+  obtain ⟨k, hk⟩ := Filter.eventually_atTop.mp ((Filter.tendsto_atTop.mp h_tend) (C / ‖ψ‖ ^ 2 + 1))
+  have hk' := hk k le_rfl
+  linarith [h_upper k]
 
 /-! ============================================================================
     PART IV: THE COMPLEX JOST TUBE 𝒯ₙ AND ANALYTIC CONTINUATION
@@ -632,12 +760,233 @@ theorem sesqOS_shift_clustering
   rw [h_trans] at h_bound
   exact h_bound
 
+/-! ============================================================================
+    PART V: TRUNCATED CONTINUUM CHARACTERISTIC FUNCTIONAL (OS0)
+    ============================================================================ -/
+
+/-- Truncated continuum characteristic functional:
+    `𝒞_N(f) = ∑_{n=0}^N (i^n / n!) S_n(f^⊗n)`. -/
+noncomputable def charFunctionalTrunc
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (op : ObservableLabel G Curv) (N : ℕ)
+    (f : SchwartzMap EuclideanSpace4 ℂ) : ℂ :=
+  ∑ n ∈ Finset.range (N + 1),
+    (Complex.I ^ n / (Nat.factorial n : ℂ)) *
+      os.schwinger_smeared n (fun _ => op) (fun _ => f)
+
+private theorem schwinger_smeared_zero_eq_one
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (ops : Fin 0 → ObservableLabel G Curv)
+    (f : Fin 0 → SchwartzMap EuclideanSpace4 ℂ) :
+    os.schwinger_smeared 0 ops f = 1 := by
+  have h_disj : DisjointSupports f := fun i => i.elim0
+  rw [os.schwinger_smeared_integral_compat 0 ops f h_disj]
+  simp [os.schwinger_zero, MeasureTheory.Measure.real_def, MeasureTheory.volume_pi]
+
+/-- Normalization of the truncated characteristic functional at `N = 0`: `𝒞_0(f) = 1`. -/
+theorem charFunctionalTrunc_zero
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (op : ObservableLabel G Curv) (f : SchwartzMap EuclideanSpace4 ℂ) :
+    charFunctionalTrunc os op 0 f = 1 := by
+  unfold charFunctionalTrunc
+  simp [schwinger_smeared_zero_eq_one]
+
+/-- Normalization of the truncated characteristic functional at `f = 0`: `𝒞_N(0) = 1`. -/
+theorem charFunctionalTrunc_zero_test
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (op : ObservableLabel G Curv) (N : ℕ) :
+    charFunctionalTrunc os op N 0 = 1 := by
+  unfold charFunctionalTrunc
+  rw [Finset.sum_range_succ']
+  have h0 : (Complex.I ^ 0 / (Nat.factorial 0 : ℂ)) *
+      os.schwinger_smeared 0 (fun _ => op) (fun _ => 0) = 1 := by
+    simp [schwinger_smeared_zero_eq_one]
+  have h_rest : ∀ k ∈ Finset.range N,
+      (Complex.I ^ (k + 1) / (Nat.factorial (k + 1) : ℂ)) *
+        os.schwinger_smeared (k + 1) (fun _ => op) (fun _ => 0) = 0 := by
+    intro k _
+    have h_lin := os.schwinger_smeared_linear (k + 1) (fun _ => op) 0 0 0 0 0 (fun _ => 0)
+    have h_upd : Function.update (fun _ : Fin (k + 1) => (0 : SchwartzMap EuclideanSpace4 ℂ))
+        0 ((0 : ℂ) • 0 + (0 : ℂ) • 0) = fun _ => 0 := by
+      ext j
+      by_cases hj : j = 0
+      · subst hj; simp
+      · simp [Function.update_of_ne hj]
+    rw [h_upd] at h_lin
+    simp only [zero_mul, add_zero] at h_lin
+    rw [h_lin, mul_zero]
+  rw [Finset.sum_eq_zero h_rest, zero_add, h0]
+
+/-- OS0 Schwartz seminorm bound for `charFunctionalTrunc os op 1 f` from `os.os0_temperedness`. -/
+theorem charFunctionalTrunc_one_os0_bound
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (op : ObservableLabel G Curv) :
+    ∃ (α : ℝ) (s : ℕ), 0 < α ∧
+      ∀ (f : SchwartzMap EuclideanSpace4 ℂ),
+        ‖charFunctionalTrunc os op 1 f‖ ≤ 1 + α * SchwartzMap.seminorm ℝ s s f := by
+  obtain ⟨α, β, s, hα, _hβ, h_smeared, _⟩ := os.os0_temperedness 1 (fun _ => op)
+  refine ⟨α, s, hα, fun f => ?_⟩
+  unfold charFunctionalTrunc
+  rw [Finset.sum_range_succ, Finset.sum_range_one]
+  have h0 : (Complex.I ^ 0 / (Nat.factorial 0 : ℂ)) *
+      os.schwinger_smeared 0 (fun _ => op) (fun _ => f) = 1 := by
+    simp [schwinger_smeared_zero_eq_one]
+  rw [h0]
+  have h_disj1 : DisjointSupports (fun _ : Fin 1 => f) := by
+    intro i j hij
+    exact absurd (Subsingleton.elim i j) hij
+  have h1 := h_smeared 1 (fun _ => 0) (fun _ => f) h_disj1
+  simp only [pow_one, Nat.factorial_one, Nat.cast_one, Real.one_rpow, mul_one,
+    Fin.prod_univ_one] at h1
+  have h_term1 : ‖(Complex.I ^ 1 / (Nat.factorial 1 : ℂ)) *
+      os.schwinger_smeared 1 (fun _ => op) (fun _ => f)‖ ≤
+      α * SchwartzMap.seminorm ℝ s s f := by
+    rw [norm_mul]
+    simp only [pow_one, Nat.factorial_one, Nat.cast_one, div_one, Complex.norm_I, one_mul]
+    exact h1
+  exact le_trans (norm_add_le _ _) (by linarith [norm_one (α := ℂ)])
+
+/-! ============================================================================
+    PART VI: RELATIVISTIC MASS-SQUARED OPERATOR & SINGLE-PARTICLE DISPERSION
+    ============================================================================ -/
+
+/-- Relativistic mass-squared operator `M² = H² - ∑_{i=1}^3 P_i²` on `theory.domain`. -/
+noncomputable def massSqOp
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {ℋ : Type*} [NormedAddCommGroup ℋ] [InnerProductSpace ℂ ℋ]
+    [CompleteSpace ℋ] [SeparableSpace ℋ]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (theory : WightmanQuantumYangMills G ℋ Curv) : theory.domain →ₗ[ℂ] ℋ where
+  toFun ψ :=
+    theory.Hamiltonian ⟨theory.Hamiltonian ψ, theory.hamiltonian_domain_invariant ψ⟩ -
+      ∑ i : Fin 3, theory.Momentum i ⟨theory.Momentum i ψ, theory.momentum_domain_invariant i ψ⟩
+  map_add' ψ φ := by
+    have hH : (⟨theory.Hamiltonian (ψ + φ), theory.hamiltonian_domain_invariant (ψ + φ)⟩ : theory.domain) =
+        ⟨theory.Hamiltonian ψ, theory.hamiltonian_domain_invariant ψ⟩ +
+        ⟨theory.Hamiltonian φ, theory.hamiltonian_domain_invariant φ⟩ := by
+      ext; simp [map_add]
+    have hP : ∀ i : Fin 3,
+        (⟨theory.Momentum i (ψ + φ), theory.momentum_domain_invariant i (ψ + φ)⟩ : theory.domain) =
+        ⟨theory.Momentum i ψ, theory.momentum_domain_invariant i ψ⟩ +
+        ⟨theory.Momentum i φ, theory.momentum_domain_invariant i φ⟩ := by
+      intro i; ext; simp [map_add]
+    rw [hH, map_add]
+    simp_rw [hP, map_add, Finset.sum_add_distrib]
+    abel
+  map_smul' c ψ := by
+    have hH : (⟨theory.Hamiltonian (c • ψ), theory.hamiltonian_domain_invariant (c • ψ)⟩ : theory.domain) =
+        c • ⟨theory.Hamiltonian ψ, theory.hamiltonian_domain_invariant ψ⟩ := by
+      ext; simp [map_smul]
+    have hP : ∀ i : Fin 3,
+        (⟨theory.Momentum i (c • ψ), theory.momentum_domain_invariant i (c • ψ)⟩ : theory.domain) =
+        c • ⟨theory.Momentum i ψ, theory.momentum_domain_invariant i ψ⟩ := by
+      intro i; ext; simp [map_smul]
+    rw [hH, map_smul]
+    simp_rw [hP, map_smul, ← Finset.smul_sum]
+    simp [smul_sub]
+
+/-- Symmetry of the relativistic mass-squared operator on `theory.domain`. -/
+theorem massSqOp_symmetric
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {ℋ : Type*} [NormedAddCommGroup ℋ] [InnerProductSpace ℂ ℋ]
+    [CompleteSpace ℋ] [SeparableSpace ℋ]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (theory : WightmanQuantumYangMills G ℋ Curv)
+    (ψ φ : theory.domain) :
+    inner ℂ (massSqOp theory ψ) (φ : ℋ) = inner ℂ (ψ : ℋ) (massSqOp theory φ) := by
+  unfold massSqOp
+  simp only [LinearMap.coe_mk, AddHom.coe_mk, inner_sub_left, inner_sub_right,
+    inner_sum, sum_inner]
+  have hH :
+      inner ℂ (theory.Hamiltonian ⟨theory.Hamiltonian ψ, theory.hamiltonian_domain_invariant ψ⟩) (φ : ℋ) =
+      inner ℂ (ψ : ℋ) (theory.Hamiltonian ⟨theory.Hamiltonian φ, theory.hamiltonian_domain_invariant φ⟩) := by
+    rw [theory.hamiltonian_symmetric ⟨theory.Hamiltonian ψ, _⟩ φ]
+    change inner ℂ (theory.Hamiltonian ψ) (theory.Hamiltonian φ) = _
+    rw [theory.hamiltonian_symmetric ψ ⟨theory.Hamiltonian φ, _⟩]
+  have hP : ∀ i : Fin 3,
+      inner ℂ (theory.Momentum i ⟨theory.Momentum i ψ, theory.momentum_domain_invariant i ψ⟩) (φ : ℋ) =
+      inner ℂ (ψ : ℋ) (theory.Momentum i ⟨theory.Momentum i φ, theory.momentum_domain_invariant i φ⟩) := by
+    intro i
+    rw [theory.momentum_symmetric i ⟨theory.Momentum i ψ, _⟩ φ]
+    change inner ℂ (theory.Momentum i ψ) (theory.Momentum i φ) = _
+    rw [theory.momentum_symmetric i ψ ⟨theory.Momentum i φ, _⟩]
+  rw [hH]
+  simp_rw [hP]
+
+/-- Exact quadratic form identity `⟨ψ, M² ψ⟩ = ‖H ψ‖² - ∑ᵢ ‖Pᵢ ψ‖²`. -/
+theorem massSqOp_inner_eq
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {ℋ : Type*} [NormedAddCommGroup ℋ] [InnerProductSpace ℂ ℋ]
+    [CompleteSpace ℋ] [SeparableSpace ℋ]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (theory : WightmanQuantumYangMills G ℋ Curv)
+    (ψ : theory.domain) :
+    inner ℂ (ψ : ℋ) (massSqOp theory ψ) =
+      ((‖theory.Hamiltonian ψ‖ ^ 2 : ℝ) : ℂ) -
+        ∑ i : Fin 3, ((‖theory.Momentum i ψ‖ ^ 2 : ℝ) : ℂ) := by
+  unfold massSqOp
+  simp only [LinearMap.coe_mk, AddHom.coe_mk, inner_sub_right, inner_sum]
+  have hH : inner ℂ (ψ : ℋ) (theory.Hamiltonian ⟨theory.Hamiltonian ψ, theory.hamiltonian_domain_invariant ψ⟩) =
+      ((‖theory.Hamiltonian ψ‖ ^ 2 : ℝ) : ℂ) := by
+    rw [← theory.hamiltonian_symmetric ψ ⟨theory.Hamiltonian ψ, _⟩]
+    rw [inner_self_eq_norm_sq_to_K]
+    norm_cast
+  have hP : ∀ i : Fin 3,
+      inner ℂ (ψ : ℋ) (theory.Momentum i ⟨theory.Momentum i ψ, theory.momentum_domain_invariant i ψ⟩) =
+      ((‖theory.Momentum i ψ‖ ^ 2 : ℝ) : ℂ) := by
+    intro i
+    rw [← theory.momentum_symmetric i ψ ⟨theory.Momentum i ψ, _⟩]
+    rw [inner_self_eq_norm_sq_to_K]
+    norm_cast
+  rw [hH]
+  simp_rw [hP]
+
+/-- Single-particle rest-frame mass-shell bound:
+    for `ψ ⊥ Ω` with `P_i ψ = 0`, `Δ² ‖ψ‖² ≤ Re ⟨ψ, M² ψ⟩`. -/
+theorem massSqOp_rest_frame_mass_shell_bound
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {ℋ : Type*} [NormedAddCommGroup ℋ] [InnerProductSpace ℂ ℋ]
+    [CompleteSpace ℋ] [SeparableSpace ℋ]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (theory : WightmanQuantumYangMills G ℋ Curv)
+    (Δ : ℝ) (hΔ : 0 ≤ Δ)
+    (h_gap : ∀ φ : theory.domain,
+      inner ℂ theory.vacuum (φ : ℋ) = 0 → Δ * ‖(φ : ℋ)‖ ≤ ‖theory.Hamiltonian φ‖)
+    (ψ : theory.domain)
+    (h_ortho : inner ℂ theory.vacuum (ψ : ℋ) = 0)
+    (h_rest : ∀ i : Fin 3, theory.Momentum i ψ = 0) :
+    Δ ^ 2 * ‖(ψ : ℋ)‖ ^ 2 ≤ (inner ℂ (ψ : ℋ) (massSqOp theory ψ)).re := by
+  rw [massSqOp_inner_eq]
+  simp_rw [h_rest, norm_zero, sq, mul_zero, Complex.ofReal_zero, Finset.sum_const_zero, sub_zero]
+  simp only [Complex.ofReal_re]
+  have h_lin := h_gap ψ h_ortho
+  have h_sq := pow_le_pow_left₀ (mul_nonneg hΔ (norm_nonneg _)) h_lin 2
+  rw [mul_pow] at h_sq
+  simpa [sq] using h_sq
+
 #print axioms gns_cauchy_schwarz_soundness
 #print axioms reed_simon_x49_semigroup_core
 #print axioms reconstructed_gns_has_mass_gap
+#print axioms semigroup_exp_decay_of_symmetric_contraction_clustering
 #print axioms sesqOS_shift_symm
 #print axioms gnsPreHilbertSemigroup_zero
 #print axioms gnsPreHilbertSemigroup_add
 #print axioms sesqOS_shift_clustering
+#print axioms charFunctionalTrunc_zero
+#print axioms charFunctionalTrunc_zero_test
+#print axioms charFunctionalTrunc_one_os0_bound
+#print axioms massSqOp_symmetric
+#print axioms massSqOp_inner_eq
+#print axioms massSqOp_rest_frame_mass_shell_bound
 
 end YangMills.ConstructiveGNS

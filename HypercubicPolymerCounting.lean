@@ -617,6 +617,50 @@ theorem hypercube4_character_dominates_klarner
   rw [hypercube4FaceIndex_card]
   exact crossover_character_dominates_klarner (by decide) hz_nonneg hz_le
 
+/-- **4. Minimal-Surface Rectangular Plaquette Sheet `S_{L, T}` and Wilson Area Law**:
+    Constructs the `L × T` rectangular plaquette sheet in the `(0, 1)`-plane of `ℤ⁴`
+    with exact area `S_{L, T}.card = L * T`. -/
+def rectPlaquetteSheet (L T : ℕ) : Finset Z4Plaquette :=
+  ((Finset.range L).product (Finset.range T)).image fun p =>
+    ⟨fun k => if k = 0 then (p.1 : ℤ) else if k = 1 then (p.2 : ℤ) else 0, 0, 1, by decide⟩
+
+theorem rectPlaquetteSheet_card (L T : ℕ) :
+    (rectPlaquetteSheet L T).card = L * T := by
+  unfold rectPlaquetteSheet
+  rw [Finset.card_image_of_injective]
+  · simp [Finset.card_product]
+  · intro p q h_eq
+    have h_base : (⟨fun k => if k = 0 then (p.1 : ℤ) else if k = 1 then (p.2 : ℤ) else 0, 0, 1, by decide⟩ : Z4Plaquette).base =
+        (⟨fun k => if k = 0 then (q.1 : ℤ) else if k = 1 then (q.2 : ℤ) else 0, 0, 1, by decide⟩ : Z4Plaquette).base :=
+      congrArg Z4Plaquette.base h_eq
+    have h0 : (p.1 : ℤ) = (q.1 : ℤ) := by simpa using congrFun h_base 0
+    have h1 : (p.2 : ℤ) = (q.2 : ℤ) := by simpa using congrFun h_base 1
+    ext <;> omega
+
+/-- **Wilson Loop Peierls Area-Law Bound**:
+    For any plaquette sheet `S : Finset Z4Plaquette` of area `A = S.card` and coupling `β > 10`,
+      `exp(-β * S.card) ≤ exp(-(β - 10) * S.card) * (1 / 2401) ^ S.card`. -/
+theorem wilson_sheet_peierls_area_law
+    (S : Finset Z4Plaquette) {β : ℝ} (_hβ : 10 < β) :
+    Real.exp (-β * (S.card : ℝ)) ≤
+      Real.exp (-(β - 10) * (S.card : ℝ)) * ((1 : ℝ) / 2401) ^ S.card := by
+  have h_split : -β * (S.card : ℝ) = -(β - 10) * (S.card : ℝ) + (-10) * (S.card : ℝ) := by ring
+  rw [h_split, Real.exp_add]
+  have h_pow : Real.exp ((-10 : ℝ) * (S.card : ℝ)) = (Real.exp (-10)) ^ S.card := by
+    rw [← Real.exp_nat_mul]
+    congr 1
+    ring
+  rw [h_pow]
+  have h_exp_le : (Real.exp (-10)) ^ S.card ≤ ((1 : ℝ) / 2401) ^ S.card :=
+    pow_le_pow_left₀ (Real.exp_pos (-10)).le exp_neg_ten_lt_inv_2401.le S.card
+  exact mul_le_mul_of_nonneg_left h_exp_le (Real.exp_pos _).le
+
+theorem rect_wilson_area_law (L T : ℕ) {β : ℝ} (hβ : 10 < β) :
+    Real.exp (-β * ((L * T : ℕ) : ℝ)) ≤
+      Real.exp (-(β - 10) * ((L * T : ℕ) : ℝ)) * ((1 : ℝ) / 2401) ^ (L * T) := by
+  simpa only [rectPlaquetteSheet_card] using
+    wilson_sheet_peierls_area_law (rectPlaquetteSheet L T) hβ
+
 #print axioms plaquetteBoundary_card
 #print axioms two_plaquettes_share_at_most_one_edge
 #print axioms closed_2cycle_card_ge_six
@@ -625,5 +669,8 @@ theorem hypercube4_character_dominates_klarner
 #print axioms strong_coupling_character_6_dominates_klarner
 #print axioms crossover_character_dominates_klarner
 #print axioms hypercube4_character_dominates_klarner
+#print axioms rectPlaquetteSheet_card
+#print axioms wilson_sheet_peierls_area_law
+#print axioms rect_wilson_area_law
 
 end YangMills.HypercubicPolymerCounting

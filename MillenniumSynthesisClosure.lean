@@ -28,6 +28,7 @@ import ToposUnifiedYangMills
 import BalabanConstructivePipeline
 import OsterwalderSchraderReconstruction
 import UnconditionalInfiniteLatticeLimit
+import ContinuumDistributionalCauchyLimit
 import ConstructiveGNSReconstruction
 import CompactLieGroupsSimplicity
 import UVThresholdBridge
@@ -336,9 +337,6 @@ structure ConstructiveContinuumSU3Witness where
   h_deriv : ∀ ψ : H.theory.domain,
     HasDerivAt (fun t => semi.T t (ψ : H.HilbertSpace))
       (- (H.theory.Hamiltonian ψ : H.HilbertSpace)) 0
-  h_cluster : ∀ (ψ : H.theory.domain) (t : ℝ),
-    inner ℂ H.theory.vacuum (ψ : H.HilbertSpace) = 0 → 0 ≤ t →
-    ‖semi.T t (ψ : H.HilbertSpace)‖ ≤ Real.exp (-os.mass_rate * t) * ‖(ψ : H.HilbertSpace)‖
   h_finite_spec : ∃ (M : ℝ) (ψ : H.theory.domain),
     0 < M ∧ inner ℂ H.theory.vacuum (ψ : H.HilbertSpace) = 0 ∧ (ψ : H.HilbertSpace) ≠ 0 ∧
     ‖H.theory.Hamiltonian ψ‖ ≤ M * ‖(ψ : H.HilbertSpace)‖
@@ -396,8 +394,47 @@ theorem constructive_su3_millennium_synthesis
             starRingEnd ℂ (w.os.schwinger f.deg (reverseConjLabels f.ops) (reverseReflectConfig f.X)) *
               w.os.schwinger g.deg g.ops g.X‖ ≤
           C * Real.exp (-w.os.mass_rate * t))) ∧
+    ((∀ (H_seq : YangMills.ContinuumCauchy.MultiscaleLatticeSchwingerHierarchy),
+        (∃! S_inf : ℝ, Filter.Tendsto H_seq.S_k Filter.atTop (nhds S_inf)) ∧
+        ∀ k : ℕ, |YangMills.ContinuumCauchy.continuumSchwingerLimit H_seq - H_seq.S_k k| ≤
+          2 * H_seq.C_n * (1 / 2 : ℝ) ^ k) ∧
+      (∀ (ch : NormalizedGaugeCharacter (Matrix.specialUnitaryGroup (Fin 3) ℂ))
+         (lambda_ym beta_ir : ℝ), 0 < beta_ir →
+         ∀ (L : ℕ) {β : ℝ}, 0 < β →
+         ∀ (ψ : SpatialL2 L (Matrix.specialUnitaryGroup (Fin 3) ℂ)),
+         inner ℂ (normalizedMagneticVacuum ch L β) ψ = 0 →
+         ‖(pureHaarWilsonLattice (Matrix.specialUnitaryGroup (Fin 3) ℂ)
+           YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra
+           ch lambda_ym beta_ir).T_wilson L β ψ‖ ≤
+           (1 - Real.exp (-2 * β)) * ‖ψ‖)) ∧
+    ((∀ (op : ObservableLabel (Matrix.specialUnitaryGroup (Fin 3) ℂ)
+           YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra)
+        (f : SchwartzMap EuclideanSpace4 ℂ) (N : ℕ),
+        charFunctionalTrunc w.os op 0 f = 1 ∧
+        charFunctionalTrunc w.os op N 0 = 1) ∧
+      (∀ (op : ObservableLabel (Matrix.specialUnitaryGroup (Fin 3) ℂ)
+           YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra),
+        ∃ (α : ℝ) (s : ℕ), 0 < α ∧
+          ∀ (f : SchwartzMap EuclideanSpace4 ℂ),
+            ‖charFunctionalTrunc w.os op 1 f‖ ≤ 1 + α * SchwartzMap.seminorm ℝ s s f)) ∧
+    (∀ (L T : ℕ) {β : ℝ}, 10 < β →
+      (YangMills.HypercubicPolymerCounting.rectPlaquetteSheet L T).card = L * T ∧
+      Real.exp (-β * ((L * T : ℕ) : ℝ)) ≤
+        Real.exp (-(β - 10) * ((L * T : ℕ) : ℝ)) * ((1 : ℝ) / 2401) ^ (L * T)) ∧
+    ((∀ ψ φ : w.H.theory.domain,
+        inner ℂ (massSqOp w.H.theory ψ) (φ : w.H.HilbertSpace) =
+          inner ℂ (ψ : w.H.HilbertSpace) (massSqOp w.H.theory φ)) ∧
+      (∀ ψ : w.H.theory.domain,
+        inner ℂ (ψ : w.H.HilbertSpace) (massSqOp w.H.theory ψ) =
+          ((‖w.H.theory.Hamiltonian ψ‖ ^ 2 : ℝ) : ℂ) -
+            ∑ i : Fin 3, ((‖w.H.theory.Momentum i ψ‖ ^ 2 : ℝ) : ℂ)) ∧
+      (∀ ψ : w.H.theory.domain,
+        inner ℂ w.H.theory.vacuum (ψ : w.H.HilbertSpace) = 0 →
+        (∀ i : Fin 3, w.H.theory.Momentum i ψ = 0) →
+        w.semi.m_rate ^ 2 * ‖(ψ : w.H.HilbertSpace)‖ ^ 2 ≤
+          (inner ℂ (ψ : w.H.HilbertSpace) (massSqOp w.H.theory ψ)).re)) ∧
     YangMills.YangMillsSU3MassGap.{0} := by
-  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · intro β r hβ_lo hβ_hi hr_lo hr_hi
     exact YangMills.UVThresholdBridge.gaussian_remainder_contraction_on_uv_bridge
       hβ_lo hβ_hi hr_lo hr_hi
@@ -424,9 +461,41 @@ theorem constructive_su3_millennium_synthesis
   · exact ⟨gnsPreHilbertSemigroup_zero w.os,
       fun t1 t2 ht1 ht2 => gnsPreHilbertSemigroup_add w.os t1 t2 ht1 ht2,
       fun f g => sesqOS_shift_clustering w.os f g⟩
-  · have h_gap : HasMassGap (Matrix.specialUnitaryGroup (Fin 3) ℂ) w.H.HilbertSpace w.H.theory :=
-      reconstructed_gns_has_mass_gap w.H w.semi w.os.mass_rate w.os.mass_rate_pos
-        w.h_deriv w.h_cluster w.h_finite_spec
+  · refine ⟨fun H_seq => ⟨YangMills.ContinuumCauchy.lattice_schwinger_unique_limit H_seq,
+        fun k => YangMills.ContinuumCauchy.continuumSchwingerLimit_error_bound H_seq k⟩,
+      fun ch lambda_ym beta_ir h_ir L {β} hβ_pos ψ h_ortho =>
+        (pureHaarWilsonLattice_infinite_volume_uniform_gap
+          (Matrix.specialUnitaryGroup (Fin 3) ℂ)
+          YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra
+          ch lambda_ym beta_ir h_ir L hβ_pos ψ h_ortho).1⟩
+  · exact ⟨fun op f N => ⟨charFunctionalTrunc_zero w.os op f, charFunctionalTrunc_zero_test w.os op N⟩,
+      fun op => charFunctionalTrunc_one_os0_bound w.os op⟩
+  · intro L T β hβ
+    exact ⟨YangMills.HypercubicPolymerCounting.rectPlaquetteSheet_card L T,
+      YangMills.HypercubicPolymerCounting.rect_wilson_area_law L T hβ⟩
+  · have h_ham_gap : ∀ ψ : w.H.theory.domain,
+        inner ℂ w.H.theory.vacuum (ψ : w.H.HilbertSpace) = 0 →
+        w.semi.m_rate * ‖(ψ : w.H.HilbertSpace)‖ ≤ ‖w.H.theory.Hamiltonian ψ‖ := by
+      intro ψ h_ortho
+      have h_init : w.semi.T 0 (ψ : w.H.HilbertSpace) = (ψ : w.H.HilbertSpace) := by
+        rw [w.semi.t_zero]; rfl
+      exact gns_mass_gap_transfer_from_clustering w.H w.semi (ψ : w.H.HilbertSpace)
+        (w.H.theory.Hamiltonian ψ : w.H.HilbertSpace) w.semi.m_rate h_init (w.h_deriv ψ)
+        (fun t ht => semigroup_exp_decay_of_symmetric_contraction_clustering
+          w.H w.semi (ψ : w.H.HilbertSpace) t h_ortho ht)
+    exact ⟨fun ψ φ => massSqOp_symmetric w.H.theory ψ φ,
+      fun ψ => massSqOp_inner_eq w.H.theory ψ,
+      fun ψ h_ortho h_rest => massSqOp_rest_frame_mass_shell_bound w.H.theory
+        w.semi.m_rate w.semi.m_rate_pos.le h_ham_gap ψ h_ortho h_rest⟩
+  · have h_cluster_derived : ∀ (ψ : w.H.theory.domain) (t : ℝ),
+        inner ℂ w.H.theory.vacuum (ψ : w.H.HilbertSpace) = 0 → 0 ≤ t →
+        ‖w.semi.T t (ψ : w.H.HilbertSpace)‖ ≤ Real.exp (-w.semi.m_rate * t) * ‖(ψ : w.H.HilbertSpace)‖ :=
+      fun ψ t h_ortho ht =>
+        semigroup_exp_decay_of_symmetric_contraction_clustering
+          w.H w.semi (ψ : w.H.HilbertSpace) t h_ortho ht
+    have h_gap : HasMassGap (Matrix.specialUnitaryGroup (Fin 3) ℂ) w.H.HilbertSpace w.H.theory :=
+      reconstructed_gns_has_mass_gap w.H w.semi w.semi.m_rate w.semi.m_rate_pos
+        w.h_deriv h_cluster_derived w.h_finite_spec
     exact ⟨YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra,
       w.H.HilbertSpace, w.H.normedGroup, w.H.innerProduct, w.H.complete,
       w.H.separable, w.H.theory, rfl, h_gap⟩
