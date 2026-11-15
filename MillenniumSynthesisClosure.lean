@@ -518,8 +518,54 @@ theorem constructive_su2_millennium_synthesis
         (∀ i : Fin 3, w.recon.H.theory.Momentum i ψ = 0) →
         w.recon.semi.m_rate ^ 2 * ‖(ψ : w.recon.H.HilbertSpace)‖ ^ 2 ≤
           (inner ℂ (ψ : w.recon.H.HilbertSpace) (massSqOp w.recon.H.theory ψ)).re)) ∧
+    ((∀ (t : ℝ) (ht : 0 ≤ t) (x : GNSLinearPreHilbert w.os),
+        ‖gnsLinearSemigroup w.os t ht x‖ ≤ ‖x‖) ∧
+      (∀ (t : ℝ) (ht : 0 ≤ t),
+        ‖gnsCompletedSemigroup w.os t ht‖ ≤ 1) ∧
+      (∀ (t1 t2 : ℝ) (ht1 : 0 ≤ t1) (ht2 : 0 ≤ t2),
+        gnsCompletedSemigroup w.os (t1 + t2) (add_nonneg ht1 ht2) =
+          (gnsCompletedSemigroup w.os t1 ht1).comp (gnsCompletedSemigroup w.os t2 ht2)) ∧
+      (∀ (t : ℝ) (ht : 0 ≤ t) (x y : GNSCompletedHilbert w.os),
+        inner ℂ (gnsCompletedSemigroup w.os t ht x) y =
+          inner ℂ x (gnsCompletedSemigroup w.os t ht y))) ∧
+    ((∀ (z : EuclideanSpace4) (lam : ℝ) (_hlam : 0 < lam),
+        YangMills.CurvatureJetConstructive.su2CurvaturePolynomialAlgebra.ope_coeff
+          YangMills.CurvatureJetConstructive.su2CurvaturePolynomialAlgebra.tr_F_sq
+          YangMills.CurvatureJetConstructive.su2CurvaturePolynomialAlgebra.tr_F_sq
+          YangMills.CurvatureJetConstructive.su2CurvaturePolynomialAlgebra.tr_F_sq
+          (lam • z) =
+          (lam : ℂ) ^ (-(4 : ℤ)) *
+            YangMills.CurvatureJetConstructive.su2CurvaturePolynomialAlgebra.ope_coeff
+              YangMills.CurvatureJetConstructive.su2CurvaturePolynomialAlgebra.tr_F_sq
+              YangMills.CurvatureJetConstructive.su2CurvaturePolynomialAlgebra.tr_F_sq
+              YangMills.CurvatureJetConstructive.su2CurvaturePolynomialAlgebra.tr_F_sq z) ∧
+      (∀ (R c_P K_rem deltaRem : ℝ), 0 < c_P → 0 ≤ K_rem → deltaRem < 4 →
+        (∀ (scale : ℝ) (_hscale : 0 < scale) (_hscale_small : scale < R / 2),
+          c_P * scale ^ (-(4 : ℝ)) - K_rem * scale ^ (-deltaRem) ≤
+            ‖w.os.schwinger 4
+                (YangMills.ContinuumFieldNontriviality.glueballOps4
+                  YangMills.CurvatureJetConstructive.su2CurvaturePolynomialAlgebra)
+                ![scale • YangMills.ContinuumFieldNontriviality.unitTimeVec, 0,
+                  (R + scale) • YangMills.ContinuumFieldNontriviality.unitTimeVec,
+                  R • YangMills.ContinuumFieldNontriviality.unitTimeVec] -
+              w.os.schwinger 2
+                ![YangMills.ContinuumFieldNontriviality.glueballOp
+                    YangMills.CurvatureJetConstructive.su2CurvaturePolynomialAlgebra,
+                  YangMills.ContinuumFieldNontriviality.glueballOp
+                    YangMills.CurvatureJetConstructive.su2CurvaturePolynomialAlgebra]
+                ![scale • YangMills.ContinuumFieldNontriviality.unitTimeVec, 0] *
+              w.os.schwinger 2
+                ![YangMills.ContinuumFieldNontriviality.glueballOp
+                    YangMills.CurvatureJetConstructive.su2CurvaturePolynomialAlgebra,
+                  YangMills.ContinuumFieldNontriviality.glueballOp
+                    YangMills.CurvatureJetConstructive.su2CurvaturePolynomialAlgebra]
+                ![(R + scale) • YangMills.ContinuumFieldNontriviality.unitTimeVec,
+                  R • YangMills.ContinuumFieldNontriviality.unitTimeVec]‖) →
+        Nonempty (YangMills.ContinuumFieldNontriviality.DirectChannelOPEWitness w.os
+          (YangMills.ContinuumFieldNontriviality.glueballOps4
+            YangMills.CurvatureJetConstructive.su2CurvaturePolynomialAlgebra) R))) ∧
     YangMills.YangMillsSU2MassGap.{0} := by
-  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · intro β r hβ_lo hβ_hi hr_lo hr_hi
     exact YangMills.UVThresholdBridge.gaussian_remainder_contraction_on_uv_bridge
       hβ_lo hβ_hi hr_lo hr_hi
@@ -601,6 +647,16 @@ theorem constructive_su2_millennium_synthesis
       fun ψ => massSqOp_inner_eq w.recon.H.theory ψ,
       fun ψ h_ortho h_rest => massSqOp_rest_frame_mass_shell_bound w.recon.H.theory
         w.recon.semi.m_rate w.recon.semi.m_rate_pos.le h_ham_gap ψ h_ortho h_rest⟩
+  · exact ⟨fun t ht x => gnsLinearSemigroup_norm_le w.os t ht x,
+      fun t ht => gnsCompletedSemigroup_norm_le_one w.os t ht,
+      fun t1 t2 ht1 ht2 => gnsCompletedSemigroup_add w.os t1 t2 ht1 ht2,
+      fun t ht x y => gnsCompletedSemigroup_inner_symm w.os t ht x y⟩
+  · exact ⟨fun z lam hlam =>
+        YangMills.ContinuumFieldNontriviality.glueballOp_ope_self_scaling
+          YangMills.CurvatureJetConstructive.su2CurvaturePolynomialAlgebra z lam hlam,
+      fun R c_P K_rem deltaRem hc_P hK_rem h_gap h_rem =>
+        ⟨YangMills.ContinuumFieldNontriviality.directChannelOPEWitness_of_tr_F_sq_remainder
+          w.os R c_P hc_P K_rem hK_rem deltaRem h_gap h_rem⟩⟩
   · exact yang_mills_su2_mass_gap_of_witness w
 
 /-- Canonical 4-tuple of scalar glueball `Tr(F²)` observables for `SU(3)`. -/
@@ -797,8 +853,54 @@ theorem constructive_su3_millennium_synthesis
         (∀ i : Fin 3, w.recon.H.theory.Momentum i ψ = 0) →
         w.recon.semi.m_rate ^ 2 * ‖(ψ : w.recon.H.HilbertSpace)‖ ^ 2 ≤
           (inner ℂ (ψ : w.recon.H.HilbertSpace) (massSqOp w.recon.H.theory ψ)).re)) ∧
+    ((∀ (t : ℝ) (ht : 0 ≤ t) (x : GNSLinearPreHilbert w.os),
+        ‖gnsLinearSemigroup w.os t ht x‖ ≤ ‖x‖) ∧
+      (∀ (t : ℝ) (ht : 0 ≤ t),
+        ‖gnsCompletedSemigroup w.os t ht‖ ≤ 1) ∧
+      (∀ (t1 t2 : ℝ) (ht1 : 0 ≤ t1) (ht2 : 0 ≤ t2),
+        gnsCompletedSemigroup w.os (t1 + t2) (add_nonneg ht1 ht2) =
+          (gnsCompletedSemigroup w.os t1 ht1).comp (gnsCompletedSemigroup w.os t2 ht2)) ∧
+      (∀ (t : ℝ) (ht : 0 ≤ t) (x y : GNSCompletedHilbert w.os),
+        inner ℂ (gnsCompletedSemigroup w.os t ht x) y =
+          inner ℂ x (gnsCompletedSemigroup w.os t ht y))) ∧
+    ((∀ (z : EuclideanSpace4) (lam : ℝ) (_hlam : 0 < lam),
+        YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra.ope_coeff
+          YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra.tr_F_sq
+          YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra.tr_F_sq
+          YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra.tr_F_sq
+          (lam • z) =
+          (lam : ℂ) ^ (-(4 : ℤ)) *
+            YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra.ope_coeff
+              YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra.tr_F_sq
+              YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra.tr_F_sq
+              YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra.tr_F_sq z) ∧
+      (∀ (R c_P K_rem deltaRem : ℝ), 0 < c_P → 0 ≤ K_rem → deltaRem < 4 →
+        (∀ (scale : ℝ) (_hscale : 0 < scale) (_hscale_small : scale < R / 2),
+          c_P * scale ^ (-(4 : ℝ)) - K_rem * scale ^ (-deltaRem) ≤
+            ‖w.os.schwinger 4
+                (YangMills.ContinuumFieldNontriviality.glueballOps4
+                  YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra)
+                ![scale • YangMills.ContinuumFieldNontriviality.unitTimeVec, 0,
+                  (R + scale) • YangMills.ContinuumFieldNontriviality.unitTimeVec,
+                  R • YangMills.ContinuumFieldNontriviality.unitTimeVec] -
+              w.os.schwinger 2
+                ![YangMills.ContinuumFieldNontriviality.glueballOp
+                    YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra,
+                  YangMills.ContinuumFieldNontriviality.glueballOp
+                    YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra]
+                ![scale • YangMills.ContinuumFieldNontriviality.unitTimeVec, 0] *
+              w.os.schwinger 2
+                ![YangMills.ContinuumFieldNontriviality.glueballOp
+                    YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra,
+                  YangMills.ContinuumFieldNontriviality.glueballOp
+                    YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra]
+                ![(R + scale) • YangMills.ContinuumFieldNontriviality.unitTimeVec,
+                  R • YangMills.ContinuumFieldNontriviality.unitTimeVec]‖) →
+        Nonempty (YangMills.ContinuumFieldNontriviality.DirectChannelOPEWitness w.os
+          (YangMills.ContinuumFieldNontriviality.glueballOps4
+            YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra) R))) ∧
     YangMills.YangMillsSU3MassGap.{0} := by
-  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · intro β r hβ_lo hβ_hi hr_lo hr_hi
     exact YangMills.UVThresholdBridge.gaussian_remainder_contraction_on_uv_bridge
       hβ_lo hβ_hi hr_lo hr_hi
@@ -880,6 +982,16 @@ theorem constructive_su3_millennium_synthesis
       fun ψ => massSqOp_inner_eq w.recon.H.theory ψ,
       fun ψ h_ortho h_rest => massSqOp_rest_frame_mass_shell_bound w.recon.H.theory
         w.recon.semi.m_rate w.recon.semi.m_rate_pos.le h_ham_gap ψ h_ortho h_rest⟩
+  · exact ⟨fun t ht x => gnsLinearSemigroup_norm_le w.os t ht x,
+      fun t ht => gnsCompletedSemigroup_norm_le_one w.os t ht,
+      fun t1 t2 ht1 ht2 => gnsCompletedSemigroup_add w.os t1 t2 ht1 ht2,
+      fun t ht x y => gnsCompletedSemigroup_inner_symm w.os t ht x y⟩
+  · exact ⟨fun z lam hlam =>
+        YangMills.ContinuumFieldNontriviality.glueballOp_ope_self_scaling
+          YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra z lam hlam,
+      fun R c_P K_rem deltaRem hc_P hK_rem h_gap h_rem =>
+        ⟨YangMills.ContinuumFieldNontriviality.directChannelOPEWitness_of_tr_F_sq_remainder
+          w.os R c_P hc_P K_rem hK_rem deltaRem h_gap h_rem⟩⟩
   · exact yang_mills_su3_mass_gap_of_witness w
 
 #print axioms constructive_su2_millennium_synthesis

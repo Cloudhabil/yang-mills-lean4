@@ -1234,6 +1234,102 @@ theorem not_gaussian_of_singular_ope
   obtain ⟨scale, _, _, h_nc, h_ne⟩ := connectedS4_ne_zero_of_singular_ope os ops hR wit
   exact h_ne (h_gauss _ h_nc)
 
+/-! ============================================================================
+    PART 5: CANONICAL SCALAR GLUEBALL OPERATOR & REDUCED OPE CONSTRUCTOR
+    ============================================================================ -/
+
+/-- Canonical scalar glueball operator label `Tr(F_{μν} F^{μν})` of classical dimension 4. -/
+def glueballOp
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    (Curv : CurvaturePolynomialAlgebra G) :
+    ObservableLabel G Curv :=
+  ObservableLabel.localCurv Curv.tr_F_sq
+
+/-- Canonical 4-point tuple of scalar glueball operator labels `(Tr F², Tr F², Tr F², Tr F²)`. -/
+def glueballOps4
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    (Curv : CurvaturePolynomialAlgebra G) :
+    Fin 4 → ObservableLabel G Curv :=
+  fun _ => glueballOp Curv
+
+theorem glueballOp_dim
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    (Curv : CurvaturePolynomialAlgebra G) :
+    Curv.classicalDim Curv.tr_F_sq = 4 :=
+  Curv.tr_F_sq_dim
+
+theorem glueballOp_uv_coeff_pos
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    (Curv : CurvaturePolynomialAlgebra G) :
+    0 < Curv.uv_two_point_coeff Curv.tr_F_sq :=
+  Curv.uv_two_point_coeff_pos Curv.tr_F_sq Curv.tr_F_sq_nonzero
+
+theorem glueballOp_ope_self_scaling
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    (Curv : CurvaturePolynomialAlgebra G)
+    (z : EuclideanSpace4) (lam : ℝ) (hlam : 0 < lam) :
+    Curv.ope_coeff Curv.tr_F_sq Curv.tr_F_sq Curv.tr_F_sq (lam • z) =
+      (lam : ℂ) ^ (-(4 : ℤ)) *
+        Curv.ope_coeff Curv.tr_F_sq Curv.tr_F_sq Curv.tr_F_sq z := by
+  have h := Curv.ope_coeff_scaling Curv.tr_F_sq Curv.tr_F_sq Curv.tr_F_sq lam z hlam
+  rw [Curv.tr_F_sq_dim] at h
+  norm_num at h ⊢
+  exact h
+
+theorem glueballOp_ope_self_scaling_diff
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    (Curv : CurvaturePolynomialAlgebra G)
+    (x y : EuclideanSpace4) (lam : ℝ) (hlam : 0 < lam) :
+    Curv.ope_coeff Curv.tr_F_sq Curv.tr_F_sq Curv.tr_F_sq (lam • x - lam • y) =
+      (lam : ℂ) ^ (-(4 : ℤ)) *
+        Curv.ope_coeff Curv.tr_F_sq Curv.tr_F_sq Curv.tr_F_sq (x - y) := by
+  rw [← smul_sub]
+  exact glueballOp_ope_self_scaling Curv (x - y) lam hlam
+
+/-- **Reduced Short-Distance OPE Constructor (`directChannelOPEWitness_of_tr_F_sq_remainder`)**:
+    Given only `c_P > 0`, `K_rem ≥ 0`, `deltaRem < 4`, and the single short-distance remainder
+    inequality for `glueballOps4 Curv`, constructs `DirectChannelOPEWitness os (glueballOps4 Curv) R`
+    with `op0 = op1 = opP = YangMills.OPE.actionDensityOp` (dimension 4). -/
+def directChannelOPEWitness_of_tr_F_sq_remainder
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (R : ℝ)
+    (c_P : ℝ) (hc_P : 0 < c_P)
+    (K_rem : ℝ) (hK_rem : 0 ≤ K_rem)
+    (deltaRem : ℝ) (h_gap : deltaRem < 4)
+    (h_rem : ∀ (scale : ℝ) (_hscale : 0 < scale) (_hscale_small : scale < R / 2),
+      c_P * scale ^ (-(4 : ℝ)) - K_rem * scale ^ (-deltaRem) ≤
+        ‖os.schwinger 4 (glueballOps4 Curv)
+            ![scale • unitTimeVec, 0, (R + scale) • unitTimeVec, R • unitTimeVec] -
+          os.schwinger 2 ![glueballOp Curv, glueballOp Curv] ![scale • unitTimeVec, 0] *
+          os.schwinger 2 ![glueballOp Curv, glueballOp Curv]
+            ![(R + scale) • unitTimeVec, R • unitTimeVec]‖) :
+    DirectChannelOPEWitness os (glueballOps4 Curv) R where
+  op0 := YangMills.OPE.actionDensityOp
+  op1 := YangMills.OPE.actionDensityOp
+  opP := YangMills.OPE.actionDensityOp
+  h_singular := by decide
+  c_P := c_P
+  hc_P := hc_P
+  K_rem := K_rem
+  hK_rem := hK_rem
+  deltaRem := deltaRem
+  hdeltaRem := by simpa [YangMills.OPE.actionDensityOp] using h_gap
+  ope_lower_bound := fun scale hscale hscale_small => by
+    have h_dim : (((YangMills.OPE.actionDensityOp.scalingDim +
+        YangMills.OPE.actionDensityOp.scalingDim -
+        YangMills.OPE.actionDensityOp.scalingDim : ℕ) : ℝ)) = 4 := by
+      norm_num [YangMills.OPE.actionDensityOp]
+    rw [h_dim]
+    have h01 : ![glueballOps4 Curv 0, glueballOps4 Curv 1] =
+        ![glueballOp Curv, glueballOp Curv] := rfl
+    have h23 : ![glueballOps4 Curv 2, glueballOps4 Curv 3] =
+        ![glueballOp Curv, glueballOp Curv] := rfl
+    dsimp only
+    rw [h01, h23]
+    exact h_rem scale hscale hscale_small
+
 #print axioms epstein_glaser_kernel_desingularization
 #print axioms epstein_glaser_integrand_desingularized
 #print axioms epstein_glaser_disjoint_supports_invariance
@@ -1247,5 +1343,12 @@ theorem not_gaussian_of_singular_ope
 #print axioms connectedS4_ne_zero_of_singular_ope
 #print axioms connectedS4_full_ne_zero_of_singular_ope
 #print axioms not_gaussian_of_singular_ope
+#print axioms glueballOp
+#print axioms glueballOps4
+#print axioms glueballOp_dim
+#print axioms glueballOp_uv_coeff_pos
+#print axioms glueballOp_ope_self_scaling
+#print axioms glueballOp_ope_self_scaling_diff
+#print axioms directChannelOPEWitness_of_tr_F_sq_remainder
 
 end YangMills.ContinuumFieldNontriviality

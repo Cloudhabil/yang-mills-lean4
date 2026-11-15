@@ -28,6 +28,7 @@ import RGCrossoverCertificate
 import HaarWilsonLattice
 import OsterwalderSchraderReconstruction
 import HypercubicPolymerCounting
+import UVThresholdBridge
 import BalabanPRT1
 import BalabanPRT2
 import BalabanREG
@@ -1771,6 +1772,116 @@ theorem wilsonLatticeHaarMeasure_largeField_peierls_suppression
       positivity
   exact ⟨h_le, h_strict, lt_of_le_of_lt h_le h_strict⟩
 
+/-- Real-valued discrete 4D Laplacian eigenvalue on an `L = 2` block for momentum mode
+    `k : Fin 4 → Fin 2`, lifted from `UVThresholdBridge.z4BlockFourierEigenvalue`. -/
+def z4BlockLaplacianEigenvalue (k : Fin 4 → Fin 2) : ℝ :=
+  (YangMills.UVThresholdBridge.z4BlockFourierEigenvalue k : ℝ)
+
+theorem z4BlockLaplacianEigenvalue_coercive (k : Fin 4 → Fin 2) (hk : k ≠ 0) :
+    (4 : ℝ) ≤ z4BlockLaplacianEigenvalue k := by
+  unfold z4BlockLaplacianEigenvalue
+  exact_mod_cast YangMills.UVThresholdBridge.z4Block_fourier_coercive k hk
+
+/-- **2⁴ Block Fluctuation Quadratic Action**:
+    `blockQuadraticAction β k φ := (β / 2) * z4BlockLaplacianEigenvalue k * φ ^ 2`
+    for block momentum mode `k : Fin 4 → Fin 2` and fluctuation amplitude `φ : ℝ`. -/
+def blockQuadraticAction (β : ℝ) (k : Fin 4 → Fin 2) (φ : ℝ) : ℝ :=
+  (β / 2) * z4BlockLaplacianEigenvalue k * φ ^ 2
+
+/-- **Uniform 2⁴ Block Gaussian Damping Bound**:
+    For all `β ≥ 0`, non-zero block modes `k ≠ 0`, and `φ : ℝ`,
+    `Real.exp (- blockQuadraticAction β k φ) ≤ Real.exp (- (2 * β * φ ^ 2))`. -/
+theorem blockQuadraticAction_gaussian_damping (β : ℝ) (hβ : 0 ≤ β)
+    (k : Fin 4 → Fin 2) (hk : k ≠ 0) (φ : ℝ) :
+    Real.exp (- blockQuadraticAction β k φ) ≤ Real.exp (- (2 * β * φ ^ 2)) := by
+  apply Real.exp_le_exp.mpr
+  apply neg_le_neg
+  unfold blockQuadraticAction
+  have h_eig := z4BlockLaplacianEigenvalue_coercive k hk
+  have h_half : 0 ≤ β / 2 := by positivity
+  have h_sq : 0 ≤ φ ^ 2 := sq_nonneg φ
+  calc 2 * β * φ ^ 2 = (β / 2) * 4 * φ ^ 2 := by ring
+    _ ≤ (β / 2) * z4BlockLaplacianEigenvalue k * φ ^ 2 := by
+        exact mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_left h_eig h_half) h_sq
+
+/-- **Fluctuation Tail Boltzmann Bound**:
+    On the fluctuation tail `|φ| ≥ δ` (`0 < δ`), for `β ≥ 0` and `k ≠ 0`,
+    `Real.exp (- blockQuadraticAction β k φ) ≤ Real.exp (- (2 * β * δ ^ 2))`. -/
+theorem blockQuadraticAction_tail_boltzmann_le (β : ℝ) (hβ : 0 ≤ β)
+    (k : Fin 4 → Fin 2) (hk : k ≠ 0) (δ φ : ℝ) (hδ : 0 < δ) (hφ : δ ≤ |φ|) :
+    Real.exp (- blockQuadraticAction β k φ) ≤ Real.exp (- (2 * β * δ ^ 2)) := by
+  refine le_trans (blockQuadraticAction_gaussian_damping β hβ k hk φ) ?_
+  apply Real.exp_le_exp.mpr
+  apply neg_le_neg
+  have h_sq : δ ^ 2 ≤ φ ^ 2 := by
+    rw [← sq_abs φ]
+    exact sq_le_sq' (by linarith) hφ
+  exact mul_le_mul_of_nonneg_left h_sq (by positivity)
+
+/-- **Unified Two-Term Small/Large-Field Upper Bound on Partition-Function Remainder Integral (`SU(3)`)**:
+    On `Fin B → SU3`, combines the `2^4` block Gaussian fluctuation tail bound on
+    `smallFieldSet B s_p ε` with `wilsonLatticeHaarMeasure_largeField_peierls_suppression` on
+    `largeFieldSet B s_p ε` to bound the total Haar remainder integral by
+    `C_small * Real.exp (- (2 * β * δ ^ 2)) + Real.exp (- S_min) * Real.exp (- 10)`
+    (and strictly `< C_small * Real.exp (- (2 * β * δ ^ 2)) + Real.exp (- S_min) * (1 / 2401)`). -/
+theorem wilsonLatticeHaarMeasure_su3_small_large_remainder_bound
+    {P : Type*} (B : ℕ)
+    (S_W : (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ) (hS : Continuous S_W)
+    (s_p : P → (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ) (ε : ℝ)
+    (hs : ∀ p : P, Continuous (s_p p))
+    (R_rem : (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ)
+    (h_int : Integrable R_rem (wilsonLatticeHaarMeasure (Matrix.specialUnitaryGroup (Fin 3) ℂ) B))
+    (C_small β δ S_min : ℝ) (hC : 0 ≤ C_small) (hβ : (5 / 2 : ℝ) ≤ β) (hδ : 0 < δ)
+    (k : Fin 4 → Fin 2) (hk : k ≠ 0)
+    (φ : (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ)
+    (h_small_tail : ∀ U ∈ smallFieldSet B s_p ε, δ ≤ |φ U|)
+    (h_small_bound : ∀ U ∈ smallFieldSet B s_p ε,
+      R_rem U ≤ C_small * Real.exp (- blockQuadraticAction β k (φ U)))
+    (γ : Finset YangMills.HypercubicPolymerCounting.Z4Plaquette)
+    (hne : γ.Nonempty) (hclosed : YangMills.HypercubicPolymerCounting.IsClosed2Cycle γ)
+    (h_large_action : ∀ U ∈ largeFieldSet B s_p ε, S_min + β * (γ.card : ℝ) ≤ S_W U)
+    (h_large_bound : ∀ U ∈ largeFieldSet B s_p ε, R_rem U ≤ Real.exp (- S_W U)) :
+    (∫ U : Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ,
+      R_rem U ∂(wilsonLatticeHaarMeasure (Matrix.specialUnitaryGroup (Fin 3) ℂ) B)) ≤
+      C_small * Real.exp (- (2 * β * δ ^ 2)) + Real.exp (- S_min) * Real.exp (- 10) ∧
+    (∫ U : Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ,
+      R_rem U ∂(wilsonLatticeHaarMeasure (Matrix.specialUnitaryGroup (Fin 3) ℂ) B)) <
+      C_small * Real.exp (- (2 * β * δ ^ 2)) + Real.exp (- S_min) * (1 / 2401) := by
+  let μ := wilsonLatticeHaarMeasure (Matrix.specialUnitaryGroup (Fin 3) ℂ) B
+  let SF := smallFieldSet (G := Matrix.specialUnitaryGroup (Fin 3) ℂ) B s_p ε
+  let LF := largeFieldSet (G := Matrix.specialUnitaryGroup (Fin 3) ℂ) B s_p ε
+  have hSF_meas : MeasurableSet SF :=
+    measurableSet_smallFieldSet (Matrix.specialUnitaryGroup (Fin 3) ℂ) B s_p ε hs
+  have hLF_meas : MeasurableSet LF :=
+    measurableSet_largeFieldSet (Matrix.specialUnitaryGroup (Fin 3) ℂ) B s_p ε hs
+  have h_decomp : (∫ U, R_rem U ∂μ) = (∫ U in SF, R_rem U ∂μ) + (∫ U in LF, R_rem U ∂μ) :=
+    (MeasureTheory.integral_add_compl hSF_meas h_int).symm
+  have hβ_nonneg : 0 ≤ β := by linarith
+  let B_small : ℝ := C_small * Real.exp (- (2 * β * δ ^ 2))
+  have hB_nonneg : 0 ≤ B_small := mul_nonneg hC (Real.exp_pos _).le
+  have h_small_le : (∫ U in SF, R_rem U ∂μ) ≤ B_small := by
+    have h_pt : ∀ U ∈ SF, R_rem U ≤ B_small := fun U hU => by
+      have h1 := h_small_bound U hU
+      have h2 := blockQuadraticAction_tail_boltzmann_le β hβ_nonneg k hk δ (φ U) hδ (h_small_tail U hU)
+      exact le_trans h1 (mul_le_mul_of_nonneg_left h2 hC)
+    have h_const_int : IntegrableOn (fun _ => B_small) SF μ :=
+      (MeasureTheory.integrable_const B_small).integrableOn
+    have h_mono := MeasureTheory.setIntegral_mono_on h_int.integrableOn h_const_int hSF_meas h_pt
+    have h_set_le : (∫ _ in SF, B_small ∂μ) ≤ ∫ _, B_small ∂μ :=
+      MeasureTheory.setIntegral_le_integral (MeasureTheory.integrable_const B_small)
+        (Filter.Eventually.of_forall fun _ => hB_nonneg)
+    have h_univ : (∫ _, B_small ∂μ) = B_small := by simp [μ]
+    linarith
+  have h_peierls := wilsonLatticeHaarMeasure_largeField_peierls_suppression
+    (Matrix.specialUnitaryGroup (Fin 3) ℂ) B S_W S_min β γ hne hclosed hβ LF hLF_meas h_large_action
+  have h_exp_int : IntegrableOn (fun U => Real.exp (- S_W U)) LF μ :=
+    (integrable_of_continuous_compact (Real.continuous_exp.comp hS.neg)).integrableOn
+  have h_large_le : (∫ U in LF, R_rem U ∂μ) ≤ ∫ U in LF, Real.exp (- S_W U) ∂μ :=
+    MeasureTheory.setIntegral_mono_on h_int.integrableOn h_exp_int hLF_meas h_large_bound
+  constructor
+  · linarith [h_peierls.1]
+  · linarith [h_peierls.2.2]
+
 /-- Pointwise n-point Schwinger correlation functions on non-coincident configurations -/
 def stdSchwinger {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
     (Curv : CurvaturePolynomialAlgebra G) (n : ℕ)
@@ -2163,6 +2274,10 @@ theorem balaban_master_continuum_yang_mills_mass_gap.{u_G, u_L, u_H}
 #print axioms wilsonLatticeFunctionalMeasure_integral_small_large_decomp
 #print axioms wilsonLatticeSchwingerFunction_small_large_decomp
 #print axioms wilsonLatticeHaarMeasure_largeField_peierls_suppression
+#print axioms z4BlockLaplacianEigenvalue_coercive
+#print axioms blockQuadraticAction_gaussian_damping
+#print axioms blockQuadraticAction_tail_boltzmann_le
+#print axioms wilsonLatticeHaarMeasure_su3_small_large_remainder_bound
 #print axioms balaban_constructive_pipeline_yields_os0
 #print axioms balaban_constructive_pipeline_yields_e0_double_and_single_prime
 #print axioms balaban_constructive_pipeline_discharges_c3

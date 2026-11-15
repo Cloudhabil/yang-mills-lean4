@@ -399,6 +399,524 @@ def GNSMetricCompletion
   UniformSpace.Completion (GNSPreHilbertQuotient os)
 
 /-! ============================================================================
+    PART II-B: GENUINE COMPLEX PRE-HILBERT VECTOR SPACE (Finsupp QUOTIENT)
+    ============================================================================ -/
+
+/-- Finite `ℂ`-linear combinations of strictly positive-time configurations. -/
+abbrev FormalPosTimeState (G : Type*) [TopologicalSpace G] [Group G]
+    [CompactSimpleLieGroup G] (Curv : CurvaturePolynomialAlgebra G) :=
+  PositiveTimeTestData G Curv →₀ ℂ
+
+/-- Sesquilinear extension of `sesqOS os` (conjugate-linear in the first argument,
+    linear in the second argument) to `FormalPosTimeState G Curv` via `Finsupp.sum`. -/
+noncomputable def sesqOSLinear
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (φ ψ : FormalPosTimeState G Curv) : ℂ :=
+  φ.sum fun f cf => ψ.sum fun g cg => starRingEnd ℂ cf * cg * sesqOS os f g
+
+theorem sesqOSLinear_single_single
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (f g : PositiveTimeTestData G Curv) (cf cg : ℂ) :
+    sesqOSLinear os (Finsupp.single f cf) (Finsupp.single g cg) =
+      starRingEnd ℂ cf * cg * sesqOS os f g := by
+  unfold sesqOSLinear
+  by_cases hf : cf = 0
+  · subst hf; simp
+  · by_cases hg : cg = 0
+    · subst hg; simp
+    · simp [Finsupp.sum_single_index]
+
+@[simp]
+theorem sesqOSLinear_zero_left
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (ψ : FormalPosTimeState G Curv) :
+    sesqOSLinear os 0 ψ = 0 := by
+  simp [sesqOSLinear]
+
+@[simp]
+theorem sesqOSLinear_zero_right
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (φ : FormalPosTimeState G Curv) :
+    sesqOSLinear os φ 0 = 0 := by
+  simp [sesqOSLinear]
+
+theorem sesqOSLinear_add_left
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (φ₁ φ₂ ψ : FormalPosTimeState G Curv) :
+    sesqOSLinear os (φ₁ + φ₂) ψ = sesqOSLinear os φ₁ ψ + sesqOSLinear os φ₂ ψ := by
+  unfold sesqOSLinear
+  rw [Finsupp.sum_add_index']
+  · intro f; simp
+  · intro f a b
+    simp only [Finsupp.sum, map_add, add_mul, Finset.sum_add_distrib]
+
+theorem sesqOSLinear_add_right
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (φ ψ₁ ψ₂ : FormalPosTimeState G Curv) :
+    sesqOSLinear os φ (ψ₁ + ψ₂) = sesqOSLinear os φ ψ₁ + sesqOSLinear os φ ψ₂ := by
+  unfold sesqOSLinear
+  calc (φ.sum fun f cf => (ψ₁ + ψ₂).sum fun g cg => starRingEnd ℂ cf * cg * sesqOS os f g)
+      = φ.sum fun f cf =>
+          (ψ₁.sum fun g cg => starRingEnd ℂ cf * cg * sesqOS os f g) +
+          (ψ₂.sum fun g cg => starRingEnd ℂ cf * cg * sesqOS os f g) := by
+          refine Finset.sum_congr rfl fun f _ => ?_
+          dsimp only
+          rw [Finsupp.sum_add_index']
+          · intro g; simp
+          · intro g a b; ring
+    _ = sesqOSLinear os φ ψ₁ + sesqOSLinear os φ ψ₂ := by
+          simp only [Finsupp.sum, Finset.sum_add_distrib]; rfl
+
+theorem sesqOSLinear_smul_left
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (c : ℂ) (φ ψ : FormalPosTimeState G Curv) :
+    sesqOSLinear os (c • φ) ψ = starRingEnd ℂ c * sesqOSLinear os φ ψ := by
+  unfold sesqOSLinear
+  rw [Finsupp.sum_smul_index' (fun f => by simp)]
+  simp only [Finsupp.sum, Finset.mul_sum]
+  refine Finset.sum_congr rfl fun f _ => Finset.sum_congr rfl fun g _ => ?_
+  rw [smul_eq_mul, map_mul]
+  ring
+
+theorem sesqOSLinear_smul_right
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (c : ℂ) (φ ψ : FormalPosTimeState G Curv) :
+    sesqOSLinear os φ (c • ψ) = c * sesqOSLinear os φ ψ := by
+  unfold sesqOSLinear
+  calc (φ.sum fun f cf => (c • ψ).sum fun g cg => starRingEnd ℂ cf * cg * sesqOS os f g)
+      = φ.sum fun f cf => c * (ψ.sum fun g cg => starRingEnd ℂ cf * cg * sesqOS os f g) := by
+          refine Finset.sum_congr rfl fun f _ => ?_
+          dsimp only
+          rw [Finsupp.sum_smul_index' (fun g => by simp)]
+          simp only [Finsupp.sum, Finset.mul_sum]
+          refine Finset.sum_congr rfl fun g _ => by ring
+    _ = c * sesqOSLinear os φ ψ := by
+          unfold sesqOSLinear
+          simp only [Finsupp.sum, Finset.mul_sum]
+
+/-- **Positivity of `sesqOSLinear` via `os.os2_reflection_positivity` for Arbitrary Finite `m`**:
+    Converts `ψ.support` to `Fin m` via `Finset.equivFin` and applies `os.os2_reflection_positivity`. -/
+theorem sesqOSLinear_nonneg
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (ψ : FormalPosTimeState G Curv) :
+    0 ≤ (sesqOSLinear os ψ ψ).re := by
+  let S := ψ.support
+  let m := S.card
+  let e : S ≃ Fin m := S.equivFin
+  let state : Fin m → PositiveTimeTestData G Curv := fun r => (e.symm r).1
+  let c : Fin m → ℂ := fun r => ψ (state r)
+  have h_sum_eq : ∀ F : PositiveTimeTestData G Curv → ℂ,
+      (∑ x ∈ ψ.support, F x) = ∑ r : Fin m, F (state r) := fun F => by
+    rw [← Finset.sum_coe_sort ψ.support]
+    exact (Equiv.sum_comp e.symm fun x : S => F x.1).symm
+  have h_eq : sesqOSLinear os ψ ψ =
+      ∑ r : Fin m, ∑ s : Fin m,
+        starRingEnd ℂ (c r) * c s *
+          os.schwinger ((state r).deg + (state s).deg)
+            (safeReflectConcatLabels (state r).ops (state s).ops)
+            (safeReflectConcatMixed (state r).X (state s).X) := by
+    unfold sesqOSLinear Finsupp.sum
+    rw [h_sum_eq]
+    refine Finset.sum_congr rfl fun r _ => ?_
+    dsimp only
+    rw [h_sum_eq]
+    rfl
+  rw [h_eq]
+  exact os.os2_reflection_positivity m
+    (fun r => (state r).deg)
+    (fun r => (state r).ops)
+    (fun r => (state r).X)
+    c
+    (fun r i => (state r).h_pos i)
+
+/-- **General OS Cauchy–Schwarz Inequality on `FormalPosTimeState`**:
+    `‖sesqOSLinear os φ ψ + starRingEnd ℂ (sesqOSLinear os ψ φ)‖^2 ≤ 4 * (sesqOSLinear os φ φ).re * (sesqOSLinear os ψ ψ).re`. -/
+theorem sesqOSLinear_symm_cauchy_schwarz
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (φ ψ : FormalPosTimeState G Curv) :
+    ‖sesqOSLinear os φ ψ + starRingEnd ℂ (sesqOSLinear os ψ φ)‖ ^ 2 ≤
+      4 * (sesqOSLinear os φ φ).re * (sesqOSLinear os ψ ψ).re := by
+  let Z : ℂ := sesqOSLinear os φ ψ + starRingEnd ℂ (sesqOSLinear os ψ φ)
+  have h_quad : ∀ s t : ℝ,
+      0 ≤ s ^ 2 * (sesqOSLinear os φ φ).re - s * t * ‖Z‖ ^ 2 +
+        t ^ 2 * ‖Z‖ ^ 2 * (sesqOSLinear os ψ ψ).re := by
+    intro s t
+    let c0 : ℂ := (s : ℂ)
+    let c1 : ℂ := -(t : ℂ) * starRingEnd ℂ Z
+    have h_raw := sesqOSLinear_nonneg os (c0 • φ + c1 • ψ)
+    have h_exp : sesqOSLinear os (c0 • φ + c1 • ψ) (c0 • φ + c1 • ψ) =
+        (starRingEnd ℂ c0 * c0 * sesqOSLinear os φ φ +
+         starRingEnd ℂ c0 * c1 * sesqOSLinear os φ ψ) +
+        (starRingEnd ℂ c1 * c0 * sesqOSLinear os ψ φ +
+         starRingEnd ℂ c1 * c1 * sesqOSLinear os ψ ψ) := by
+      rw [sesqOSLinear_add_left, sesqOSLinear_add_right, sesqOSLinear_add_right,
+        sesqOSLinear_smul_left, sesqOSLinear_smul_left, sesqOSLinear_smul_left, sesqOSLinear_smul_left,
+        sesqOSLinear_smul_right, sesqOSLinear_smul_right, sesqOSLinear_smul_right, sesqOSLinear_smul_right]
+      ring
+    rw [h_exp] at h_raw
+    have h_eq :
+        ((starRingEnd ℂ c0 * c0 * sesqOSLinear os φ φ +
+          starRingEnd ℂ c0 * c1 * sesqOSLinear os φ ψ) +
+         (starRingEnd ℂ c1 * c0 * sesqOSLinear os ψ φ +
+          starRingEnd ℂ c1 * c1 * sesqOSLinear os ψ ψ)).re =
+        s ^ 2 * (sesqOSLinear os φ φ).re - s * t * ‖Z‖ ^ 2 +
+          t ^ 2 * ‖Z‖ ^ 2 * (sesqOSLinear os ψ ψ).re := by
+      rw [Complex.sq_norm, Complex.normSq_apply]
+      simp only [c0, c1, Z, map_neg, map_mul, Complex.conj_ofReal, RingHomCompTriple.comp_apply,
+        RingHom.id_apply, Complex.add_re, Complex.add_im, Complex.mul_re, Complex.mul_im,
+        Complex.conj_re, Complex.conj_im, Complex.neg_re, Complex.neg_im,
+        Complex.ofReal_re, Complex.ofReal_im]
+      ring
+    linarith
+  have hA : 0 ≤ (sesqOSLinear os φ φ).re := sesqOSLinear_nonneg os φ
+  have hB : 0 ≤ (sesqOSLinear os ψ ψ).re := sesqOSLinear_nonneg os ψ
+  rcases eq_or_lt_of_le hB with hB0 | hB_pos
+  · have h_spec := h_quad (‖Z‖ ^ 2) ((sesqOSLinear os φ φ).re + 1)
+    rw [← hB0] at h_spec ⊢
+    nlinarith [sq_nonneg (‖Z‖ ^ 2)]
+  · have h_spec := h_quad (2 * (sesqOSLinear os ψ ψ).re) 1
+    nlinarith
+
+/-- **OS Cauchy–Schwarz Inequality on `FormalPosTimeState` under Hermitian Symmetry**. -/
+theorem sesqOSLinear_cauchy_schwarz
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (φ ψ : FormalPosTimeState G Curv)
+    (h_herm : sesqOSLinear os ψ φ = starRingEnd ℂ (sesqOSLinear os φ ψ)) :
+    ‖sesqOSLinear os φ ψ‖ ^ 2 ≤ (sesqOSLinear os φ φ).re * (sesqOSLinear os ψ ψ).re := by
+  have h_symm := sesqOSLinear_symm_cauchy_schwarz os φ ψ
+  have h_conj : starRingEnd ℂ (sesqOSLinear os ψ φ) = sesqOSLinear os φ ψ := by
+    rw [h_herm, RingHomCompTriple.comp_apply, RingHom.id_apply]
+  have h_two : sesqOSLinear os φ ψ + starRingEnd ℂ (sesqOSLinear os ψ φ) = (2 : ℂ) * sesqOSLinear os φ ψ := by
+    rw [h_conj]; ring
+  rw [h_two, norm_mul, Complex.norm_ofNat, mul_pow] at h_symm
+  linarith
+
+/-- **Hermitian-Symmetrized OS Sesquilinear Form** on `FormalPosTimeState G Curv`:
+    `sesqOSHerm os φ ψ := (1 / 2 : ℂ) * (sesqOSLinear os φ ψ + starRingEnd ℂ (sesqOSLinear os ψ φ))`. -/
+noncomputable def sesqOSHerm
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (φ ψ : FormalPosTimeState G Curv) : ℂ :=
+  (1 / 2 : ℂ) * (sesqOSLinear os φ ψ + starRingEnd ℂ (sesqOSLinear os ψ φ))
+
+theorem sesqOSHerm_conj_symm
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (φ ψ : FormalPosTimeState G Curv) :
+    starRingEnd ℂ (sesqOSHerm os ψ φ) = sesqOSHerm os φ ψ := by
+  unfold sesqOSHerm
+  simp only [map_mul, map_add, map_div₀, map_one, map_ofNat,
+    RingHomCompTriple.comp_apply, RingHom.id_apply, add_comm]
+
+theorem sesqOSHerm_self_re
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (ψ : FormalPosTimeState G Curv) :
+    (sesqOSHerm os ψ ψ).re = (sesqOSLinear os ψ ψ).re := by
+  unfold sesqOSHerm
+  have h12 : (1 / 2 : ℂ) = ((1 / 2 : ℝ) : ℂ) := by norm_num
+  rw [h12, Complex.re_ofReal_mul, Complex.add_re, Complex.conj_re]
+  ring
+
+theorem sesqOSHerm_self_im
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (ψ : FormalPosTimeState G Curv) :
+    (sesqOSHerm os ψ ψ).im = 0 := by
+  unfold sesqOSHerm
+  have h12 : (1 / 2 : ℂ) = ((1 / 2 : ℝ) : ℂ) := by norm_num
+  rw [h12, Complex.im_ofReal_mul, Complex.add_im, Complex.conj_im]
+  ring
+
+theorem sesqOSHerm_nonneg
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (ψ : FormalPosTimeState G Curv) :
+    0 ≤ (sesqOSHerm os ψ ψ).re := by
+  rw [sesqOSHerm_self_re]
+  exact sesqOSLinear_nonneg os ψ
+
+@[simp]
+theorem sesqOSHerm_zero_left
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (ψ : FormalPosTimeState G Curv) :
+    sesqOSHerm os 0 ψ = 0 := by
+  unfold sesqOSHerm
+  simp
+
+@[simp]
+theorem sesqOSHerm_zero_right
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (φ : FormalPosTimeState G Curv) :
+    sesqOSHerm os φ 0 = 0 := by
+  unfold sesqOSHerm
+  simp
+
+theorem sesqOSHerm_add_left
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (φ₁ φ₂ ψ : FormalPosTimeState G Curv) :
+    sesqOSHerm os (φ₁ + φ₂) ψ = sesqOSHerm os φ₁ ψ + sesqOSHerm os φ₂ ψ := by
+  unfold sesqOSHerm
+  rw [sesqOSLinear_add_left, sesqOSLinear_add_right, map_add]
+  ring
+
+theorem sesqOSHerm_add_right
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (φ ψ₁ ψ₂ : FormalPosTimeState G Curv) :
+    sesqOSHerm os φ (ψ₁ + ψ₂) = sesqOSHerm os φ ψ₁ + sesqOSHerm os φ ψ₂ := by
+  unfold sesqOSHerm
+  rw [sesqOSLinear_add_right, sesqOSLinear_add_left, map_add]
+  ring
+
+theorem sesqOSHerm_smul_left
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (c : ℂ) (φ ψ : FormalPosTimeState G Curv) :
+    sesqOSHerm os (c • φ) ψ = starRingEnd ℂ c * sesqOSHerm os φ ψ := by
+  unfold sesqOSHerm
+  rw [sesqOSLinear_smul_left, sesqOSLinear_smul_right, map_mul]
+  ring
+
+theorem sesqOSHerm_smul_right
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (c : ℂ) (φ ψ : FormalPosTimeState G Curv) :
+    sesqOSHerm os φ (c • ψ) = c * sesqOSHerm os φ ψ := by
+  unfold sesqOSHerm
+  rw [sesqOSLinear_smul_right, sesqOSLinear_smul_left, map_mul,
+    RingHomCompTriple.comp_apply, RingHom.id_apply]
+  ring
+
+/-- **Exact Hermitian OS Cauchy–Schwarz Inequality**:
+    `‖sesqOSHerm os φ ψ‖ ^ 2 ≤ (sesqOSHerm os φ φ).re * (sesqOSHerm os ψ ψ).re`. -/
+theorem sesqOSHerm_cauchy_schwarz
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (φ ψ : FormalPosTimeState G Curv) :
+    ‖sesqOSHerm os φ ψ‖ ^ 2 ≤ (sesqOSHerm os φ φ).re * (sesqOSHerm os ψ ψ).re := by
+  unfold sesqOSHerm
+  have h12 : ‖(1 / 2 : ℂ)‖ = 1 / 2 := by norm_num
+  rw [norm_mul, h12, mul_pow]
+  have h_cs := sesqOSLinear_symm_cauchy_schwarz os φ ψ
+  have hreφ : (sesqOSLinear os φ φ).re = ((1 / 2 : ℂ) * (sesqOSLinear os φ φ + starRingEnd ℂ (sesqOSLinear os φ φ))).re := by
+    have h := sesqOSHerm_self_re os φ
+    unfold sesqOSHerm at h
+    exact h.symm
+  have hreψ : (sesqOSLinear os ψ ψ).re = ((1 / 2 : ℂ) * (sesqOSLinear os ψ ψ + starRingEnd ℂ (sesqOSLinear os ψ ψ))).re := by
+    have h := sesqOSHerm_self_re os ψ
+    unfold sesqOSHerm at h
+    exact h.symm
+  rw [← hreφ, ← hreψ]
+  linarith
+
+/-- **Null-State Equivalence for `sesqOSHerm`**:
+    `(sesqOSHerm os ψ ψ).re = 0 ↔ ∀ w : FormalPosTimeState G Curv, sesqOSHerm os ψ w = 0`. -/
+theorem sesqOSHerm_eq_zero_iff
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (ψ : FormalPosTimeState G Curv) :
+    (sesqOSHerm os ψ ψ).re = 0 ↔ ∀ w : FormalPosTimeState G Curv, sesqOSHerm os ψ w = 0 := by
+  constructor
+  · intro h w
+    have hcs := sesqOSHerm_cauchy_schwarz os ψ w
+    rw [h, zero_mul] at hcs
+    have hnorm : ‖sesqOSHerm os ψ w‖ = 0 := by
+      nlinarith [norm_nonneg (sesqOSHerm os ψ w)]
+    exact norm_eq_zero.mp hnorm
+  · intro h
+    rw [h ψ, Complex.zero_re]
+
+/-- **Hermitian OS Null Space `N_os` as a Complex Submodule of `FormalPosTimeState G Curv`**. -/
+def osHermNullSubmodule
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv) :
+    Submodule ℂ (FormalPosTimeState G Curv) where
+  carrier := {ψ : FormalPosTimeState G Curv | (sesqOSHerm os ψ ψ).re = 0}
+  zero_mem' := by simp [sesqOSHerm_self_re]
+  add_mem' := by
+    intro φ ψ hφ hψ
+    have hφw := (sesqOSHerm_eq_zero_iff os φ).mp hφ
+    have hψw := (sesqOSHerm_eq_zero_iff os ψ).mp hψ
+    show (sesqOSHerm os (φ + ψ) (φ + ψ)).re = 0
+    rw [sesqOSHerm_add_left, hφw, hψw, add_zero, Complex.zero_re]
+  smul_mem' := by
+    intro c ψ hψ
+    have hψw := (sesqOSHerm_eq_zero_iff os ψ).mp hψ
+    show (sesqOSHerm os (c • ψ) (c • ψ)).re = 0
+    rw [sesqOSHerm_smul_left, hψw, mul_zero, Complex.zero_re]
+
+/-- **Genuine Complex Pre-Hilbert Vector Space Quotient**:
+    `GNSLinearPreHilbert os := FormalPosTimeState G Curv ⧸ osHermNullSubmodule os`. -/
+abbrev GNSLinearPreHilbert
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv) :=
+  FormalPosTimeState G Curv ⧸ osHermNullSubmodule os
+
+/-- Well-defined Hermitian sesquilinear OS form descended to `GNSLinearPreHilbert os`. -/
+noncomputable def sesqOSHermQuotient
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv) :
+    GNSLinearPreHilbert os → GNSLinearPreHilbert os → ℂ :=
+  Quotient.lift₂ (sesqOSHerm os) fun φ₁ ψ₁ φ₂ ψ₂ hφ hψ => by
+    have hφ_mem : φ₁ - φ₂ ∈ osHermNullSubmodule os := (Submodule.quotientRel_def (osHermNullSubmodule os)).mp hφ
+    have hψ_mem : ψ₁ - ψ₂ ∈ osHermNullSubmodule os := (Submodule.quotientRel_def (osHermNullSubmodule os)).mp hψ
+    have hφ_zero : sesqOSHerm os (φ₁ - φ₂) ψ₁ = 0 :=
+      (sesqOSHerm_eq_zero_iff os (φ₁ - φ₂)).mp hφ_mem ψ₁
+    have hψ_zero_l : sesqOSHerm os (ψ₁ - ψ₂) φ₂ = 0 :=
+      (sesqOSHerm_eq_zero_iff os (ψ₁ - ψ₂)).mp hψ_mem φ₂
+    have hψ_zero : sesqOSHerm os φ₂ (ψ₁ - ψ₂) = 0 := by
+      rw [← sesqOSHerm_conj_symm, hψ_zero_l, map_zero]
+    have h1 : sesqOSHerm os φ₁ ψ₁ - sesqOSHerm os φ₂ ψ₁ = 0 := by
+      have hsub : φ₁ = (φ₁ - φ₂) + φ₂ := (sub_add_cancel φ₁ φ₂).symm
+      rw [hsub, sesqOSHerm_add_left, hφ_zero, zero_add, sub_self]
+    have h2 : sesqOSHerm os φ₂ ψ₁ - sesqOSHerm os φ₂ ψ₂ = 0 := by
+      have hsub : ψ₁ = (ψ₁ - ψ₂) + ψ₂ := (sub_add_cancel ψ₁ ψ₂).symm
+      rw [hsub, sesqOSHerm_add_right, hψ_zero, zero_add, sub_self]
+    exact sub_eq_zero.mp (by linear_combination h1 + h2)
+
+@[simp]
+theorem sesqOSHermQuotient_mk
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (φ ψ : FormalPosTimeState G Curv) :
+    sesqOSHermQuotient os (Submodule.Quotient.mk φ) (Submodule.Quotient.mk ψ) = sesqOSHerm os φ ψ :=
+  rfl
+
+/-- Mathlib `InnerProductSpace.Core ℂ` structure on `GNSLinearPreHilbert os`. -/
+@[instance_reducible]
+noncomputable def gnsLinearInnerCore
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv) :
+    InnerProductSpace.Core ℂ (GNSLinearPreHilbert os) where
+  inner := sesqOSHermQuotient os
+  conj_inner_symm := Quotient.ind₂ fun x y => sesqOSHerm_conj_symm os x y
+  re_inner_nonneg := Quotient.ind fun x => sesqOSHerm_nonneg os x
+  add_left := Quotient.ind₂ fun x y => Quotient.ind fun z => sesqOSHerm_add_left os x y z
+  smul_left := Quotient.ind₂ fun x y r => sesqOSHerm_smul_left os r x y
+  definite := by
+    intro x hx
+    refine Quotient.inductionOn x (fun φ hφ => ?_) hx
+    change sesqOSHerm os φ φ = 0 at hφ
+    have hre : (sesqOSHerm os φ φ).re = 0 := by rw [hφ, Complex.zero_re]
+    exact (Submodule.Quotient.mk_eq_zero (osHermNullSubmodule os)).mpr hre
+
+/-- Canonical `NormedAddCommGroup` structure on `GNSLinearPreHilbert os`. -/
+noncomputable instance gnsLinearNormedAddCommGroup
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv) :
+    NormedAddCommGroup (GNSLinearPreHilbert os) :=
+  (gnsLinearInnerCore os).toNormedAddCommGroup
+
+/-- Canonical `InnerProductSpace ℂ` structure on `GNSLinearPreHilbert os`. -/
+noncomputable instance gnsLinearInnerProductSpace
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv) :
+    InnerProductSpace ℂ (GNSLinearPreHilbert os) :=
+  InnerProductSpace.ofCore (gnsLinearInnerCore os).toCore
+
+theorem gnsLinear_norm_eq_sqrt_re_inner
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (x : GNSLinearPreHilbert os) :
+    ‖x‖ = Real.sqrt (inner ℂ x x).re := by
+  rw [← Real.sqrt_sq (norm_nonneg x), InnerProductSpace.norm_sq_eq_re_inner (𝕜 := ℂ)]
+  rfl
+
+theorem gnsLinear_norm_eq_zero_iff
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (x : GNSLinearPreHilbert os) :
+    ‖x‖ = 0 ↔ x = 0 :=
+  norm_eq_zero
+
+/-- **Canonical GNS Completed Complex Hilbert Space** `ℋ = UniformSpace.Completion (GNSLinearPreHilbert os)`.
+    Mathlib automatically synthesizes `NormedAddCommGroup`, `InnerProductSpace ℂ`, and `CompleteSpace`. -/
+abbrev GNSCompletedHilbert
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv) :=
+  UniformSpace.Completion (GNSLinearPreHilbert os)
+
+/-- Isometric dense linear embedding `GNSLinearPreHilbert os →ₗᵢ[ℂ] GNSCompletedHilbert os`. -/
+noncomputable def gnsLinearToCompleted
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv) :
+    GNSLinearPreHilbert os →ₗᵢ[ℂ] GNSCompletedHilbert os :=
+  UniformSpace.Completion.toComplₗᵢ
+
+theorem gnsLinearToCompleted_denseRange
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv) :
+    DenseRange (gnsLinearToCompleted os) := by
+  simpa [gnsLinearToCompleted, UniformSpace.Completion.coe_toComplₗᵢ] using
+    (UniformSpace.Completion.denseRange_coe (α := GNSLinearPreHilbert os))
+
+theorem gnsCompletedHilbert_complete
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv) :
+    CompleteSpace (GNSCompletedHilbert os) :=
+  inferInstance
+
+@[instance_reducible]
+noncomputable def gnsCompletedHilbert_innerProductSpace
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv) :
+    InnerProductSpace ℂ (GNSCompletedHilbert os) :=
+  inferInstance
+
+/-! ============================================================================
     PART III: HILBERT SPACE COMPLETION AND CONTRACTION SEMIGROUP
     ============================================================================ -/
 
@@ -808,7 +1326,7 @@ theorem shiftPositiveTimeTestData_congr
   rw [sesqOS_shift_symm os t ht f w, sesqOS_shift_symm os t ht f' w]
   exact h (shiftPositiveTimeTestData t ht w)
 
-private theorem shiftPositiveTimeTestData_zero
+theorem shiftPositiveTimeTestData_zero
     {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
     {Curv : CurvaturePolynomialAlgebra G}
     (f : PositiveTimeTestData G Curv) :
@@ -820,7 +1338,7 @@ private theorem shiftPositiveTimeTestData_zero
     ext i μ
     fin_cases μ <;> simp [euclideanShift, vec4, ofCoords, toCoords]
 
-private theorem shiftPositiveTimeTestData_add
+theorem shiftPositiveTimeTestData_add
     {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
     {Curv : CurvaturePolynomialAlgebra G}
     (t1 t2 : ℝ) (ht1 : 0 ≤ t1) (ht2 : 0 ≤ t2) (f : PositiveTimeTestData G Curv) :
@@ -869,6 +1387,216 @@ theorem gnsPreHilbertSemigroup_add
     toPreHilbert os (shiftPositiveTimeTestData t1 ht1 (shiftPositiveTimeTestData t2 ht2 f))
   rw [shiftPositiveTimeTestData_add]
 
+/-! ============================================================================
+    PART III-B: LINEAR TIME-SHIFT SEMIGROUP & EXTENSION TO GNSCompletedHilbert
+    ============================================================================ -/
+
+/-- `ℂ`-linear time-shift map on `FormalPosTimeState G Curv` via `Finsupp.lmapDomain`. -/
+noncomputable def shiftFormalPosTimeState
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (t : ℝ) (ht : 0 ≤ t) :
+    FormalPosTimeState G Curv →ₗ[ℂ] FormalPosTimeState G Curv :=
+  Finsupp.lmapDomain ℂ ℂ (shiftPositiveTimeTestData t ht)
+
+@[simp]
+theorem shiftFormalPosTimeState_single
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (t : ℝ) (ht : 0 ≤ t) (f : PositiveTimeTestData G Curv) (c : ℂ) :
+    shiftFormalPosTimeState t ht (Finsupp.single f c) =
+      Finsupp.single (shiftPositiveTimeTestData t ht f) c := by
+  simp [shiftFormalPosTimeState, Finsupp.lmapDomain_apply, Finsupp.mapDomain_single]
+
+theorem shiftFormalPosTimeState_zero
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G} :
+    shiftFormalPosTimeState (G := G) (Curv := Curv) 0 le_rfl = LinearMap.id := by
+  refine LinearMap.ext fun φ => ?_
+  refine Finsupp.induction φ ?_ ?_
+  · simp
+  · intro f c ψ _ _ ih
+    simp [map_add, shiftFormalPosTimeState_single, shiftPositiveTimeTestData_zero, ih]
+
+theorem shiftFormalPosTimeState_add
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (t1 t2 : ℝ) (ht1 : 0 ≤ t1) (ht2 : 0 ≤ t2) :
+    shiftFormalPosTimeState (G := G) (Curv := Curv) (t1 + t2) (add_nonneg ht1 ht2) =
+      (shiftFormalPosTimeState t1 ht1).comp (shiftFormalPosTimeState t2 ht2) := by
+  refine LinearMap.ext fun φ => ?_
+  refine Finsupp.induction φ ?_ ?_
+  · simp
+  · intro f c ψ _ _ ih
+    simp only [map_add, LinearMap.comp_apply, shiftFormalPosTimeState_single]
+    rw [shiftPositiveTimeTestData_add]
+    rw [ih]
+    rfl
+
+theorem sesqOSLinear_shift_symm
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (t : ℝ) (ht : 0 ≤ t) (φ ψ : FormalPosTimeState G Curv) :
+    sesqOSLinear os (shiftFormalPosTimeState t ht φ) ψ =
+      sesqOSLinear os φ (shiftFormalPosTimeState t ht ψ) := by
+  refine Finsupp.induction φ ?_ ?_
+  · simp
+  · intro f cf φ' _ _ ihφ
+    simp only [map_add, sesqOSLinear_add_left, ihφ]
+    congr 1
+    refine Finsupp.induction ψ ?_ ?_
+    · simp
+    · intro g cg ψ' _ _ ihψ
+      simp only [map_add, sesqOSLinear_add_right, ihψ]
+      congr 1
+      simp only [shiftFormalPosTimeState_single, sesqOSLinear_single_single, sesqOS_shift_symm]
+
+theorem sesqOSHerm_shift_symm
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (t : ℝ) (ht : 0 ≤ t) (φ ψ : FormalPosTimeState G Curv) :
+    sesqOSHerm os (shiftFormalPosTimeState t ht φ) ψ =
+      sesqOSHerm os φ (shiftFormalPosTimeState t ht ψ) := by
+  unfold sesqOSHerm
+  rw [sesqOSLinear_shift_symm os t ht φ ψ, sesqOSLinear_shift_symm os t ht ψ φ]
+
+theorem shiftFormalPosTimeState_mem_osHermNullSubmodule
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (t : ℝ) (ht : 0 ≤ t) :
+    ∀ ψ ∈ osHermNullSubmodule os, shiftFormalPosTimeState t ht ψ ∈ osHermNullSubmodule os := by
+  intro ψ hψ
+  have h_all := (sesqOSHerm_eq_zero_iff os ψ).mp hψ
+  exact (sesqOSHerm_eq_zero_iff os (shiftFormalPosTimeState t ht ψ)).mpr fun w => by
+    rw [sesqOSHerm_shift_symm]
+    exact h_all (shiftFormalPosTimeState t ht w)
+
+/-- Quotient `ℂ`-linear time-shift semigroup `gnsLinearSemigroup os t ht` on `GNSLinearPreHilbert os`. -/
+noncomputable def gnsLinearSemigroup
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (t : ℝ) (ht : 0 ≤ t) :
+    GNSLinearPreHilbert os →ₗ[ℂ] GNSLinearPreHilbert os :=
+  Submodule.mapQ (osHermNullSubmodule os) (osHermNullSubmodule os)
+    (shiftFormalPosTimeState t ht)
+    (shiftFormalPosTimeState_mem_osHermNullSubmodule os t ht)
+
+@[simp]
+theorem gnsLinearSemigroup_mk
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (t : ℝ) (ht : 0 ≤ t) (φ : FormalPosTimeState G Curv) :
+    gnsLinearSemigroup os t ht (Submodule.Quotient.mk φ) =
+      Submodule.Quotient.mk (shiftFormalPosTimeState t ht φ) :=
+  rfl
+
+theorem gnsLinearSemigroup_inner_symm
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (t : ℝ) (ht : 0 ≤ t) (x y : GNSLinearPreHilbert os) :
+    inner ℂ (gnsLinearSemigroup os t ht x) y = inner ℂ x (gnsLinearSemigroup os t ht y) := by
+  refine Quotient.inductionOn₂ x y fun φ ψ => ?_
+  change sesqOSHermQuotient os (Submodule.Quotient.mk (shiftFormalPosTimeState t ht φ))
+      (Submodule.Quotient.mk ψ) =
+    sesqOSHermQuotient os (Submodule.Quotient.mk φ)
+      (Submodule.Quotient.mk (shiftFormalPosTimeState t ht ψ))
+  simp only [sesqOSHermQuotient_mk]
+  exact sesqOSHerm_shift_symm os t ht φ ψ
+
+theorem gnsLinearSemigroup_zero
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv) :
+    gnsLinearSemigroup os 0 le_rfl = LinearMap.id := by
+  refine LinearMap.ext fun x => ?_
+  refine Quotient.inductionOn x fun φ => ?_
+  change Submodule.Quotient.mk (shiftFormalPosTimeState 0 le_rfl φ) = Submodule.Quotient.mk φ
+  rw [shiftFormalPosTimeState_zero, LinearMap.id_apply]
+
+theorem gnsLinearSemigroup_add
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (t1 t2 : ℝ) (ht1 : 0 ≤ t1) (ht2 : 0 ≤ t2) :
+    gnsLinearSemigroup os (t1 + t2) (add_nonneg ht1 ht2) =
+      (gnsLinearSemigroup os t1 ht1).comp (gnsLinearSemigroup os t2 ht2) := by
+  refine LinearMap.ext fun x => ?_
+  refine Quotient.inductionOn x fun φ => ?_
+  change Submodule.Quotient.mk (shiftFormalPosTimeState (t1 + t2) (add_nonneg ht1 ht2) φ) =
+    Submodule.Quotient.mk (shiftFormalPosTimeState t1 ht1 (shiftFormalPosTimeState t2 ht2 φ))
+  rw [shiftFormalPosTimeState_add, LinearMap.comp_apply]
+
+/-- **Iterated `2^k`-Power Cauchy–Schwarz Bound on `GNSLinearPreHilbert os`**:
+    `‖T_t x‖^(2^k) ≤ ‖x‖^(2^k - 1) * ‖T_{2^k t} x‖`. -/
+theorem gnsLinearSemigroup_pow_two_cauchy_schwarz
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (t : ℝ) (ht : 0 ≤ t) (x : GNSLinearPreHilbert os) (k : ℕ) :
+    ‖gnsLinearSemigroup os t ht x‖ ^ (2 ^ k) ≤
+      ‖x‖ ^ (2 ^ k - 1) *
+        ‖gnsLinearSemigroup os ((2 ^ k : ℝ) * t) (mul_nonneg (pow_nonneg zero_le_two k) ht) x‖ := by
+  have h_time_eq : ∀ s1 s2 (hs1 : 0 ≤ s1) (hs2 : 0 ≤ s2), s1 = s2 →
+      gnsLinearSemigroup os s1 hs1 x = gnsLinearSemigroup os s2 hs2 x := by
+    rintro s _ hs1 hs2 rfl; rfl
+  induction k generalizing t ht with
+  | zero =>
+    simp only [pow_zero, Nat.sub_self, pow_one, one_mul]
+    exact le_rfl
+  | succ k ih =>
+    have h2t_eq : t + t = (2 : ℝ) * t := by ring
+    have h_step1 : ‖gnsLinearSemigroup os t ht x‖ ^ 2 ≤
+        ‖x‖ * ‖gnsLinearSemigroup os ((2 : ℝ) * t) (mul_nonneg zero_le_two ht) x‖ := by
+      rw [InnerProductSpace.norm_sq_eq_re_inner (𝕜 := ℂ)]
+      rw [gnsLinearSemigroup_inner_symm os t ht x (gnsLinearSemigroup os t ht x)]
+      have h_comp : gnsLinearSemigroup os t ht (gnsLinearSemigroup os t ht x) =
+          gnsLinearSemigroup os ((2 : ℝ) * t) (mul_nonneg zero_le_two ht) x := by
+        have h_add := congrArg (fun L => L x) (gnsLinearSemigroup_add os t t ht ht)
+        simp only [LinearMap.comp_apply] at h_add
+        rw [← h_add]
+        exact h_time_eq _ _ _ _ h2t_eq
+      rw [h_comp]
+      have h_re : (inner ℂ x (gnsLinearSemigroup os ((2 : ℝ) * t) (mul_nonneg zero_le_two ht) x)).re ≤
+          ‖inner ℂ x (gnsLinearSemigroup os ((2 : ℝ) * t) (mul_nonneg zero_le_two ht) x)‖ :=
+        Complex.re_le_norm _
+      exact h_re.trans (norm_inner_le_norm _ _)
+    have h_pow : (‖gnsLinearSemigroup os t ht x‖ ^ 2) ^ (2 ^ k) ≤
+        (‖x‖ * ‖gnsLinearSemigroup os ((2 : ℝ) * t) (mul_nonneg zero_le_two ht) x‖) ^ (2 ^ k) :=
+      pow_le_pow_left₀ (sq_nonneg _) h_step1 (2 ^ k)
+    rw [← pow_mul, mul_comm 2 (2 ^ k), ← pow_succ] at h_pow
+    rw [mul_pow] at h_pow
+    have h_ih := ih ((2 : ℝ) * t) (mul_nonneg zero_le_two ht)
+    have h_time : (2 ^ k : ℝ) * ((2 : ℝ) * t) = (2 ^ (k + 1) : ℝ) * t := by
+      rw [pow_succ]; ring
+    have h_norm_eq : ‖gnsLinearSemigroup os ((2 ^ k : ℝ) * ((2 : ℝ) * t))
+        (mul_nonneg (pow_nonneg zero_le_two k) (mul_nonneg zero_le_two ht)) x‖ =
+      ‖gnsLinearSemigroup os ((2 ^ (k + 1) : ℝ) * t)
+        (mul_nonneg (pow_nonneg zero_le_two (k + 1)) ht) x‖ := by
+      rw [h_time_eq _ _ _ _ h_time]
+    rw [h_norm_eq] at h_ih
+    have h_mul := mul_le_mul_of_nonneg_left h_ih (pow_nonneg (norm_nonneg x) (2 ^ k))
+    have h_exp : 2 ^ k + (2 ^ k - 1) = 2 ^ (k + 1) - 1 := by
+      have h1 : 1 ≤ 2 ^ k := Nat.one_le_two_pow
+      rw [pow_succ]
+      omega
+    calc ‖gnsLinearSemigroup os t ht x‖ ^ (2 ^ (k + 1))
+        ≤ ‖x‖ ^ (2 ^ k) * ‖gnsLinearSemigroup os ((2 : ℝ) * t) (mul_nonneg zero_le_two ht) x‖ ^ (2 ^ k) := h_pow
+      _ ≤ ‖x‖ ^ (2 ^ k) * (‖x‖ ^ (2 ^ k - 1) *
+            ‖gnsLinearSemigroup os ((2 ^ (k + 1) : ℝ) * t)
+              (mul_nonneg (pow_nonneg zero_le_two (k + 1)) ht) x‖) := h_mul
+      _ = ‖x‖ ^ (2 ^ k + (2 ^ k - 1)) *
+            ‖gnsLinearSemigroup os ((2 ^ (k + 1) : ℝ) * t)
+              (mul_nonneg (pow_nonneg zero_le_two (k + 1)) ht) x‖ := by rw [← mul_assoc, ← pow_add]
+      _ = ‖x‖ ^ (2 ^ (k + 1) - 1) *
+            ‖gnsLinearSemigroup os ((2 ^ (k + 1) : ℝ) * t)
+              (mul_nonneg (pow_nonneg zero_le_two (k + 1)) ht) x‖ := by rw [h_exp]
+
 /-- **(4) Exponential Clustering of Shifted OS Correlations from OS4**:
     For any positive-time states `f, g`, `sesqOS os f (shiftPositiveTimeTestData t ht g)`
     clusters exponentially to `conj(S_{f.deg}(Θ f*)) * S_{g.deg}(g)` at rate `os.mass_rate`. -/
@@ -907,6 +1635,267 @@ theorem sesqOS_shift_clustering
   have h_bound := h_cluster t ht
   rw [h_trans] at h_bound
   exact h_bound
+
+/-- Uniform norm bound on shifted OS correlations from `sesqOS_shift_clustering`:
+    for any `f, g`, there exists `C ≥ 0` such that `‖⟨f, T_s g⟩_OS‖ ≤ C` for all `s ≥ 0`. -/
+theorem sesqOS_shift_norm_bounded
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (f g : PositiveTimeTestData G Curv) :
+    ∃ C : ℝ, 0 ≤ C ∧
+      ∀ (s : ℝ) (hs : 0 ≤ s),
+        ‖sesqOS os f (shiftPositiveTimeTestData s hs g)‖ ≤ C := by
+  obtain ⟨C0, hC0, h_cluster⟩ := sesqOS_shift_clustering os f g
+  let z : ℂ :=
+    starRingEnd ℂ (os.schwinger f.deg (reverseConjLabels f.ops) (reverseReflectConfig f.X)) *
+      os.schwinger g.deg g.ops g.X
+  refine ⟨C0 + ‖z‖, add_nonneg hC0 (norm_nonneg z), fun s hs => ?_⟩
+  have h_exp_le : Real.exp (-os.mass_rate * s) ≤ 1 :=
+    Real.exp_le_one_iff.mpr (mul_nonpos_of_nonpos_of_nonneg (neg_nonpos.mpr os.mass_rate_pos.le) hs)
+  have h_cl : ‖sesqOS os f (shiftPositiveTimeTestData s hs g) - z‖ ≤ C0 :=
+    (h_cluster s hs).trans (mul_le_of_le_one_right hC0 h_exp_le)
+  have h_tri : ‖sesqOS os f (shiftPositiveTimeTestData s hs g)‖ ≤
+      ‖sesqOS os f (shiftPositiveTimeTestData s hs g) - z‖ + ‖z‖ := by
+    calc ‖sesqOS os f (shiftPositiveTimeTestData s hs g)‖
+        = ‖(sesqOS os f (shiftPositiveTimeTestData s hs g) - z) + z‖ := by ring_nf
+      _ ≤ ‖sesqOS os f (shiftPositiveTimeTestData s hs g) - z‖ + ‖z‖ := norm_add_le _ _
+  linarith
+
+private theorem sesqOSLinear_single_shift_norm_bounded
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (f : PositiveTimeTestData G Curv) (cf : ℂ) (ψ : FormalPosTimeState G Curv) :
+    ∃ C : ℝ, 0 ≤ C ∧
+      ∀ (s : ℝ) (hs : 0 ≤ s),
+        ‖sesqOSLinear os (Finsupp.single f cf) (shiftFormalPosTimeState s hs ψ)‖ ≤ C := by
+  refine Finsupp.induction ψ ?_ ?_
+  · exact ⟨0, le_rfl, fun s hs => by simp⟩
+  · intro g cg ψ' _ _ ih
+    obtain ⟨C1, hC1, h1⟩ := ih
+    obtain ⟨Cfg, hCfg, hfg⟩ := sesqOS_shift_norm_bounded os f g
+    refine ⟨‖cf‖ * ‖cg‖ * Cfg + C1,
+      add_nonneg (mul_nonneg (mul_nonneg (norm_nonneg cf) (norm_nonneg cg)) hCfg) hC1,
+      fun s hs => ?_⟩
+    rw [map_add, sesqOSLinear_add_right]
+    refine (norm_add_le _ _).trans (add_le_add ?_ (h1 s hs))
+    rw [shiftFormalPosTimeState_single, sesqOSLinear_single_single,
+      norm_mul, norm_mul, Complex.norm_conj]
+    exact mul_le_mul_of_nonneg_left (hfg s hs)
+      (mul_nonneg (norm_nonneg cf) (norm_nonneg cg))
+
+theorem sesqOSLinear_shift_norm_bounded
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (φ ψ : FormalPosTimeState G Curv) :
+    ∃ C : ℝ, 0 ≤ C ∧
+      ∀ (s : ℝ) (hs : 0 ≤ s),
+        ‖sesqOSLinear os φ (shiftFormalPosTimeState s hs ψ)‖ ≤ C := by
+  refine Finsupp.induction φ ?_ ?_
+  · exact ⟨0, le_rfl, fun s hs => by simp⟩
+  · intro f cf φ' _ _ ih
+    obtain ⟨C1, hC1, h1⟩ := ih
+    obtain ⟨C0, hC0, h0⟩ := sesqOSLinear_single_shift_norm_bounded os f cf ψ
+    refine ⟨C0 + C1, add_nonneg hC0 hC1, fun s hs => ?_⟩
+    rw [sesqOSLinear_add_left]
+    exact (norm_add_le _ _).trans (add_le_add (h0 s hs) (h1 s hs))
+
+/-- Uniform boundedness of the time-shift semigroup on `GNSLinearPreHilbert os`:
+    for every `x`, there exists `M ≥ 0` such that `‖T_s x‖ ≤ M` for all `s ≥ 0`. -/
+theorem gnsLinearSemigroup_uniform_bounded
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (x : GNSLinearPreHilbert os) :
+    ∃ M : ℝ, 0 ≤ M ∧ ∀ (s : ℝ) (hs : 0 ≤ s), ‖gnsLinearSemigroup os s hs x‖ ≤ M := by
+  refine Quotient.inductionOn x fun φ => ?_
+  obtain ⟨C, hC, h_bd⟩ := sesqOSLinear_shift_norm_bounded os φ φ
+  refine ⟨Real.sqrt C, Real.sqrt_nonneg C, fun s hs => ?_⟩
+  have h_sq : ‖gnsLinearSemigroup os s hs (Submodule.Quotient.mk φ)‖ ^ 2 ≤ C := by
+    rw [InnerProductSpace.norm_sq_eq_re_inner (𝕜 := ℂ)]
+    rw [gnsLinearSemigroup_inner_symm os s hs]
+    have h_add := congrArg (fun L => L (Submodule.Quotient.mk φ))
+      (gnsLinearSemigroup_add os s s hs hs)
+    simp only [LinearMap.comp_apply] at h_add
+    rw [← h_add, gnsLinearSemigroup_mk]
+    change (sesqOSHermQuotient os (Submodule.Quotient.mk φ)
+      (Submodule.Quotient.mk (shiftFormalPosTimeState (s + s) (add_nonneg hs hs) φ))).re ≤ C
+    rw [sesqOSHermQuotient_mk]
+    have h_re : (sesqOSHerm os φ (shiftFormalPosTimeState (s + s) (add_nonneg hs hs) φ)).re ≤
+        ‖sesqOSHerm os φ (shiftFormalPosTimeState (s + s) (add_nonneg hs hs) φ)‖ :=
+      Complex.re_le_norm _
+    refine h_re.trans ?_
+    unfold sesqOSHerm
+    rw [sesqOSLinear_shift_symm os (s + s) (add_nonneg hs hs) φ φ]
+    have h12 : ‖(1 / 2 : ℂ)‖ = 1 / 2 := by norm_num
+    rw [norm_mul, h12]
+    have h_tri : ‖sesqOSLinear os φ (shiftFormalPosTimeState (s + s) (add_nonneg hs hs) φ) +
+        starRingEnd ℂ (sesqOSLinear os φ (shiftFormalPosTimeState (s + s) (add_nonneg hs hs) φ))‖ ≤
+        2 * ‖sesqOSLinear os φ (shiftFormalPosTimeState (s + s) (add_nonneg hs hs) φ)‖ := by
+      refine (norm_add_le _ _).trans ?_
+      rw [Complex.norm_conj]
+      linarith
+    have h_bd2 := h_bd (s + s) (add_nonneg hs hs)
+    linarith
+  exact Real.le_sqrt_of_sq_le h_sq
+
+/-- **Unconditional Contraction Bound on `GNSLinearPreHilbert os`**:
+    Derived from `gnsLinearSemigroup_pow_two_cauchy_schwarz` and
+    `gnsLinearSemigroup_uniform_bounded` (via `os.os4_exponential_clustering`). -/
+theorem gnsLinearSemigroup_norm_le
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (t : ℝ) (ht : 0 ≤ t) (x : GNSLinearPreHilbert os) :
+    ‖gnsLinearSemigroup os t ht x‖ ≤ ‖x‖ := by
+  by_contra h_gt
+  push Not at h_gt
+  obtain ⟨M, _, hM⟩ := gnsLinearSemigroup_uniform_bounded os x
+  have h_pow_le : ∀ k : ℕ,
+      ‖gnsLinearSemigroup os t ht x‖ ^ (2 ^ k) ≤ ‖x‖ ^ (2 ^ k - 1) * M := fun k => by
+    have h1 := gnsLinearSemigroup_pow_two_cauchy_schwarz os t ht x k
+    have h2 := hM ((2 ^ k : ℝ) * t) (mul_nonneg (pow_nonneg zero_le_two k) ht)
+    exact h1.trans (mul_le_mul_of_nonneg_left h2 (pow_nonneg (norm_nonneg x) _))
+  rcases eq_or_lt_of_le (norm_nonneg x) with hx0 | hx_pos
+  · have h1 := h_pow_le 1
+    rw [← hx0] at h1
+    simp only [pow_one, Nat.reduceSub, zero_mul] at h1
+    have h_sq_zero : ‖gnsLinearSemigroup os t ht x‖ ^ 2 = 0 :=
+      le_antisymm h1 (sq_nonneg _)
+    have h_zero : ‖gnsLinearSemigroup os t ht x‖ = 0 := sq_eq_zero_iff.mp h_sq_zero
+    linarith
+  · have hr_gt : 1 < ‖gnsLinearSemigroup os t ht x‖ / ‖x‖ := (one_lt_div hx_pos).mpr h_gt
+    obtain ⟨k, hk⟩ := pow_unbounded_of_one_lt (M / ‖x‖) hr_gt
+    have hk_le : k ≤ 2 ^ k := Nat.lt_two_pow_self.le
+    have h_pow_mono : (‖gnsLinearSemigroup os t ht x‖ / ‖x‖) ^ k ≤
+        (‖gnsLinearSemigroup os t ht x‖ / ‖x‖) ^ (2 ^ k) :=
+      pow_le_pow_right₀ hr_gt.le hk_le
+    have h_div_le : (‖gnsLinearSemigroup os t ht x‖ / ‖x‖) ^ (2 ^ k) ≤ M / ‖x‖ := by
+      rw [div_pow, div_le_div_iff₀ (pow_pos hx_pos (2 ^ k)) hx_pos]
+      have h_pow_id : ‖x‖ ^ (2 ^ k - 1) * ‖x‖ = ‖x‖ ^ (2 ^ k) := by
+        have h1 : 1 ≤ 2 ^ k := Nat.one_le_two_pow
+        rw [← pow_succ, Nat.sub_add_cancel h1]
+      calc ‖gnsLinearSemigroup os t ht x‖ ^ (2 ^ k) * ‖x‖
+          ≤ (‖x‖ ^ (2 ^ k - 1) * M) * ‖x‖ := mul_le_mul_of_nonneg_right (h_pow_le k) hx_pos.le
+        _ = M * (‖x‖ ^ (2 ^ k - 1) * ‖x‖) := by ring
+        _ = M * ‖x‖ ^ (2 ^ k) := by rw [h_pow_id]
+    linarith
+
+/-- Unconditional promotion of `gnsLinearSemigroup os t ht` to a `ContinuousLinearMap`. -/
+noncomputable def gnsLinearSemigroupCLM
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (t : ℝ) (ht : 0 ≤ t) :
+    GNSLinearPreHilbert os →L[ℂ] GNSLinearPreHilbert os :=
+  (gnsLinearSemigroup os t ht).mkContinuous 1 fun x => by
+    simpa using gnsLinearSemigroup_norm_le os t ht x
+
+/-- Unconditional unique bounded linear extension of `gnsLinearSemigroup os t ht`
+    along `gnsLinearToCompleted os` to `GNSCompletedHilbert os →L[ℂ] GNSCompletedHilbert os`. -/
+noncomputable def gnsCompletedSemigroup
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (t : ℝ) (ht : 0 ≤ t) :
+    GNSCompletedHilbert os →L[ℂ] GNSCompletedHilbert os :=
+  ContinuousLinearMap.extend
+    ((gnsLinearToCompleted os).toContinuousLinearMap.comp (gnsLinearSemigroupCLM os t ht))
+    (gnsLinearToCompleted os).toContinuousLinearMap
+
+theorem gnsCompletedSemigroup_apply_coe
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (t : ℝ) (ht : 0 ≤ t)
+    (x : GNSLinearPreHilbert os) :
+    gnsCompletedSemigroup os t ht (gnsLinearToCompleted os x) =
+      gnsLinearToCompleted os (gnsLinearSemigroup os t ht x) := by
+  unfold gnsCompletedSemigroup
+  exact ContinuousLinearMap.extend_eq _
+    (gnsLinearToCompleted_denseRange os)
+    (gnsLinearToCompleted os).isometry.isUniformInducing x
+
+theorem gnsCompletedSemigroup_unique
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (t : ℝ) (ht : 0 ≤ t)
+    (g : GNSCompletedHilbert os →L[ℂ] GNSCompletedHilbert os)
+    (hg : g.comp (gnsLinearToCompleted os).toContinuousLinearMap =
+      (gnsLinearToCompleted os).toContinuousLinearMap.comp (gnsLinearSemigroupCLM os t ht)) :
+    gnsCompletedSemigroup os t ht = g := by
+  unfold gnsCompletedSemigroup
+  exact ContinuousLinearMap.extend_unique _
+    (gnsLinearToCompleted_denseRange os)
+    (gnsLinearToCompleted os).isometry.isUniformInducing g hg
+
+theorem gnsCompletedSemigroup_norm_le_one
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (t : ℝ) (ht : 0 ≤ t) :
+    ‖gnsCompletedSemigroup os t ht‖ ≤ 1 := by
+  refine ContinuousLinearMap.opNorm_le_bound _ zero_le_one fun y => ?_
+  rw [one_mul]
+  refine (gnsLinearToCompleted_denseRange os).induction_on y ?_ ?_
+  · exact isClosed_le ((gnsCompletedSemigroup os t ht).continuous.norm) continuous_norm
+  · intro x
+    rw [gnsCompletedSemigroup_apply_coe]
+    rw [(gnsLinearToCompleted os).norm_map, (gnsLinearToCompleted os).norm_map]
+    exact gnsLinearSemigroup_norm_le os t ht x
+
+theorem gnsCompletedSemigroup_zero
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv) :
+    gnsCompletedSemigroup os 0 le_rfl = ContinuousLinearMap.id ℂ (GNSCompletedHilbert os) := by
+  refine gnsCompletedSemigroup_unique os 0 le_rfl _ ?_
+  ext x
+  simp [gnsLinearSemigroupCLM, gnsLinearSemigroup_zero]
+
+theorem gnsCompletedSemigroup_add
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (t1 t2 : ℝ) (ht1 : 0 ≤ t1) (ht2 : 0 ≤ t2) :
+    gnsCompletedSemigroup os (t1 + t2) (add_nonneg ht1 ht2) =
+      (gnsCompletedSemigroup os t1 ht1).comp (gnsCompletedSemigroup os t2 ht2) := by
+  refine gnsCompletedSemigroup_unique os (t1 + t2) (add_nonneg ht1 ht2) _ ?_
+  ext x
+  simp only [ContinuousLinearMap.comp_apply, LinearIsometry.coe_toContinuousLinearMap]
+  rw [gnsCompletedSemigroup_apply_coe, gnsCompletedSemigroup_apply_coe]
+  change gnsLinearToCompleted os (gnsLinearSemigroup os t1 ht1 (gnsLinearSemigroup os t2 ht2 x)) =
+    gnsLinearToCompleted os (gnsLinearSemigroup os (t1 + t2) (add_nonneg ht1 ht2) x)
+  rw [gnsLinearSemigroup_add, LinearMap.comp_apply]
+
+theorem gnsCompletedSemigroup_inner_symm
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (t : ℝ) (ht : 0 ≤ t)
+    (x y : GNSCompletedHilbert os) :
+    inner ℂ (gnsCompletedSemigroup os t ht x) y =
+      inner ℂ x (gnsCompletedSemigroup os t ht y) := by
+  refine (gnsLinearToCompleted_denseRange os).induction_on x ?_ ?_
+  · exact isClosed_eq
+      ((gnsCompletedSemigroup os t ht).continuous.inner continuous_const)
+      (continuous_id.inner continuous_const)
+  · intro a
+    refine (gnsLinearToCompleted_denseRange os).induction_on y ?_ ?_
+    · exact isClosed_eq
+        (continuous_const.inner continuous_id)
+        (continuous_const.inner (gnsCompletedSemigroup os t ht).continuous)
+    · intro b
+      rw [gnsCompletedSemigroup_apply_coe, gnsCompletedSemigroup_apply_coe]
+      change inner ℂ ((gnsLinearSemigroup os t ht a : GNSLinearPreHilbert os) : GNSCompletedHilbert os)
+          ((b : GNSLinearPreHilbert os) : GNSCompletedHilbert os) =
+        inner ℂ ((a : GNSLinearPreHilbert os) : GNSCompletedHilbert os)
+          ((gnsLinearSemigroup os t ht b : GNSLinearPreHilbert os) : GNSCompletedHilbert os)
+      rw [UniformSpace.Completion.inner_coe, UniformSpace.Completion.inner_coe]
+      exact gnsLinearSemigroup_inner_symm os t ht a b
 
 /-! ============================================================================
     PART V: TRUNCATED CONTINUUM CHARACTERISTIC FUNCTIONAL (OS0)
@@ -1127,6 +2116,25 @@ theorem massSqOp_rest_frame_mass_shell_bound
 #print axioms sesqOS_symm_cauchy_schwarz
 #print axioms sesqOS_cauchy_schwarz
 #print axioms sesqOS_eq_zero_of_diag_re_eq_zero
+#print axioms sesqOSLinear_nonneg
+#print axioms sesqOSLinear_symm_cauchy_schwarz
+#print axioms sesqOSLinear_cauchy_schwarz
+#print axioms sesqOSHerm_conj_symm
+#print axioms sesqOSHerm_self_re
+#print axioms sesqOSHerm_self_im
+#print axioms sesqOSHerm_nonneg
+#print axioms sesqOSHerm_cauchy_schwarz
+#print axioms sesqOSHerm_eq_zero_iff
+#print axioms osHermNullSubmodule
+#print axioms gnsLinearInnerCore
+#print axioms gnsLinearNormedAddCommGroup
+#print axioms gnsLinearInnerProductSpace
+#print axioms gnsLinear_norm_eq_sqrt_re_inner
+#print axioms gnsLinear_norm_eq_zero_iff
+#print axioms gnsLinearToCompleted
+#print axioms gnsLinearToCompleted_denseRange
+#print axioms gnsCompletedHilbert_complete
+#print axioms gnsCompletedHilbert_innerProductSpace
 #print axioms gns_cauchy_schwarz_soundness
 #print axioms reed_simon_x49_semigroup_core
 #print axioms reconstructed_gns_has_mass_gap
@@ -1135,6 +2143,27 @@ theorem massSqOp_rest_frame_mass_shell_bound
 #print axioms sesqOS_shift_symm
 #print axioms gnsPreHilbertSemigroup_zero
 #print axioms gnsPreHilbertSemigroup_add
+#print axioms shiftFormalPosTimeState_zero
+#print axioms shiftFormalPosTimeState_add
+#print axioms sesqOSLinear_shift_symm
+#print axioms sesqOSHerm_shift_symm
+#print axioms shiftFormalPosTimeState_mem_osHermNullSubmodule
+#print axioms gnsLinearSemigroup
+#print axioms gnsLinearSemigroup_inner_symm
+#print axioms gnsLinearSemigroup_zero
+#print axioms gnsLinearSemigroup_add
+#print axioms gnsLinearSemigroup_pow_two_cauchy_schwarz
+#print axioms gnsCompletedSemigroup
+#print axioms gnsCompletedSemigroup_apply_coe
+#print axioms gnsCompletedSemigroup_unique
+#print axioms gnsCompletedSemigroup_norm_le_one
+#print axioms sesqOS_shift_norm_bounded
+#print axioms sesqOSLinear_shift_norm_bounded
+#print axioms gnsLinearSemigroup_uniform_bounded
+#print axioms gnsLinearSemigroup_norm_le
+#print axioms gnsCompletedSemigroup_zero
+#print axioms gnsCompletedSemigroup_add
+#print axioms gnsCompletedSemigroup_inner_symm
 #print axioms sesqOS_shift_clustering
 #print axioms charFunctionalTrunc_zero
 #print axioms charFunctionalTrunc_zero_test
