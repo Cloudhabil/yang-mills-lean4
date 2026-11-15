@@ -5112,6 +5112,1598 @@ noncomputable def su3CurvaturePolynomialAlgebra :
     CurvaturePolynomialAlgebra SU3 :=
   buildCurvaturePolynomialAlgebra su3LieBasisData
 
+@[simp]
+theorem su3CurvaturePolynomialAlgebra_casimir_adjoint :
+    su3CurvaturePolynomialAlgebra.casimir_adjoint = 3 := rfl
+
 end SU3Instance
+
+section SU2Instance
+
+open YangMills.LieGroups
+
+/-- Inner product on `LieSU 2`: `⟨X, Y⟩ = -2 * Re(Tr(X Y))`. -/
+private def su2InnerFun (X Y : LieSU 2) : ℝ :=
+  -2 * (Matrix.trace (X.1 * Y.1)).re
+
+private noncomputable def su2Inner : LieSU 2 →ₗ[ℝ] LieSU 2 →ₗ[ℝ] ℝ where
+  toFun X :=
+    { toFun := fun Y => su2InnerFun X Y
+      map_add' := fun Y Z => by
+        simp only [su2InnerFun, Submodule.coe_add, Matrix.mul_add, Matrix.trace_add,
+          Complex.add_re, mul_add]
+      map_smul' := fun c Y => by
+        simp only [su2InnerFun, SetLike.val_smul, Matrix.mul_smul, Matrix.trace_smul,
+          smul_eq_mul, Complex.real_smul, Complex.mul_re, Complex.ofReal_re, Complex.ofReal_im,
+          zero_mul, sub_zero, RingHom.id_apply]
+        ring }
+  map_add' X₁ X₂ := by
+    ext Y
+    simp only [LinearMap.coe_mk, AddHom.coe_mk, LinearMap.add_apply, su2InnerFun,
+      Submodule.coe_add, Matrix.add_mul, Matrix.trace_add, Complex.add_re, mul_add]
+  map_smul' c X := by
+    ext Y
+    simp only [LinearMap.coe_mk, AddHom.coe_mk, LinearMap.smul_apply, smul_eq_mul,
+      RingHom.id_apply, su2InnerFun, SetLike.val_smul, Matrix.smul_mul, Matrix.trace_smul,
+      Complex.real_smul, Complex.mul_re, Complex.ofReal_re, Complex.ofReal_im, zero_mul, sub_zero]
+    ring
+
+private theorem su2Inner_symm (X Y : LieSU 2) : su2Inner X Y = su2Inner Y X := by
+  simp only [su2Inner, LinearMap.coe_mk, AddHom.coe_mk, su2InnerFun]
+  rw [Matrix.trace_mul_comm]
+
+private theorem su2Inner_pos (X : LieSU 2) (hX : X ≠ 0) : 0 < su2Inner X X := by
+  have h_skew : star X.1 = -X.1 := X.2.1
+  have h_val : X.1 ≠ 0 := fun h => hX (Subtype.ext h)
+  have h_tr : su2Inner X X = 2 * ∑ i : Fin 2, ∑ j : Fin 2, ‖X.1 i j‖ ^ 2 := by
+    simp only [su2Inner, LinearMap.coe_mk, AddHom.coe_mk, su2InnerFun]
+    have h_eq : Matrix.trace (X.1 * X.1) = - Matrix.trace (star X.1 * X.1) := by
+      calc Matrix.trace (X.1 * X.1)
+          = Matrix.trace (-(-X.1) * X.1) := by rw [neg_neg]
+        _ = Matrix.trace (-star X.1 * X.1) := by rw [h_skew]
+        _ = - Matrix.trace (star X.1 * X.1) := by rw [Matrix.neg_mul, Matrix.trace_neg]
+    rw [h_eq, Complex.neg_re]
+    have h_lhs : -2 * -(Matrix.trace (star X.1 * X.1)).re =
+        2 * (Matrix.trace (star X.1 * X.1)).re := by ring
+    rw [h_lhs]
+    congr 1
+    simp only [Matrix.trace, Matrix.diag, Matrix.mul_apply, Matrix.star_apply, RCLike.star_def]
+    rw [Complex.re_sum, Finset.sum_comm]
+    refine Finset.sum_congr rfl fun j _ => ?_
+    rw [Complex.re_sum]
+    refine Finset.sum_congr rfl fun i _ => ?_
+    simp [Complex.conj_mul', ← Complex.ofReal_pow]
+  rw [h_tr]
+  obtain ⟨i, j, hij⟩ : ∃ i j : Fin 2, X.1 i j ≠ 0 := by
+    by_contra h_all
+    push Not at h_all
+    exact h_val (Matrix.ext h_all)
+  have h_pos : 0 < ‖X.1 i j‖ ^ 2 := sq_pos_of_pos (norm_pos_iff.mpr hij)
+  have h_nn : ∀ a b : Fin 2, 0 ≤ ‖X.1 a b‖ ^ 2 := fun a b => sq_nonneg _
+  have h_sum_j : 0 < ∑ b : Fin 2, ‖X.1 i b‖ ^ 2 :=
+    Finset.sum_pos' (fun b _ => h_nn i b) ⟨j, Finset.mem_univ j, h_pos⟩
+  have h_sum_i : 0 < ∑ a : Fin 2, ∑ b : Fin 2, ‖X.1 a b‖ ^ 2 :=
+    Finset.sum_pos' (fun a _ => Finset.sum_nonneg fun b _ => h_nn a b) ⟨i, Finset.mem_univ i, h_sum_j⟩
+  linarith
+
+private def su2Adjoint (g : SU2) : LieSU 2 →ₗ[ℝ] LieSU 2 where
+  toFun := sunAdjoint 2 g
+  map_add' X Y := by
+    apply Subtype.ext
+    simp only [sunAdjoint, Submodule.coe_add, Matrix.mul_add, Matrix.add_mul]
+  map_smul' c X := by
+    apply Subtype.ext
+    simp only [sunAdjoint, SetLike.val_smul, Matrix.mul_smul, Matrix.smul_mul, RingHom.id_apply]
+
+private theorem su2Adjoint_one : su2Adjoint 1 = LinearMap.id := by
+  ext X i j
+  simp [su2Adjoint, sunAdjoint]
+
+private theorem su2Adjoint_mul (g h : SU2) (X : LieSU 2) :
+  su2Adjoint (g * h) X = su2Adjoint g (su2Adjoint h X) := by
+  apply Subtype.ext
+  simp only [su2Adjoint, LinearMap.coe_mk, AddHom.coe_mk, sunAdjoint, Submonoid.coe_mul,
+    star_mul, Matrix.mul_assoc]
+
+private theorem su2Adjoint_bracket (g : SU2) (X Y : LieSU 2) :
+    su2Adjoint g ⁅X, Y⁆ = ⁅su2Adjoint g X, su2Adjoint g Y⁆ := by
+  apply Subtype.ext
+  have hg : star g.1 * g.1 = 1 := by
+    rcases Matrix.mem_specialUnitaryGroup_iff.mp g.2 with ⟨h1, _⟩
+    exact Matrix.mem_unitaryGroup_iff'.mp h1
+  simp only [su2Adjoint, LinearMap.coe_mk, AddHom.coe_mk, sunAdjoint]
+  change g.1 * (X.1 * Y.1 - Y.1 * X.1) * star g.1 =
+    (g.1 * X.1 * star g.1) * (g.1 * Y.1 * star g.1) -
+    (g.1 * Y.1 * star g.1) * (g.1 * X.1 * star g.1)
+  have h1 : (g.1 * X.1 * star g.1) * (g.1 * Y.1 * star g.1) = g.1 * (X.1 * Y.1) * star g.1 := by
+    calc g.1 * X.1 * star g.1 * (g.1 * Y.1 * star g.1)
+        = g.1 * X.1 * (star g.1 * g.1) * Y.1 * star g.1 := by simp only [Matrix.mul_assoc]
+      _ = g.1 * (X.1 * Y.1) * star g.1 := by rw [hg, Matrix.mul_one]; simp only [Matrix.mul_assoc]
+  have h2 : (g.1 * Y.1 * star g.1) * (g.1 * X.1 * star g.1) = g.1 * (Y.1 * X.1) * star g.1 := by
+    calc g.1 * Y.1 * star g.1 * (g.1 * X.1 * star g.1)
+        = g.1 * Y.1 * (star g.1 * g.1) * X.1 * star g.1 := by simp only [Matrix.mul_assoc]
+      _ = g.1 * (Y.1 * X.1) * star g.1 := by rw [hg, Matrix.mul_one]; simp only [Matrix.mul_assoc]
+  rw [h1, h2, Matrix.mul_sub, Matrix.sub_mul]
+
+private theorem su2Inner_ad_inv (g : SU2) (X Y : LieSU 2) :
+    su2Inner (su2Adjoint g X) (su2Adjoint g Y) = su2Inner X Y := by
+  have hg : star g.1 * g.1 = 1 := by
+    rcases Matrix.mem_specialUnitaryGroup_iff.mp g.2 with ⟨h1, _⟩
+    exact Matrix.mem_unitaryGroup_iff'.mp h1
+  simp only [su2Inner, LinearMap.coe_mk, AddHom.coe_mk, su2InnerFun, su2Adjoint, sunAdjoint]
+  have h_prod : (g.1 * X.1 * star g.1) * (g.1 * Y.1 * star g.1) = g.1 * (X.1 * Y.1) * star g.1 := by
+    calc g.1 * X.1 * star g.1 * (g.1 * Y.1 * star g.1)
+        = g.1 * X.1 * (star g.1 * g.1) * Y.1 * star g.1 := by simp only [Matrix.mul_assoc]
+      _ = g.1 * (X.1 * Y.1) * star g.1 := by rw [hg, Matrix.mul_one]; simp only [Matrix.mul_assoc]
+  rw [h_prod, Matrix.trace_mul_comm (g.1 * (X.1 * Y.1)) (star g.1), ← Matrix.mul_assoc,
+    ← Matrix.mul_assoc, hg, Matrix.one_mul]
+
+private theorem su2Inner_ad_skew (Y X Z : LieSU 2) :
+    su2Inner ⁅Y, X⁆ Z + su2Inner X ⁅Y, Z⁆ = 0 := by
+  simp only [su2Inner, LinearMap.coe_mk, AddHom.coe_mk, su2InnerFun]
+  have h1 : (Y.1 * X.1 - X.1 * Y.1) * Z.1 + X.1 * (Y.1 * Z.1 - Z.1 * Y.1) =
+      Y.1 * (X.1 * Z.1) - (X.1 * Z.1) * Y.1 := by
+    noncomm_ring
+  have h_tr : Matrix.trace ((Y.1 * X.1 - X.1 * Y.1) * Z.1) +
+      Matrix.trace (X.1 * (Y.1 * Z.1 - Z.1 * Y.1)) = 0 := by
+    rw [← Matrix.trace_add, h1, Matrix.trace_sub, Matrix.trace_mul_comm Y.1 (X.1 * Z.1), sub_self]
+  have h_re := congrArg Complex.re h_tr
+  simp only [Complex.add_re, Complex.zero_re] at h_re
+  change -2 * (Matrix.trace ((Y.1 * X.1 - X.1 * Y.1) * Z.1)).re +
+      -2 * (Matrix.trace (X.1 * (Y.1 * Z.1 - Z.1 * Y.1))).re = 0
+  linarith
+
+/-- Explicit orthonormal Pauli basis `B_a = (-I / 2) σ_a` for `LieSU 2`. -/
+private noncomputable def su2BasisMat (a : Fin 3) : Matrix (Fin 2) (Fin 2) ℂ :=
+  match a with
+  | 0 => !![0, -Complex.I / 2; -Complex.I / 2, 0]
+  | 1 => !![0, -1 / 2; 1 / 2, 0]
+  | 2 => !![-Complex.I / 2, 0; 0, Complex.I / 2]
+
+private theorem su2BasisMat_mem (a : Fin 3) : su2BasisMat a ∈ LieSU 2 := by
+  refine ⟨?_, ?_⟩
+  · ext i j
+    fin_cases a <;> fin_cases i <;> fin_cases j <;>
+      simp [su2BasisMat, Matrix.star_apply] <;> ring
+  · fin_cases a <;>
+      simp [su2BasisMat, Matrix.trace, Fin.sum_univ_two] <;> ring
+
+private noncomputable def su2Basis (a : Fin 3) : LieSU 2 :=
+  ⟨su2BasisMat a, su2BasisMat_mem a⟩
+
+private theorem su2Basis_orthonormal (a b : Fin 3) :
+    su2Inner (su2Basis a) (su2Basis b) = if a = b then 1 else 0 := by
+  simp only [su2Inner, LinearMap.coe_mk, AddHom.coe_mk, su2InnerFun, su2Basis]
+  fin_cases a <;> fin_cases b <;>
+    simp [su2BasisMat, Matrix.trace, Fin.sum_univ_two, Matrix.mul_apply,
+      Complex.div_re, Complex.div_im, Complex.mul_re, Complex.mul_im] <;>
+    norm_num
+
+private theorem su2Inner_basis0 (X : LieSU 2) :
+    su2Inner X (su2Basis 0) = -2 * (X.1 0 1).im := by
+  have h01 : star (X.1 0 1) = - X.1 1 0 := by
+    have h := congrArg (fun M : Matrix (Fin 2) (Fin 2) ℂ => M 1 0) X.2.1
+    simpa [Matrix.star_apply] using h
+  have h10_im : (X.1 1 0).im = (X.1 0 1).im := by
+    have h := congrArg Complex.im h01; simp at h; linarith
+  simp [su2Inner, su2InnerFun, su2Basis, su2BasisMat, Matrix.trace, Fin.sum_univ_two,
+    Matrix.mul_apply, h10_im]
+  ring
+
+private theorem su2Inner_basis1 (X : LieSU 2) :
+    su2Inner X (su2Basis 1) = -2 * (X.1 0 1).re := by
+  have h01 : star (X.1 0 1) = - X.1 1 0 := by
+    have h := congrArg (fun M : Matrix (Fin 2) (Fin 2) ℂ => M 1 0) X.2.1
+    simpa [Matrix.star_apply] using h
+  have h10_re : (X.1 1 0).re = - (X.1 0 1).re := by
+    have h := congrArg Complex.re h01; simp at h; linarith
+  simp [su2Inner, su2InnerFun, su2Basis, su2BasisMat, Matrix.trace, Fin.sum_univ_two,
+    Matrix.mul_apply, h10_re]
+  ring
+
+private theorem su2Inner_basis2 (X : LieSU 2) :
+    su2Inner X (su2Basis 2) = (X.1 1 1).im - (X.1 0 0).im := by
+  simp [su2Inner, su2InnerFun, su2Basis, su2BasisMat, Matrix.trace, Fin.sum_univ_two,
+    Matrix.mul_apply]
+  ring
+
+private theorem su2_expand (X : LieSU 2) :
+    X = ∑ a : Fin 3, su2Inner X (su2Basis a) • su2Basis a := by
+  have h_skew : ∀ i j : Fin 2, star (X.1 j i) = - X.1 i j := fun i j => by
+    have h := congrArg (fun M : Matrix (Fin 2) (Fin 2) ℂ => M i j) X.2.1
+    simpa [Matrix.star_apply] using h
+  have h_tr : X.1 0 0 + X.1 1 1 = 0 := by
+    simpa [Matrix.trace, Fin.sum_univ_two] using X.2.2
+  have h00_re : (X.1 0 0).re = 0 := by
+    have h := congrArg Complex.re (h_skew 0 0); simp at h; linarith
+  have h11_re : (X.1 1 1).re = 0 := by
+    have h := congrArg Complex.re (h_skew 1 1); simp at h; linarith
+  have h11_im : (X.1 1 1).im = - (X.1 0 0).im := by
+    have h := congrArg Complex.im h_tr; simp at h; linarith
+  have h10_re : (X.1 1 0).re = - (X.1 0 1).re := by
+    have h := congrArg Complex.re (h_skew 0 1); simpa using h
+  have h10_im : (X.1 1 0).im = (X.1 0 1).im := by
+    have h := congrArg Complex.im (h_skew 0 1); simpa using h
+  apply Subtype.ext
+  ext i j
+  fin_cases i <;> fin_cases j <;>
+    (simp only [Submodule.coe_sum, SetLike.val_smul, Matrix.sum_apply, Matrix.smul_apply,
+       Fin.sum_univ_three, su2Inner_basis0, su2Inner_basis1, su2Inner_basis2];
+     simp only [su2Basis];
+     apply Complex.ext <;>
+     simp [su2BasisMat, Complex.div_re, Complex.div_im, h00_re, h11_re, h11_im,
+       h10_re, h10_im] <;>
+     ring)
+
+private theorem su2_su2_triple :
+    ∃ (X Y Z : LieSU 2),
+      ⁅X, Y⁆ = Z ∧ ⁅Y, Z⁆ = X ∧ ⁅Z, X⁆ = Y ∧ su2Inner X X = 1 ∧
+      ∀ X' Y' Z' : LieSU 2, X' ≠ 0 → ⁅X', Y'⁆ = Z' → ⁅Y', Z'⁆ = X' → ⁅Z', X'⁆ = Y' →
+        1 ≤ su2Inner X' X' := by
+  refine ⟨su2Basis 0, su2Basis 1, su2Basis 2, ?_, ?_, ?_, ?_, ?_⟩
+  · apply Subtype.ext
+    change (su2Basis 0).1 * (su2Basis 1).1 - (su2Basis 1).1 * (su2Basis 0).1 = (su2Basis 2).1
+    ext i j
+    fin_cases i <;> fin_cases j <;>
+      (simp [su2Basis, su2BasisMat, Matrix.mul_apply, Fin.sum_univ_two, Complex.I_sq, Complex.I_mul_I];
+       try ring; try norm_num [Complex.I_sq])
+  · apply Subtype.ext
+    change (su2Basis 1).1 * (su2Basis 2).1 - (su2Basis 2).1 * (su2Basis 1).1 = (su2Basis 0).1
+    ext i j
+    fin_cases i <;> fin_cases j <;>
+      (simp [su2Basis, su2BasisMat, Matrix.mul_apply, Fin.sum_univ_two, Complex.I_sq, Complex.I_mul_I];
+       try ring; try norm_num [Complex.I_sq])
+  · apply Subtype.ext
+    change (su2Basis 2).1 * (su2Basis 0).1 - (su2Basis 0).1 * (su2Basis 2).1 = (su2Basis 1).1
+    ext i j
+    fin_cases i <;> fin_cases j <;>
+      (simp [su2Basis, su2BasisMat, Matrix.mul_apply, Fin.sum_univ_two, Complex.I_sq, Complex.I_mul_I];
+       try ring; try norm_num [Complex.I_sq])
+  · simpa using su2Basis_orthonormal 0 0
+  · intro X' Y' Z' hX'_ne hXY hYZ hZX
+    let H : Matrix (Fin 2) (Fin 2) ℂ := Complex.I • X'.1
+    have hH : H.IsHermitian := by
+      rw [Matrix.IsHermitian]
+      change star (Complex.I • X'.1) = Complex.I • X'.1
+      rw [star_smul, Complex.star_def, Complex.conj_I, X'.2.1, neg_smul, smul_neg, neg_neg]
+    let W : Matrix (Fin 2) (Fin 2) ℂ := Y'.1 + Complex.I • Z'.1
+    have hW_ne : W ≠ 0 := by
+      intro hW0
+      have hY_eq : Y'.1 = - (Complex.I • Z'.1) := eq_neg_of_add_eq_zero_left hW0
+      have hX_val : X'.1 = 0 := by
+        have h1 : X'.1 = Y'.1 * Z'.1 - Z'.1 * Y'.1 := congrArg Subtype.val hYZ.symm
+        rw [h1, hY_eq]
+        noncomm_ring
+      exact hX'_ne (Subtype.ext hX_val)
+    have hHW : H * W - W * H = W := by
+      have h1 : X'.1 * Y'.1 - Y'.1 * X'.1 = Z'.1 := congrArg Subtype.val hXY
+      have h2 : Z'.1 * X'.1 - X'.1 * Z'.1 = Y'.1 := congrArg Subtype.val hZX
+      have h2' : X'.1 * Z'.1 - Z'.1 * X'.1 = -Y'.1 := by rw [← h2]; abel
+      calc H * W - W * H
+          = Complex.I • (X'.1 * Y'.1 - Y'.1 * X'.1) +
+              (Complex.I * Complex.I) • (X'.1 * Z'.1 - Z'.1 * X'.1) := by
+            simp only [H, W, Matrix.mul_add, Matrix.add_mul, Matrix.smul_mul, Matrix.mul_smul,
+              smul_smul, smul_sub]
+            module
+        _ = Complex.I • Z'.1 + (-1 : ℂ) • (-Y'.1) := by rw [h1, h2', Complex.I_mul_I]
+        _ = W := by simp [W]; abel
+    let U : Matrix.unitaryGroup (Fin 2) ℂ := hH.eigenvectorUnitary
+    have h_spec := hH.spectral_theorem
+    have h_diag : (star U.1) * H * U.1 = Matrix.diagonal (RCLike.ofReal ∘ hH.eigenvalues) := by
+      have hU_unit : (star U.1) * U.1 = 1 := Matrix.mem_unitaryGroup_iff'.mp U.2
+      calc (star U.1) * H * U.1
+          = (star U.1) * (U.1 * Matrix.diagonal (RCLike.ofReal ∘ hH.eigenvalues) * star U.1) * U.1 := by
+            conv_lhs => rw [h_spec, Unitary.conjStarAlgAut_apply]; rfl
+        _ = ((star U.1) * U.1) * Matrix.diagonal (RCLike.ofReal ∘ hH.eigenvalues) * ((star U.1) * U.1) := by
+            simp only [Matrix.mul_assoc]
+        _ = Matrix.diagonal (RCLike.ofReal ∘ hH.eigenvalues) := by rw [hU_unit, Matrix.one_mul, Matrix.mul_one]
+    let W' : Matrix (Fin 2) (Fin 2) ℂ := (star U.1) * W * U.1
+    have hW'_ne : W' ≠ 0 := by
+      intro h0
+      have hU1 : U.1 * star U.1 = 1 := Matrix.mem_unitaryGroup_iff.mp U.2
+      have hW0 : W = 0 := by
+        calc W = (U.1 * star U.1) * W * (U.1 * star U.1) := by rw [hU1, Matrix.one_mul, Matrix.mul_one]
+          _ = U.1 * W' * star U.1 := by simp only [W', Matrix.mul_assoc]
+          _ = 0 := by rw [h0, Matrix.mul_zero, Matrix.zero_mul]
+      exact hW_ne hW0
+    obtain ⟨j, k, hjk⟩ : ∃ j k : Fin 2, W' j k ≠ 0 := by
+      by_contra h_all
+      push Not at h_all
+      exact hW'_ne (Matrix.ext h_all)
+    have h_comm_W' : Matrix.diagonal (RCLike.ofReal ∘ hH.eigenvalues) * W' -
+        W' * Matrix.diagonal (RCLike.ofReal ∘ hH.eigenvalues) = W' := by
+      have hU1 : U.1 * star U.1 = 1 := Matrix.mem_unitaryGroup_iff.mp U.2
+      calc Matrix.diagonal (RCLike.ofReal ∘ hH.eigenvalues) * W' -
+              W' * Matrix.diagonal (RCLike.ofReal ∘ hH.eigenvalues)
+          = (star U.1 * H * U.1) * (star U.1 * W * U.1) -
+              (star U.1 * W * U.1) * (star U.1 * H * U.1) := by rw [← h_diag]
+        _ = star U.1 * (H * (U.1 * star U.1) * W - W * (U.1 * star U.1) * H) * U.1 := by
+            simp only [Matrix.mul_assoc, Matrix.mul_sub, Matrix.sub_mul]
+        _ = star U.1 * (H * W - W * H) * U.1 := by rw [hU1, Matrix.mul_one, Matrix.mul_one]
+        _ = W' := by rw [hHW]
+    have h_entry := congrArg (fun M : Matrix (Fin 2) (Fin 2) ℂ => M j k) h_comm_W'
+    simp only [Matrix.sub_apply, Matrix.diagonal_mul, Matrix.mul_diagonal, Function.comp_apply,
+      RCLike.ofReal_real_eq_id, id_eq] at h_entry
+    have h_diff : ((hH.eigenvalues j : ℂ) - (hH.eigenvalues k : ℂ) - 1) * W' j k = 0 := by
+      linear_combination h_entry
+    have h_eig_c : (hH.eigenvalues j : ℂ) - (hH.eigenvalues k : ℂ) = 1 := by
+      rcases mul_eq_zero.mp h_diff with h0 | h0
+      · exact sub_eq_zero.mp h0
+      · exact absurd h0 hjk
+    have h_eig : hH.eigenvalues j - hH.eigenvalues k = 1 := by
+      exact Complex.ofReal_injective (by simpa using h_eig_c)
+    have h_ne_jk : j ≠ k := by
+      intro h_eq; rw [h_eq, sub_self] at h_eig; norm_num at h_eig
+    have h_norm : su2Inner X' X' = 2 * ∑ m : Fin 2, (hH.eigenvalues m) ^ 2 := by
+      have hHH : H * H = - (X'.1 * X'.1) := by
+        simp only [H, Matrix.smul_mul, Matrix.mul_smul, smul_smul, Complex.I_mul_I, neg_one_smul]
+      have h_tr_sq : Matrix.trace (H * H) =
+          Matrix.trace (Matrix.diagonal (RCLike.ofReal ∘ hH.eigenvalues) *
+            Matrix.diagonal (RCLike.ofReal ∘ hH.eigenvalues)) := by
+        have hU1 : U.1 * star U.1 = 1 := Matrix.mem_unitaryGroup_iff.mp U.2
+        calc Matrix.trace (H * H)
+            = Matrix.trace ((U.1 * star U.1) * H * (U.1 * star U.1) * H) := by
+              simp [hU1]
+          _ = Matrix.trace (star U.1 * H * (U.1 * star U.1) * H * U.1) := by
+              simp only [Matrix.mul_assoc]
+              rw [Matrix.trace_mul_comm U.1]
+              simp only [Matrix.mul_assoc]
+          _ = Matrix.trace ((star U.1 * H * U.1) * (star U.1 * H * U.1)) := by
+              simp only [Matrix.mul_assoc]
+          _ = _ := by rw [h_diag]
+      simp only [su2Inner, LinearMap.coe_mk, AddHom.coe_mk, su2InnerFun]
+      have h_tr_X : -2 * (Matrix.trace (X'.1 * X'.1)).re = 2 * (Matrix.trace (H * H)).re := by
+        rw [hHH, Matrix.trace_neg, Complex.neg_re]; ring
+      rw [h_tr_X, h_tr_sq]
+      simp [Matrix.trace, sq]
+    rw [h_norm]
+    have h_sum_ge : (hH.eigenvalues j) ^ 2 + (hH.eigenvalues k) ^ 2 ≤
+        ∑ m : Fin 2, (hH.eigenvalues m) ^ 2 := by
+      have h_nn : ∀ m : Fin 2, 0 ≤ (hH.eigenvalues m) ^ 2 := fun m => sq_nonneg _
+      have h_sub : ({j, k} : Finset (Fin 2)) ⊆ Finset.univ := Finset.subset_univ _
+      calc (hH.eigenvalues j) ^ 2 + (hH.eigenvalues k) ^ 2
+          = ∑ m ∈ ({j, k} : Finset (Fin 2)), (hH.eigenvalues m) ^ 2 := by
+            rw [Finset.sum_pair h_ne_jk]
+        _ ≤ ∑ m ∈ Finset.univ, (hH.eigenvalues m) ^ 2 :=
+            Finset.sum_le_sum_of_subset_of_nonneg h_sub (fun m _ _ => h_nn m)
+    nlinarith [sq_nonneg (hH.eigenvalues j + hH.eigenvalues k)]
+
+private noncomputable def su2BasisObj : Module.Basis (Fin 3) ℝ (LieSU 2) :=
+  Module.Basis.mk
+    (Fintype.linearIndependent_iff.mpr fun c hc a => by
+      have h0 : su2Inner (∑ b : Fin 3, c b • su2Basis b) (su2Basis a) = 0 := by
+        rw [hc, map_zero, LinearMap.zero_apply]
+      simp only [map_sum, map_smul, LinearMap.coe_sum, LinearMap.smul_apply,
+        Finset.sum_apply, smul_eq_mul, su2Basis_orthonormal, mul_ite, mul_one, mul_zero] at h0
+      simpa using h0)
+    (fun X _ => by
+      rw [su2_expand X]
+      exact Submodule.sum_mem _ fun a _ =>
+        Submodule.smul_mem _ _ (Submodule.subset_span (Set.mem_range_self a)))
+
+private theorem su2_trace_eq_sum (T : LieSU 2 →ₗ[ℝ] LieSU 2) :
+    LinearMap.trace ℝ (LieSU 2) T = ∑ k : Fin 3, su2Inner (T (su2Basis k)) (su2Basis k) := by
+  rw [LinearMap.trace_eq_matrix_trace ℝ su2BasisObj T]
+  simp only [Matrix.trace, Matrix.diag, LinearMap.toMatrix_apply]
+  refine Finset.sum_congr rfl fun k _ => ?_
+  have h_b : ∀ a : Fin 3, su2BasisObj a = su2Basis a := fun a => by simp [su2BasisObj]
+  have h_exp := su2_expand (T (su2BasisObj k))
+  have h_eq : T (su2BasisObj k) =
+      ∑ a : Fin 3, su2Inner (T (su2Basis k)) (su2Basis a) • su2BasisObj a := by
+    rw [← h_b k]
+    conv_lhs => rw [h_exp]
+    simp_rw [h_b]
+  conv_lhs => rw [h_eq, map_sum]
+  simp only [map_smul, Module.Basis.repr_self, Finsupp.coe_finsetSum, Finsupp.coe_smul,
+    Finset.sum_apply, Pi.smul_apply, smul_eq_mul, Finsupp.single_apply, mul_ite, mul_one,
+    mul_zero, Finset.sum_ite_eq', Finset.mem_univ, ↓reduceIte]
+
+private theorem su2Inner_bracket_eq (A B C D : LieSU 2) :
+    su2Inner ⁅A, B⁆ ⁅C, D⁆ =
+      -2 * (Matrix.trace ((A.1 * B.1 - B.1 * A.1) * (C.1 * D.1 - D.1 * C.1))).re := rfl
+
+private theorem su2_ad_trace_row0 (b : Fin 3) :
+    ∑ k : Fin 3, su2Inner ⁅su2Basis b, su2Basis k⁆ ⁅su2Basis 0, su2Basis k⁆ =
+      if (0 : Fin 3) = b then 2 else 0 := by
+  simp_rw [su2Inner_bracket_eq]
+  fin_cases b <;>
+    (simp only [Fin.sum_univ_three, su2Basis];
+     simp [su2BasisMat, Matrix.trace, Fin.sum_univ_two, Matrix.mul_apply,
+       Complex.mul_re, Complex.I_sq, Complex.I_mul_I]; try ring)
+
+private theorem su2_ad_trace_row1 (b : Fin 3) :
+    ∑ k : Fin 3, su2Inner ⁅su2Basis b, su2Basis k⁆ ⁅su2Basis 1, su2Basis k⁆ =
+      if (1 : Fin 3) = b then 2 else 0 := by
+  simp_rw [su2Inner_bracket_eq]
+  fin_cases b <;>
+    (simp only [Fin.sum_univ_three, su2Basis];
+     simp [su2BasisMat, Matrix.trace, Fin.sum_univ_two, Matrix.mul_apply,
+       Complex.mul_re, Complex.I_sq, Complex.I_mul_I]; try ring)
+
+private theorem su2_ad_trace_row2 (b : Fin 3) :
+    ∑ k : Fin 3, su2Inner ⁅su2Basis b, su2Basis k⁆ ⁅su2Basis 2, su2Basis k⁆ =
+      if (2 : Fin 3) = b then 2 else 0 := by
+  simp_rw [su2Inner_bracket_eq]
+  fin_cases b <;>
+    (simp only [Fin.sum_univ_three, su2Basis];
+     simp [su2BasisMat, Matrix.trace, Fin.sum_univ_two, Matrix.mul_apply,
+       Complex.mul_re, Complex.I_sq, Complex.I_mul_I]; try ring)
+
+private theorem su2_ad_trace_basis (i j : Fin 3) :
+    ∑ k : Fin 3, su2Inner ⁅su2Basis j, su2Basis k⁆ ⁅su2Basis i, su2Basis k⁆ =
+      if i = j then 2 else 0 := by
+  fin_cases i
+  · exact su2_ad_trace_row0 j
+  · exact su2_ad_trace_row1 j
+  · exact su2_ad_trace_row2 j
+
+private theorem su2_killing_casimir (X Y : LieSU 2) :
+    LinearMap.trace ℝ (LieSU 2)
+      ((LieAlgebra.ad ℝ (LieSU 2) X).comp (LieAlgebra.ad ℝ (LieSU 2) Y)) =
+      -(2 : ℝ) * su2Inner X Y := by
+  have hX := su2_expand X
+  have hY := su2_expand Y
+  have h_adX : LieAlgebra.ad ℝ (LieSU 2) X =
+      ∑ i : Fin 3, su2Inner X (su2Basis i) • LieAlgebra.ad ℝ (LieSU 2) (su2Basis i) := by
+    conv_lhs => rw [hX, map_sum]
+    simp_rw [map_smul]
+  have h_adY : LieAlgebra.ad ℝ (LieSU 2) Y =
+      ∑ j : Fin 3, su2Inner Y (su2Basis j) • LieAlgebra.ad ℝ (LieSU 2) (su2Basis j) := by
+    conv_lhs => rw [hY, map_sum]
+    simp_rw [map_smul]
+  rw [h_adX, h_adY]
+  have h_comp :
+      (∑ i : Fin 3, su2Inner X (su2Basis i) • LieAlgebra.ad ℝ (LieSU 2) (su2Basis i)).comp
+        (∑ j : Fin 3, su2Inner Y (su2Basis j) • LieAlgebra.ad ℝ (LieSU 2) (su2Basis j)) =
+      ∑ i : Fin 3, ∑ j : Fin 3,
+        (su2Inner X (su2Basis i) * su2Inner Y (su2Basis j)) •
+          ((LieAlgebra.ad ℝ (LieSU 2) (su2Basis i)).comp
+            (LieAlgebra.ad ℝ (LieSU 2) (su2Basis j))) := by
+    ext Z
+    simp [Finset.sum_smul, Finset.smul_sum, mul_smul]
+  rw [h_comp, map_sum]
+  simp_rw [map_sum, map_smul, smul_eq_mul]
+  have h_term : ∀ i j : Fin 3,
+      LinearMap.trace ℝ (LieSU 2)
+        ((LieAlgebra.ad ℝ (LieSU 2) (su2Basis i)).comp
+          (LieAlgebra.ad ℝ (LieSU 2) (su2Basis j))) =
+        -(2 : ℝ) * su2Inner (su2Basis i) (su2Basis j) := fun i j => by
+    rw [su2_trace_eq_sum]
+    simp only [LinearMap.comp_apply, LieAlgebra.ad_apply]
+    have h_flip : ∀ k : Fin 3,
+        su2Inner ⁅su2Basis i, ⁅su2Basis j, su2Basis k⁆⁆ (su2Basis k) =
+          - su2Inner ⁅su2Basis j, su2Basis k⁆ ⁅su2Basis i, su2Basis k⁆ := fun k => by
+      have h_sk2 := su2Inner_ad_skew (su2Basis i) ⁅su2Basis j, su2Basis k⁆ (su2Basis k)
+      linarith
+    simp_rw [h_flip, Finset.sum_neg_distrib, su2_ad_trace_basis, su2Basis_orthonormal]
+    split_ifs <;> ring
+  simp_rw [h_term, su2Basis_orthonormal]
+  conv_rhs => rw [hX, hY]
+  simp only [map_sum, map_smul, LinearMap.coe_sum, Finset.sum_apply, LinearMap.smul_apply,
+    smul_eq_mul, su2Basis_orthonormal, Finset.mul_sum]
+  refine Finset.sum_congr rfl fun i _ => Finset.sum_congr rfl fun j _ => ?_
+  by_cases hij : i = j
+  · subst hij; ring
+  · have hji : j ≠ i := Ne.symm hij
+    simp [hij, hji]
+
+section SU2Analytic
+open scoped Matrix.Norms.Operator
+
+private theorem matrix2_exp_entry_hasDerivAt (A : Matrix (Fin 2) (Fin 2) ℂ) (i j : Fin 2) :
+    HasDerivAt (fun t : ℝ => (NormedSpace.exp (t • A)) i j) (A i j) 0 := by
+  letI : NormedRing (Matrix (Fin 2) (Fin 2) ℂ) := Matrix.linftyOpNormedRing
+  letI : NormedAlgebra ℝ (Matrix (Fin 2) (Fin 2) ℂ) := Matrix.linftyOpNormedAlgebra
+  have h_exp : @HasDerivAt ℝ _ (Matrix (Fin 2) (Fin 2) ℂ)
+      Matrix.linftyOpNormedRing.toAddCommGroup _ _ _
+      (fun t : ℝ => NormedSpace.exp (t • A)) (A * NormedSpace.exp ((0 : ℝ) • A)) 0 :=
+    hasDerivAt_exp_smul_const' A (0 : ℝ)
+  have h_mul : A * NormedSpace.exp ((0 : ℝ) • A) = A := by
+    rw [zero_smul, NormedSpace.exp_zero, mul_one]
+  rw [h_mul] at h_exp
+  let evL : Matrix (Fin 2) (Fin 2) ℂ →ₗ[ℝ] ℂ :=
+    { toFun := fun M => M i j
+      map_add' := fun _ _ => rfl
+      map_smul' := fun _ _ => rfl }
+  let ev : Matrix (Fin 2) (Fin 2) ℂ →L[ℝ] ℂ :=
+    { toLinearMap := evL
+      cont := LinearMap.continuous_of_finiteDimensional evL }
+  exact ev.hasFDerivAt.comp_hasDerivAt 0 h_exp
+
+private theorem matrix2_det_exp (A : Matrix (Fin 2) (Fin 2) ℂ) :
+    Matrix.det (NormedSpace.exp A) = Complex.exp (Matrix.trace A) := by
+  letI : NormedCommRing ℂ := Complex.instNormedField.toNormedCommRing
+  let g : ℝ → ℂ := fun t => Matrix.det (NormedSpace.exp (t • A))
+  have hg_zero : HasDerivAt g (Matrix.trace A) 0 := by
+    have h_entry := matrix2_exp_entry_hasDerivAt A
+    have h_det : HasDerivAt (fun t : ℝ => ∑ σ : Equiv.Perm (Fin 2),
+        (Equiv.Perm.sign σ : ℂ) * ∏ i : Fin 2, (NormedSpace.exp (t • A)) (σ i) i)
+        (∑ σ : Equiv.Perm (Fin 2), (Equiv.Perm.sign σ : ℂ) *
+          ∑ j : Fin 2, A (σ j) j *
+            ∏ i ∈ Finset.univ.erase j, (NormedSpace.exp ((0 : ℝ) • A)) (σ i) i) 0 := by
+      refine HasDerivAt.fun_sum (u := Finset.univ) fun σ _ => ?_
+      have h_prod := HasDerivAt.finsetProd (u := Finset.univ)
+        (fun i _ => h_entry (σ i) i)
+      have h_cm := h_prod.const_mul (Equiv.Perm.sign σ : ℂ)
+      refine h_cm.congr_deriv ?_
+      congr 1
+      refine Finset.sum_congr rfl fun i _ => ?_
+      rw [smul_eq_mul, mul_comm]
+    have h_eq_g : (fun t : ℝ => ∑ σ : Equiv.Perm (Fin 2),
+        (Equiv.Perm.sign σ : ℂ) * ∏ i : Fin 2, (NormedSpace.exp (t • A)) (σ i) i) = g := by
+      ext t
+      simp [g, Matrix.det_apply, Units.smul_def, zsmul_eq_mul]
+    rw [h_eq_g] at h_det
+    have h_sum_eq : (∑ σ : Equiv.Perm (Fin 2), (Equiv.Perm.sign σ : ℂ) *
+        ∑ j : Fin 2, A (σ j) j *
+          ∏ i ∈ Finset.univ.erase j, (NormedSpace.exp ((0 : ℝ) • A)) (σ i) i) =
+        Matrix.trace A := by
+      rw [Finset.sum_eq_single (1 : Equiv.Perm (Fin 2))]
+      · simp [Matrix.trace, Fin.sum_univ_two, zero_smul, NormedSpace.exp_zero]
+      · intro σ _ hσ
+        have h_zero : ∀ j : Fin 2,
+            ∏ i ∈ Finset.univ.erase j, (1 : Matrix (Fin 2) (Fin 2) ℂ) (σ i) i = 0 := fun j => by
+          have h_exists : ∃ i ∈ Finset.univ.erase j, σ i ≠ i := by
+            by_contra h_all
+            push Not at h_all
+            have h_all_eq : ∀ i : Fin 2, σ i = i := fun i => by
+              by_cases hij : i = j
+              · subst hij
+                by_contra hne
+                have h_inj := σ.injective (show σ (σ i) = σ i from by
+                  rw [h_all (σ i) (Finset.mem_erase.mpr ⟨hne, Finset.mem_univ _⟩)])
+                exact hne h_inj
+              · exact h_all i (Finset.mem_erase.mpr ⟨hij, Finset.mem_univ _⟩)
+            exact hσ (Equiv.ext h_all_eq)
+          obtain ⟨i, hi_mem, hi_ne⟩ := h_exists
+          refine Finset.prod_eq_zero hi_mem ?_
+          simp [Matrix.one_apply, hi_ne]
+        simp [zero_smul, NormedSpace.exp_zero, h_zero]
+      · intro h1; exact absurd (Finset.mem_univ _) h1
+    rwa [h_sum_eq] at h_det
+  let f : ℝ → ℂ := fun t => g t * Complex.exp (-(t : ℂ) * Matrix.trace A)
+  have hf_deriv : ∀ t : ℝ, HasDerivAt f 0 t := fun t => by
+    have hg_t : HasDerivAt g (g t * Matrix.trace A) t := by
+      have h_shift : HasDerivAt (fun s : ℝ => g (t + (s - t))) (g t * Matrix.trace A) t := by
+        let shift : ℝ → ℝ := fun s => s - t
+        have h_sub : HasDerivAt shift 1 t := by
+          simpa [shift] using (hasDerivAt_id t).sub_const t
+        have h_eq : (fun h : ℝ => g (t + h)) = (fun h : ℝ => g t * g h) := by
+          ext h
+          simp only [g, add_smul]
+          have h_comm : Commute (t • A) (h • A) := ((Commute.refl A).smul_left t).smul_right h
+          have h_exp_add : NormedSpace.exp (t • A + h • A) =
+              NormedSpace.exp (t • A) * NormedSpace.exp (h • A) :=
+            NormedSpace.exp_add_of_commute h_comm
+          rw [h_exp_add, Matrix.det_mul]
+        have h0 : HasDerivAt (fun h : ℝ => g (t + h)) (g t * Matrix.trace A) (shift t) := by
+          dsimp [shift]; rw [sub_self, h_eq]; simpa using (hg_zero.const_mul (g t))
+        have h_res := h0.hasFDerivAt.comp_hasDerivAt t h_sub
+        simpa [shift, Function.comp_def] using h_res
+      simpa using h_shift
+    have h_exp_t : HasDerivAt (fun s : ℝ => Complex.exp (-(s : ℂ) * Matrix.trace A))
+        (Complex.exp (-(t : ℂ) * Matrix.trace A) * (-Matrix.trace A)) t := by
+      have h_lin : HasDerivAt (fun s : ℝ => -(s : ℂ) * Matrix.trace A) (-Matrix.trace A) t := by
+        have h1 : HasDerivAt (fun s : ℝ => (s : ℂ)) 1 t := Complex.ofRealCLM.hasDerivAt
+        simpa using (h1.neg.mul_const (Matrix.trace A))
+      exact h_lin.cexp
+    have h_mul := hg_t.mul h_exp_t
+    exact h_mul.congr_deriv (by ring)
+  have hf_const := is_const_of_deriv_eq_zero (fun t => (hf_deriv t).differentiableAt)
+    (fun t => (hf_deriv t).deriv) 1 0
+  have hf_0 : f 0 = 1 := by simp [f, g]
+  have hf_1 : f 1 = Matrix.det (NormedSpace.exp A) * Complex.exp (-Matrix.trace A) := by
+    simp [f, g]
+  rw [hf_0, hf_1] at hf_const
+  calc Matrix.det (NormedSpace.exp A)
+      = Matrix.det (NormedSpace.exp A) * Complex.exp (-Matrix.trace A) *
+          Complex.exp (Matrix.trace A) := by
+        rw [mul_assoc, ← Complex.exp_add, neg_add_cancel, Complex.exp_zero, mul_one]
+    _ = 1 * Complex.exp (Matrix.trace A) := by rw [hf_const]
+    _ = Complex.exp (Matrix.trace A) := one_mul _
+
+private noncomputable def su2Exp (X : LieSU 2) : SU2 where
+  val := NormedSpace.exp X.1
+  property := by
+    rw [Matrix.mem_specialUnitaryGroup_iff]
+    refine ⟨Matrix.mem_unitaryGroup_iff.mpr ?_, ?_⟩
+    · change NormedSpace.exp X.1 * (NormedSpace.exp X.1)ᴴ = 1
+      have h_ct : (NormedSpace.exp X.1)ᴴ = NormedSpace.exp X.1ᴴ :=
+        (Matrix.exp_conjTranspose X.1).symm
+      have hX_ct : X.1ᴴ = -X.1 := X.2.1
+      have h_exp_neg : NormedSpace.exp X.1 * NormedSpace.exp (-X.1) = 1 := by
+        have h_add : NormedSpace.exp (X.1 + -X.1) =
+            NormedSpace.exp X.1 * NormedSpace.exp (-X.1) :=
+          NormedSpace.exp_add_of_commute (Commute.refl X.1).neg_right
+        rw [← h_add, add_neg_cancel, NormedSpace.exp_zero]
+      rw [h_ct, hX_ct, h_exp_neg]
+    · rw [matrix2_det_exp, X.2.2, Complex.exp_zero]
+
+private theorem su2Exp_zero : su2Exp 0 = 1 := by
+  apply Subtype.ext
+  simp [su2Exp, NormedSpace.exp_zero]
+
+private theorem su2Exp_add_of_commute (X Y : LieSU 2) (h : ⁅X, Y⁆ = 0) :
+    su2Exp (X + Y) = su2Exp X * su2Exp Y := by
+  apply Subtype.ext
+  have h_comm : Commute X.1 Y.1 := by
+    have h1 : X.1 * Y.1 - Y.1 * X.1 = 0 := congrArg Subtype.val h
+    exact sub_eq_zero.mp h1
+  simp only [su2Exp, Submodule.coe_add, Submonoid.coe_mul]
+  exact NormedSpace.exp_add_of_commute h_comm
+
+private theorem su2Exp_continuous : Continuous su2Exp :=
+  Continuous.subtype_mk (NormedSpace.exp_continuous.comp continuous_subtype_val) _
+
+private theorem su2Exp_adjoint_conj (g : SU2) (X : LieSU 2) :
+    su2Exp (su2Adjoint g X) = g * su2Exp X * g⁻¹ := by
+  apply Subtype.ext
+  have hg_inv : (g⁻¹ : SU2).1 = star g.1 := rfl
+  simp only [su2Exp, su2Adjoint, LinearMap.coe_mk, AddHom.coe_mk, sunAdjoint,
+    Submonoid.coe_mul, hg_inv]
+  let u : (Matrix (Fin 2) (Fin 2) ℂ)ˣ :=
+    ⟨g.1, star g.1, Matrix.mem_unitaryGroup_iff.mp (Matrix.mem_specialUnitaryGroup_iff.mp g.2).1,
+      Matrix.mem_unitaryGroup_iff'.mp (Matrix.mem_specialUnitaryGroup_iff.mp g.2).1⟩
+  exact NormedSpace.exp_units_conj u X.1
+
+private theorem su2Exp_local_homeomorph :
+    ∃ (U : Set (LieSU 2)) (V : Set SU2),
+      IsOpen U ∧ (0 : LieSU 2) ∈ U ∧ IsOpen V ∧ (1 : SU2) ∈ V ∧
+      Set.BijOn su2Exp U V ∧ ContinuousOn su2Exp U ∧
+      ∀ ⦃x⦄, x ∈ U → ∀ ⦃O : Set (LieSU 2)⦄, IsOpen O → x ∈ O →
+        su2Exp '' (U ∩ O) ∈ nhds (su2Exp x) := by
+  let M := Matrix (Fin 2) (Fin 2) ℂ
+  have h_strict : HasStrictFDerivAt (NormedSpace.exp : M → M)
+      ((ContinuousLinearEquiv.refl ℝ M : M ≃L[ℝ] M) : M →L[ℝ] M) 0 :=
+    hasStrictFDerivAt_exp_zero
+  let φ := h_strict.toOpenPartialHomeomorph (NormedSpace.exp : M → M)
+  have h_tr_cont : Continuous (fun X : M => ‖Matrix.trace X‖) := by
+    let trL : M →ₗ[ℝ] ℂ :=
+      { toFun := Matrix.trace
+        map_add' := Matrix.trace_add
+        map_smul' := fun c X => by
+          simp only [Matrix.trace, Matrix.diag, Finset.smul_sum]
+          refine Finset.sum_congr rfl fun i _ => Complex.real_smul }
+    exact continuous_norm.comp (LinearMap.continuous_of_finiteDimensional trL)
+  let B_tr : Set M := {X : M | ‖Matrix.trace X‖ < 2 * Real.pi}
+  have hB_open : IsOpen B_tr := isOpen_lt h_tr_cont continuous_const
+  have h0B : (0 : M) ∈ B_tr := by simp [B_tr, Real.pi_pos]
+  have h_star_cont : Continuous (star : M → M) := by
+    let starL : M →ₗ[ℝ] M :=
+      { toFun := star
+        map_add' := star_add
+        map_smul' := fun c X => by simp }
+    exact starL.continuous_of_finiteDimensional
+  let U₀ : Set M := φ.source ∩ (star ⁻¹' φ.source) ∩ (Neg.neg ⁻¹' φ.source) ∩ B_tr
+  have hU₀_open : IsOpen U₀ :=
+    ((φ.open_source.inter (φ.open_source.preimage h_star_cont)).inter
+      (φ.open_source.preimage continuous_neg)).inter hB_open
+  have h0_src : (0 : M) ∈ φ.source := h_strict.mem_toOpenPartialHomeomorph_source
+  have h0U₀ : (0 : M) ∈ U₀ := by
+    refine ⟨⟨⟨h0_src, ?_⟩, ?_⟩, h0B⟩
+    · change star (0 : M) ∈ φ.source; rw [star_zero]; exact h0_src
+    · change -(0 : M) ∈ φ.source; rw [neg_zero]; exact h0_src
+  let V₀ : Set M := φ.target ∩ (φ.symm ⁻¹' U₀)
+  have hV₀_open : IsOpen V₀ := φ.continuousOn_symm.isOpen_inter_preimage φ.open_target hU₀_open
+  have hφ_coe : ∀ X : M, φ X = NormedSpace.exp X :=
+    congrFun (h_strict.toOpenPartialHomeomorph_coe)
+  have h1V₀ : (1 : M) ∈ V₀ := by
+    have h1_eq : (1 : M) = φ 0 := by
+      rw [hφ_coe 0]; exact NormedSpace.exp_zero.symm
+    refine ⟨?_, ?_⟩
+    · rw [h1_eq]; exact φ.map_source h0_src
+    · rw [Set.mem_preimage, h1_eq, φ.left_inv h0_src]; exact h0U₀
+  let U : Set (LieSU 2) := Subtype.val ⁻¹' U₀
+  let V : Set SU2 := Subtype.val ⁻¹' V₀
+  have h_symm_mem : ∀ g : SU2, g.1 ∈ V₀ →
+      φ.symm g.1 ∈ LieSU 2 ∧ NormedSpace.exp (φ.symm g.1) = g.1 := fun g hg => by
+    have hg_tgt : g.1 ∈ φ.target := hg.1
+    have hX₁_U₀ : φ.symm g.1 ∈ U₀ := hg.2
+    let X₁ := φ.symm g.1
+    have h_exp_X₁ : NormedSpace.exp X₁ = g.1 := by
+      rw [← hφ_coe X₁]
+      exact φ.right_inv hg_tgt
+    have h_skew : star X₁ = -X₁ := by
+      have h_exp_star : NormedSpace.exp (star X₁) = NormedSpace.exp (-X₁) := by
+        have h_star_exp : NormedSpace.exp (star X₁) = star (NormedSpace.exp X₁) := by
+          change NormedSpace.exp X₁ᴴ = (NormedSpace.exp X₁)ᴴ
+          exact Matrix.exp_conjTranspose X₁
+        rw [h_star_exp, h_exp_X₁]
+        have hg_u : g.1 * star g.1 = 1 :=
+          Matrix.mem_unitaryGroup_iff.mp (Matrix.mem_specialUnitaryGroup_iff.mp g.2).1
+        have h_inv : NormedSpace.exp (-X₁) * NormedSpace.exp X₁ = 1 := by
+          rw [← Matrix.exp_add_of_commute (-X₁) X₁ ((Commute.refl X₁).neg_left), neg_add_cancel,
+            NormedSpace.exp_zero]
+        rw [h_exp_X₁] at h_inv
+        calc star g.1 = 1 * star g.1 := (Matrix.one_mul _).symm
+          _ = (NormedSpace.exp (-X₁) * g.1) * star g.1 := by rw [h_inv]
+          _ = NormedSpace.exp (-X₁) * (g.1 * star g.1) := Matrix.mul_assoc _ _ _
+          _ = NormedSpace.exp (-X₁) := by rw [hg_u, Matrix.mul_one]
+      exact φ.injOn hX₁_U₀.1.1.2 hX₁_U₀.1.2 (by
+        rw [hφ_coe (star X₁), hφ_coe (-X₁)]
+        exact h_exp_star)
+    have h_tr0 : Matrix.trace X₁ = 0 := by
+      have h_det : Complex.exp (Matrix.trace X₁) = 1 := by
+        rw [← matrix2_det_exp, h_exp_X₁]
+        exact (Matrix.mem_specialUnitaryGroup_iff.mp g.2).2
+      obtain ⟨n, hn⟩ := Complex.exp_eq_one_iff.mp h_det
+      have h_lt : ‖Matrix.trace X₁‖ < 2 * Real.pi := hX₁_U₀.2
+      rw [hn] at h_lt
+      have hn0 : n = 0 := by
+        have h_norm_eq : ‖(n : ℂ) * (2 * ↑Real.pi * Complex.I)‖ = |(n : ℝ)| * (2 * Real.pi) := by
+          simp [abs_mul, abs_of_pos Real.pi_pos]
+        rw [h_norm_eq] at h_lt
+        have h_abs : |(n : ℝ)| < 1 := by nlinarith [Real.pi_pos]
+        have h_int : |n| < 1 := by exact_mod_cast h_abs
+        exact Int.abs_lt_one_iff.mp h_int
+      simp [hn, hn0]
+    exact ⟨⟨h_skew, h_tr0⟩, h_exp_X₁⟩
+  refine ⟨U, V, hU₀_open.preimage continuous_subtype_val, h0U₀,
+    hV₀_open.preimage continuous_subtype_val, h1V₀, ?_, su2Exp_continuous.continuousOn, ?_⟩
+  · refine ⟨?_, ?_, ?_⟩
+    · intro X hX
+      have hX_src : X.1 ∈ φ.source := hX.1.1.1
+      refine ⟨?_, ?_⟩
+      · change NormedSpace.exp X.1 ∈ φ.target
+        rw [← hφ_coe X.1]; exact φ.map_source hX_src
+      · change φ.symm (NormedSpace.exp X.1) ∈ U₀
+        rw [← hφ_coe X.1, φ.left_inv hX_src]
+        exact hX
+    · intro X hX Y hY hXY
+      apply Subtype.ext
+      have hX_src : X.1 ∈ φ.source := hX.1.1.1
+      have hY_src : Y.1 ∈ φ.source := hY.1.1.1
+      have h_eq : φ X.1 = φ Y.1 := by
+        rw [hφ_coe X.1, hφ_coe Y.1]
+        exact congrArg Subtype.val hXY
+      exact φ.injOn hX_src hY_src h_eq
+    · intro g hg
+      obtain ⟨h_lie, h_exp⟩ := h_symm_mem g hg
+      exact ⟨⟨φ.symm g.1, h_lie⟩, hg.2, Subtype.ext h_exp⟩
+  · intro x hx O hO hxO
+    have hUO_open : IsOpen (U ∩ O) := (hU₀_open.preimage continuous_subtype_val).inter hO
+    obtain ⟨O₀, hO₀_open, hO₀_eq⟩ := isOpen_induced_iff.mp hUO_open
+    let W : Set SU2 := V ∩ {g : SU2 | φ.symm g.1 ∈ O₀}
+    have hW_open : IsOpen W := by
+      have h_eq_set : V₀ ∩ φ.symm ⁻¹' O₀ = V₀ ∩ (φ.target ∩ φ.symm ⁻¹' O₀) := by
+        ext y; exact ⟨fun ⟨hyV, hyO⟩ => ⟨hyV, hyV.1, hyO⟩, fun ⟨hyV, _, hyO⟩ => ⟨hyV, hyO⟩⟩
+      have h_open_M : IsOpen (V₀ ∩ φ.symm ⁻¹' O₀) := by
+        rw [h_eq_set]
+        exact hV₀_open.inter (φ.continuousOn_symm.isOpen_inter_preimage φ.open_target hO₀_open)
+      exact h_open_M.preimage continuous_subtype_val
+    have hx_W : su2Exp x ∈ W := by
+      have hx_src : x.1 ∈ φ.source := hx.1.1.1
+      have hx_UO : x ∈ U ∩ O := ⟨hx, hxO⟩
+      rw [← hO₀_eq] at hx_UO
+      refine ⟨⟨?_, ?_⟩, ?_⟩
+      · change NormedSpace.exp x.1 ∈ φ.target
+        rw [← hφ_coe x.1]; exact φ.map_source hx_src
+      · change φ.symm (NormedSpace.exp x.1) ∈ U₀
+        rw [← hφ_coe x.1, φ.left_inv hx_src]
+        exact hx
+      · change φ.symm (NormedSpace.exp x.1) ∈ O₀
+        rw [← hφ_coe x.1, φ.left_inv hx_src]
+        exact hx_UO
+    have hW_sub : W ⊆ su2Exp '' (U ∩ O) := by
+      intro g ⟨hgV, hgO⟩
+      obtain ⟨h_lie, h_exp⟩ := h_symm_mem g hgV
+      let X : LieSU 2 := ⟨φ.symm g.1, h_lie⟩
+      have hX_UO : X ∈ U ∩ O := by rw [← hO₀_eq]; exact hgO
+      exact ⟨X, hX_UO, Subtype.ext h_exp⟩
+    exact mem_nhds_iff.mpr ⟨W, hW_sub, hW_open, hx_W⟩
+
+private theorem su2Exp_smul_add (X : LieSU 2) (s t : ℝ) :
+    su2Exp ((s + t) • X) = su2Exp (s • X) * su2Exp (t • X) := by
+  rw [add_smul]
+  apply su2Exp_add_of_commute
+  apply Subtype.ext
+  change (s • X.1) * (t • X.1) - (t • X.1) * (s • X.1) = 0
+  simp only [Matrix.smul_mul, Matrix.mul_smul, smul_smul, mul_comm s t, sub_self]
+
+private theorem su2Exp_zsmul (X : LieSU 2) (m : ℤ) :
+    su2Exp ((m : ℝ) • X) = (su2Exp X) ^ m := by
+  have h_nat : ∀ n : ℕ, su2Exp ((n : ℝ) • X) = (su2Exp X) ^ n := fun n => by
+    induction n with
+    | zero => simp [su2Exp_zero]
+    | succ n ih =>
+      rw [Nat.cast_succ, su2Exp_smul_add, ih, one_smul, pow_succ]
+  cases m with
+  | ofNat n => simpa using h_nat n
+  | negSucc n =>
+    have h_neg : su2Exp (-((n + 1 : ℕ) : ℝ) • X) * su2Exp (((n + 1 : ℕ) : ℝ) • X) = 1 := by
+      rw [← su2Exp_smul_add, neg_add_cancel, zero_smul, su2Exp_zero]
+    have h_eq : su2Exp (-((n + 1 : ℕ) : ℝ) • X) = (su2Exp (((n + 1 : ℕ) : ℝ) • X))⁻¹ :=
+      eq_inv_of_mul_eq_one_left h_neg
+    have hn := h_nat (n + 1)
+    push_cast at h_eq hn
+    rw [hn] at h_eq
+    rw [Int.cast_negSucc, Nat.cast_add, Nat.cast_one]
+    simpa [zpow_negSucc] using h_eq
+
+private theorem su2Exp_one_param_bijection
+    (γ : Multiplicative ℝ →* SU2) (hγ : Continuous γ) :
+    ∃! X : LieSU 2, ∀ t : ℝ, γ (Multiplicative.ofAdd t) = su2Exp (t • X) := by
+  obtain ⟨U, _, hU_open, h0U, _, _, hBij, _, hOpenImg⟩ := su2Exp_local_homeomorph
+  obtain ⟨U_M, hU_M_open, hU_M_eq⟩ := isOpen_induced_iff.mp hU_open
+  have h0U_M : (0 : Matrix (Fin 2) (Fin 2) ℂ) ∈ U_M := by
+    change (0 : LieSU 2).1 ∈ U_M; rw [← Set.mem_preimage, hU_M_eq]; exact h0U
+  obtain ⟨r, hr_pos, hr_sub_M⟩ := Metric.isOpen_iff.mp hU_M_open 0 h0U_M
+  have hr_sub : ∀ Z : LieSU 2, ‖Z.1‖ < r → Z ∈ U := fun Z hZ => by
+    rw [← hU_M_eq]; apply hr_sub_M; simpa [Metric.mem_ball, dist_zero_right] using hZ
+  let B2 : Set (LieSU 2) := {Z : LieSU 2 | ‖Z.1‖ < r / 2}
+  have hB2_open : IsOpen B2 :=
+    isOpen_lt (continuous_norm.comp continuous_subtype_val) continuous_const
+  have h0B2 : (0 : LieSU 2) ∈ B2 := by simp [B2, hr_pos]
+  have h_nhds : su2Exp '' (U ∩ B2) ∈ nhds (1 : SU2) := by
+    rw [← su2Exp_zero]
+    exact hOpenImg h0U hB2_open h0B2
+  have hγ0 : ContinuousAt (fun t : ℝ => γ (Multiplicative.ofAdd t)) 0 :=
+    (hγ.comp continuous_ofAdd).continuousAt
+  have h_pre : (fun t : ℝ => γ (Multiplicative.ofAdd t)) ⁻¹'
+      (su2Exp '' (U ∩ B2)) ∈ nhds (0 : ℝ) := by
+    apply hγ0.preimage_mem_nhds
+    simpa using h_nhds
+  obtain ⟨δ, hδ_pos, hδ_sub⟩ := Metric.mem_nhds_iff.mp h_pre
+  let t₀ : ℝ := δ / 2
+  have ht₀_pos : 0 < t₀ := by dsimp [t₀]; linarith
+  have ht₀_mem : t₀ ∈ Metric.ball (0 : ℝ) δ := by
+    simp only [Metric.mem_ball, dist_zero_right, Real.norm_eq_abs, abs_of_pos ht₀_pos]
+    dsimp [t₀]; linarith
+  obtain ⟨X₀, hX₀_mem, hX₀_eq⟩ := hδ_sub ht₀_mem
+  have hX₀_norm : ‖X₀.1‖ < r / 2 := hX₀_mem.2
+  let X : LieSU 2 := t₀⁻¹ • X₀
+  have h_dyadic_pow : ∀ n : ℕ,
+      γ (Multiplicative.ofAdd (t₀ / 2 ^ n)) = su2Exp ((t₀ / 2 ^ n) • X) := by
+    intro n
+    induction n with
+    | zero =>
+      simp only [pow_zero, div_one, X, smul_smul, mul_inv_cancel₀ ht₀_pos.ne', one_smul]
+      exact hX₀_eq.symm
+    | succ n ih =>
+      have ht'_pos : 0 < t₀ / 2 ^ (n + 1) := div_pos ht₀_pos (by positivity)
+      have ht'_le : t₀ / 2 ^ (n + 1) ≤ t₀ :=
+        div_le_self ht₀_pos.le (one_le_pow₀ (by norm_num : (1 : ℝ) ≤ 2))
+      have ht'_mem : t₀ / 2 ^ (n + 1) ∈ Metric.ball (0 : ℝ) δ := by
+        simp only [Metric.mem_ball, dist_zero_right, Real.norm_eq_abs, abs_of_pos ht'_pos]
+        exact lt_of_le_of_lt ht'_le (by dsimp [t₀]; linarith)
+      obtain ⟨Y, hY_mem, hY_eq⟩ := hδ_sub ht'_mem
+      have hY_norm : ‖Y.1‖ < r / 2 := hY_mem.2
+      have h2Y_U : (2 : ℝ) • Y ∈ U := by
+        apply hr_sub
+        have h_n : ‖((2 : ℝ) • Y).1‖ = 2 * ‖Y.1‖ := by
+          rw [SetLike.val_smul, norm_smul, Real.norm_of_nonneg (by norm_num)]
+        rw [h_n]
+        linarith
+      have h_prev_U : (t₀ / 2 ^ n) • X ∈ U := by
+        apply hr_sub
+        have h_eq_X₀ : (t₀ / 2 ^ n) • X = ((2 : ℝ) ^ n)⁻¹ • X₀ := by
+          simp only [X, smul_smul]; congr 1; field_simp
+        rw [h_eq_X₀, SetLike.val_smul, norm_smul, Real.norm_of_nonneg (by positivity)]
+        have h_inv_le : ((2 : ℝ) ^ n)⁻¹ ≤ 1 := inv_le_one_of_one_le₀ (one_le_pow₀ (by norm_num))
+        nlinarith [norm_nonneg X₀.1]
+      have h_exp_eq : su2Exp ((2 : ℝ) • Y) = su2Exp ((t₀ / 2 ^ n) • X) := by
+        have h2_eq : (2 : ℝ) • Y = Y + Y := by rw [two_smul]
+        rw [h2_eq, su2Exp_add_of_commute _ _ (lie_self Y), hY_eq, ← map_mul, ← ofAdd_add]
+        have h_add : t₀ / 2 ^ (n + 1) + t₀ / 2 ^ (n + 1) = t₀ / 2 ^ n := by ring
+        rw [h_add, ih]
+      have h_inj := hBij.injOn h2Y_U h_prev_U h_exp_eq
+      have hY_eq_X : Y = (t₀ / 2 ^ (n + 1)) • X := by
+        have h1 : (2 : ℝ)⁻¹ • ((2 : ℝ) • Y) = (2 : ℝ)⁻¹ • ((t₀ / 2 ^ n) • X) :=
+          congrArg (fun Z : LieSU 2 => (2 : ℝ)⁻¹ • Z) h_inj
+        simp only [smul_smul] at h1
+        norm_num at h1
+        have h_pow : 1 / 2 * (t₀ / 2 ^ n) = t₀ / 2 ^ (n + 1) := by
+          rw [pow_succ]; ring
+        rwa [h_pow] at h1
+      dsimp only at hY_eq
+      rw [← hY_eq, hY_eq_X]
+  have h_dyadic : ∀ (m : ℤ) (n : ℕ),
+      γ (Multiplicative.ofAdd ((m : ℝ) * (t₀ / 2 ^ n))) =
+        su2Exp (((m : ℝ) * (t₀ / 2 ^ n)) • X) := fun m n => by
+    have h_z : Multiplicative.ofAdd ((m : ℝ) * (t₀ / 2 ^ n)) =
+        (Multiplicative.ofAdd (t₀ / 2 ^ n)) ^ m := by
+      rw [← ofAdd_zsmul, zsmul_eq_mul]
+    rw [h_z, map_zpow, h_dyadic_pow n, mul_smul, su2Exp_zsmul]
+  have h_all : ∀ t : ℝ, γ (Multiplicative.ofAdd t) = su2Exp (t • X) := fun t => by
+    have h_dense : DenseRange (fun p : ℤ × ℕ => (p.1 : ℝ) * (t₀ / 2 ^ p.2)) := by
+      rw [Metric.denseRange_iff]
+      intro x ε hε
+      obtain ⟨n, hn⟩ := exists_pow_lt_of_lt_one (div_pos hε ht₀_pos) (by norm_num : (1 : ℝ) / 2 < 1)
+      have hn' : t₀ / 2 ^ n < ε := by
+        have h_eq : t₀ * ((1 : ℝ) / 2) ^ n = t₀ / 2 ^ n := by
+          rw [one_div, inv_pow, div_eq_mul_inv]
+        rw [← h_eq]
+        exact (lt_div_iff₀' ht₀_pos).mp hn
+      let s : ℝ := t₀ / 2 ^ n
+      have hs_pos : 0 < s := div_pos ht₀_pos (by positivity)
+      let m : ℤ := ⌊x / s⌋
+      refine ⟨(m, n), ?_⟩
+      rw [Real.dist_eq, abs_lt]
+      have h_le : (m : ℝ) * s ≤ x := (le_div_iff₀ hs_pos).mp (Int.floor_le (x / s))
+      have h_lt : x < ((m : ℝ) + 1) * s := (div_lt_iff₀ hs_pos).mp (Int.lt_floor_add_one (x / s))
+      change -ε < x - (m : ℝ) * s ∧ x - (m : ℝ) * s < ε
+      constructor <;> linarith
+    have h_eq_fn : (fun t : ℝ => γ (Multiplicative.ofAdd t)) = (fun t : ℝ => su2Exp (t • X)) := by
+      refine h_dense.equalizer (hγ.comp continuous_ofAdd)
+        (su2Exp_continuous.comp (continuous_id.smul continuous_const)) ?_
+      funext ⟨m, n⟩
+      exact h_dyadic m n
+    exact congrFun h_eq_fn t
+  refine ⟨X, h_all, ?_⟩
+  intro Y hY
+  have h_norm_pos : 0 < ‖X.1‖ + ‖Y.1‖ + 1 := by positivity
+  let t : ℝ := r / (2 * (‖X.1‖ + ‖Y.1‖ + 1))
+  have ht_pos : 0 < t := div_pos hr_pos (by positivity)
+  have htX_U : t • X ∈ U := by
+    apply hr_sub
+    rw [SetLike.val_smul, norm_smul, Real.norm_eq_abs, abs_of_pos ht_pos]
+    have h1 : t * ‖X.1‖ ≤ r / 2 := by
+      rw [div_mul_eq_mul_div, div_le_div_iff₀ (by positivity) (by norm_num)]
+      nlinarith [norm_nonneg Y.1]
+    linarith
+  have htY_U : t • Y ∈ U := by
+    apply hr_sub
+    rw [SetLike.val_smul, norm_smul, Real.norm_eq_abs, abs_of_pos ht_pos]
+    have h1 : t * ‖Y.1‖ ≤ r / 2 := by
+      rw [div_mul_eq_mul_div, div_le_div_iff₀ (by positivity) (by norm_num)]
+      nlinarith [norm_nonneg X.1]
+    linarith
+  have h_eq : su2Exp (t • Y) = su2Exp (t • X) := by rw [← hY t, h_all t]
+  have h_inj := hBij.injOn htY_U htX_U h_eq
+  have h1 := congrArg (fun Z : LieSU 2 => t⁻¹ • Z) h_inj
+  simpa [smul_smul, ht_pos.ne'] using h1
+
+end SU2Analytic
+
+private theorem su2Adjoint_exp_entry_hasDerivAt (A X : LieSU 2) (i j : Fin 2) :
+    HasDerivAt (fun t : ℝ => (su2Adjoint (su2Exp (t • A)) X).1 i j)
+      ((A.1 * X.1 - X.1 * A.1) i j) 0 := by
+  letI : NormedCommRing ℂ := Complex.instNormedField.toNormedCommRing
+  have h_exp : ∀ a b : Fin 2,
+      HasDerivAt (fun t : ℝ => (NormedSpace.exp (t • A.1)) a b) (A.1 a b) 0 :=
+    matrix2_exp_entry_hasDerivAt A.1
+  have h_star : ∀ a b : Fin 2,
+      HasDerivAt (fun t : ℝ => (star (NormedSpace.exp (t • A.1))) a b) ((-A.1) a b) 0 := fun a b => by
+    have h_eq : (fun t : ℝ => (star (NormedSpace.exp (t • A.1))) a b) =
+        (fun t : ℝ => (NormedSpace.exp (t • (-A.1))) a b) := by
+      ext t
+      have h_ct : (NormedSpace.exp (t • A.1))ᴴ = NormedSpace.exp (t • A.1)ᴴ :=
+        (Matrix.exp_conjTranspose (t • A.1)).symm
+      have hA_ct : A.1ᴴ = -A.1 := A.2.1
+      change (NormedSpace.exp (t • A.1))ᴴ a b = (NormedSpace.exp (t • (-A.1))) a b
+      rw [h_ct, Matrix.conjTranspose_smul, star_trivial, hA_ct, smul_neg]
+    rw [h_eq]
+    exact matrix2_exp_entry_hasDerivAt (-A.1) a b
+  simp only [su2Adjoint, LinearMap.coe_mk, AddHom.coe_mk, sunAdjoint, su2Exp,
+    SetLike.val_smul, Matrix.mul_apply, Matrix.sub_apply]
+  have h_sum := HasDerivAt.fun_sum (u := (Finset.univ : Finset (Fin 2))) fun k _ =>
+    ((HasDerivAt.fun_sum (u := (Finset.univ : Finset (Fin 2))) fun l _ =>
+      (h_exp i l).mul_const (X.1 l k)).mul (h_star k j))
+  refine h_sum.congr_deriv ?_
+  simp only [zero_smul, NormedSpace.exp_zero]
+  fin_cases i <;> fin_cases j <;> simp [Fin.sum_univ_two, Matrix.one_apply] <;> ring
+
+private theorem su2_hasDerivAt_coord (A X Y : LieSU 2) :
+    HasDerivAt (fun t : ℝ => su2Inner (su2Adjoint (su2Exp (t • A)) X) Y)
+      (su2Inner ⁅A, X⁆ Y) 0 := by
+  have h_tr : HasDerivAt
+      (fun t : ℝ => Matrix.trace ((su2Adjoint (su2Exp (t • A)) X).1 * Y.1))
+      (Matrix.trace ((⁅A, X⁆ : LieSU 2).1 * Y.1)) 0 := by
+    simp only [Matrix.trace, Matrix.diag, Matrix.mul_apply]
+    refine HasDerivAt.fun_sum (u := Finset.univ) fun i _ => ?_
+    refine HasDerivAt.fun_sum (u := Finset.univ) fun j _ => ?_
+    exact (su2Adjoint_exp_entry_hasDerivAt A X i j).mul_const (Y.1 j i)
+  have h_re := Complex.reCLM.hasFDerivAt.comp_hasDerivAt 0 h_tr
+  simpa [su2Inner, su2InnerFun] using h_re.const_mul (-2 : ℝ)
+
+private theorem su2_hasDerivAt_adjoint_exp (X Y : LieSU 2) :
+    HasDerivAt (fun t : ℝ => su2Adjoint (su2Exp (t • X)) Y) ⁅X, Y⁆ 0 := by
+  let valL : LieSU 2 →L[ℝ] Matrix (Fin 2) (Fin 2) ℂ :=
+    { toLinearMap := (LieSU 2).subtype
+      cont := continuous_subtype_val }
+  have h_mat : HasDerivAt (fun t : ℝ => valL (su2Adjoint (su2Exp (t • X)) Y))
+      (valL ⁅X, Y⁆) 0 :=
+    hasDerivAt_pi.mpr fun i => hasDerivAt_pi.mpr fun j =>
+      su2Adjoint_exp_entry_hasDerivAt X Y i j
+  have h_otvs : (fun p : ℝ × ℝ =>
+      valL (su2Adjoint (su2Exp (p.1 • X)) Y - su2Adjoint (su2Exp (p.2 • X)) Y -
+        (ContinuousLinearMap.toSpanSingleton ℝ (⁅X, Y⁆ : LieSU 2)) (p.1 - p.2)))
+      =o[ℝ; nhds 0 ×ˢ pure 0] (fun p => p.1 - p.2) := by
+    simpa [valL] using h_mat.isLittleOTVS
+  exact ⟨(valL.isThetaTVS_comp Topology.IsInducing.subtypeVal).symm.isBigOTVS.trans_isLittleOTVS h_otvs⟩
+
+/-- Concrete `LieBasisData SU2 3` for `SU(2)` using the orthonormal Pauli basis. -/
+noncomputable def su2LieBasisData : LieBasisData SU2 3 where
+  Lie := LieSU 2
+  hd := by omega
+  B := su2Basis
+  adjoint_action := su2Adjoint
+  adjoint_action_one := su2Adjoint_one
+  adjoint_action_mul := su2Adjoint_mul
+  adjoint_action_bracket := su2Adjoint_bracket
+  lie_inner := su2Inner
+  lie_inner_symm := su2Inner_symm
+  lie_inner_pos := su2Inner_pos
+  lie_inner_ad_inv := su2Inner_ad_inv
+  orthonormal := su2Basis_orthonormal
+  expand := su2_expand
+  su2_triple := su2_su2_triple
+  casimir_adjoint := 2
+  casimir_adjoint_pos := by omega
+  killing_casimir_identity := su2_killing_casimir
+  exp := su2Exp
+  exp_zero := su2Exp_zero
+  exp_add_of_commute := su2Exp_add_of_commute
+  exp_continuous := su2Exp_continuous
+  exp_local_homeomorph := su2Exp_local_homeomorph
+  exp_one_param_bijection := su2Exp_one_param_bijection
+  exp_adjoint_conj := su2Exp_adjoint_conj
+  hasDerivAt_adjoint_exp := su2_hasDerivAt_adjoint_exp
+  hasDerivAt_coord := su2_hasDerivAt_coord
+  lie_inner_ad_skew := su2Inner_ad_skew
+
+section SU2CompactSimpleInstance
+
+open scoped Manifold ContDiff
+attribute [local instance] Matrix.linftyOpNormedRing Matrix.linftyOpNormedAlgebra
+
+private noncomputable def su2Proj : Matrix (Fin 2) (Fin 2) ℂ →L[ℝ] LieSU 2 :=
+  let toLie : Matrix (Fin 2) (Fin 2) ℂ →ₗ[ℝ] LieSU 2 :=
+    { toFun := fun X =>
+        let A := (1 / 2 : ℝ) • (X - star X)
+        let B := A - ((1 / 2 : ℂ) * Matrix.trace A) • (1 : Matrix (Fin 2) (Fin 2) ℂ)
+        ⟨B, by
+          have hA_skew : star A = -A := by
+            simp only [A, star_smul, star_sub, star_star, star_trivial, ← smul_neg, neg_sub]
+          have htr_skew : star (Matrix.trace A) = -Matrix.trace A := by
+            rw [← Matrix.trace_conjTranspose]
+            change Matrix.trace (star A) = -Matrix.trace A
+            rw [hA_skew, Matrix.trace_neg]
+          have hB_skew : star B = -B := by
+            simp only [B, star_sub, hA_skew, star_smul, star_one, smul_eq_mul]
+            have h_conj : star ((1 / 2 : ℂ) * Matrix.trace A) = -((1 / 2 : ℂ) * Matrix.trace A) := by
+              rw [star_mul, htr_skew]
+              have h12 : star (1 / 2 : ℂ) = (1 / 2 : ℂ) := by
+                norm_num [Complex.star_def]
+              rw [h12]
+              ring
+            rw [h_conj]
+            simp only [neg_smul]
+            abel
+          have hB_tr : Matrix.trace B = 0 := by
+            simp only [B, Matrix.trace_sub, Matrix.trace_smul, Matrix.trace_one,
+              Fintype.card_fin, smul_eq_mul]
+            ring
+          exact ⟨hB_skew, hB_tr⟩⟩
+      map_add' := fun X Y => by
+        apply Subtype.ext
+        change (1 / 2 : ℝ) • (X + Y - star (X + Y)) -
+          ((1 / 2 : ℂ) * Matrix.trace ((1 / 2 : ℝ) • (X + Y - star (X + Y)))) • 1 =
+          ((1 / 2 : ℝ) • (X - star X) -
+            ((1 / 2 : ℂ) * Matrix.trace ((1 / 2 : ℝ) • (X - star X))) • 1) +
+          ((1 / 2 : ℝ) • (Y - star Y) -
+            ((1 / 2 : ℂ) * Matrix.trace ((1 / 2 : ℝ) • (Y - star Y))) • 1)
+        ext i j
+        simp [star_add, Matrix.trace_add]
+        ring
+      map_smul' := fun c X => by
+        apply Subtype.ext
+        change (1 / 2 : ℝ) • (c • X - star (c • X)) -
+          ((1 / 2 : ℂ) * Matrix.trace ((1 / 2 : ℝ) • (c • X - star (c • X)))) • 1 =
+          c • ((1 / 2 : ℝ) • (X - star X) -
+            ((1 / 2 : ℂ) * Matrix.trace ((1 / 2 : ℝ) • (X - star X))) • 1)
+        ext i j
+        simp [star_smul, Matrix.trace_smul, Complex.real_smul]
+        ring }
+  { toLinearMap := toLie
+    cont := toLie.continuous_of_finiteDimensional }
+
+private theorem su2Proj_coe (X : LieSU 2) : su2Proj X.1 = X := by
+  apply Subtype.ext
+  change (1 / 2 : ℝ) • (X.1 - star X.1) -
+    ((1 / 2 : ℂ) * Matrix.trace ((1 / 2 : ℝ) • (X.1 - star X.1))) • 1 = X.1
+  have hskew : star X.1 = -X.1 := X.2.1
+  have htr : Matrix.trace X.1 = 0 := X.2.2
+  rw [hskew, sub_neg_eq_add, ← two_smul ℝ X.1, smul_smul]
+  norm_num
+  simp [htr]
+
+private theorem su2Exp_analytic_local_homeomorph :
+    ∃ (log : SU2 → LieSU 2) (U : Set (LieSU 2)) (V : Set SU2)
+      (V₀ : Set (Matrix (Fin 2) (Fin 2) ℂ))
+      (φ : OpenPartialHomeomorph (Matrix (Fin 2) (Fin 2) ℂ) (Matrix (Fin 2) (Fin 2) ℂ)),
+      IsOpen U ∧ (0 : LieSU 2) ∈ U ∧ IsOpen V ∧ (1 : SU2) ∈ V ∧
+      IsOpen V₀ ∧ (1 : Matrix (Fin 2) (Fin 2) ℂ) ∈ V₀ ∧
+      (∀ g : SU2, g ∈ V → g.1 ∈ V₀) ∧
+      Set.BijOn su2Exp U V ∧ ContinuousOn log V ∧
+      (∀ x ∈ U, log (su2Exp x) = x) ∧ (∀ g ∈ V, su2Exp (log g) = g) ∧
+      (∀ g : SU2, g ∈ V → g.1 ∈ φ.target ∧ log g = su2Proj (φ.symm g.1)) ∧
+      (∀ X : LieSU 2, X ∈ U → X.1 ∈ φ.source ∧ φ X.1 = NormedSpace.exp X.1) ∧
+      ContDiffOn ℝ ω (fun y => φ.symm y) V₀ ∧
+      ∀ ⦃x⦄, x ∈ U → ∀ ⦃O : Set (LieSU 2)⦄, IsOpen O → x ∈ O →
+        su2Exp '' (U ∩ O) ∈ nhds (su2Exp x) := by
+  let M := Matrix (Fin 2) (Fin 2) ℂ
+  have h_contDiff0 : ContDiffAt ℝ ω (NormedSpace.exp : M → M) 0 :=
+    (NormedSpace.exp_analytic 0).contDiffAt
+  have h_deriv0 : HasFDerivAt (NormedSpace.exp : M → M)
+      ((ContinuousLinearEquiv.refl ℝ M : M ≃L[ℝ] M) : M →L[ℝ] M) 0 :=
+    hasStrictFDerivAt_exp_zero.hasFDerivAt
+  let φ := h_contDiff0.toOpenPartialHomeomorph (NormedSpace.exp : M → M) h_deriv0 (by simp)
+  have hφ_coe : ∀ X : M, φ X = NormedSpace.exp X :=
+    congrFun (h_contDiff0.toOpenPartialHomeomorph_coe h_deriv0 (by simp))
+  have h0_src : (0 : M) ∈ φ.source := h_contDiff0.mem_toOpenPartialHomeomorph_source h_deriv0 (by simp)
+  have h_symm_at_1 : ContDiffAt ℝ ω (φ.symm) 1 := by
+    have h1_eq : φ 0 = 1 := by rw [hφ_coe 0]; exact NormedSpace.exp_zero
+    rw [← h1_eq]
+    refine φ.contDiffAt_symm (f₀' := ContinuousLinearEquiv.refl ℝ M) (φ.map_source h0_src) ?_ ?_
+    · rw [φ.left_inv h0_src]
+      have h_eq : ∀ᶠ x in nhds (0 : M), φ x = NormedSpace.exp x :=
+        Filter.Eventually.of_forall hφ_coe
+      exact h_deriv0.congr_of_eventuallyEq h_eq
+    · rw [φ.left_inv h0_src]
+      have h_eq : ∀ᶠ x in nhds (0 : M), φ x = NormedSpace.exp x :=
+        Filter.Eventually.of_forall hφ_coe
+      exact h_contDiff0.congr_of_eventuallyEq h_eq
+  obtain ⟨W_symm, hW_symm_nhds, hW_symm_cont⟩ := h_symm_at_1.contDiffOn le_rfl (by simp)
+  have h_tr_cont : Continuous (fun X : M => ‖Matrix.trace X‖) := by
+    let trL : M →ₗ[ℝ] ℂ :=
+      { toFun := Matrix.trace
+        map_add' := Matrix.trace_add
+        map_smul' := fun c X => by
+          simp only [Matrix.trace, Matrix.diag, Finset.smul_sum]
+          refine Finset.sum_congr rfl fun i _ => Complex.real_smul }
+    exact continuous_norm.comp (LinearMap.continuous_of_finiteDimensional trL)
+  let B_tr : Set M := {X : M | ‖Matrix.trace X‖ < 2 * Real.pi}
+  have hB_open : IsOpen B_tr := isOpen_lt h_tr_cont continuous_const
+  have h0B : (0 : M) ∈ B_tr := by simp [B_tr, Real.pi_pos]
+  have h_star_cont : Continuous (star : M → M) := by
+    let starL : M →ₗ[ℝ] M :=
+      { toFun := star
+        map_add' := star_add
+        map_smul' := fun c X => by simp }
+    exact starL.continuous_of_finiteDimensional
+  have h_exp_cont : Continuous (NormedSpace.exp : M → M) :=
+    ((contDiff_iff_contDiffAt (n := ω)).mpr fun x =>
+      (NormedSpace.exp_analytic (𝕂 := ℝ) x).contDiffAt).continuous
+  let U₀ : Set M := φ.source ∩ (star ⁻¹' φ.source) ∩ (Neg.neg ⁻¹' φ.source) ∩ B_tr ∩
+    (NormedSpace.exp ⁻¹' interior W_symm)
+  have hU₀_open : IsOpen U₀ :=
+    (((φ.open_source.inter (φ.open_source.preimage h_star_cont)).inter
+      (φ.open_source.preimage continuous_neg)).inter hB_open).inter
+      (isOpen_interior.preimage h_exp_cont)
+  have h1_intW : (1 : M) ∈ interior W_symm := mem_interior_iff_mem_nhds.mpr hW_symm_nhds
+  have h0U₀ : (0 : M) ∈ U₀ := by
+    refine ⟨⟨⟨⟨h0_src, ?_⟩, ?_⟩, h0B⟩, ?_⟩
+    · change star (0 : M) ∈ φ.source; rw [star_zero]; exact h0_src
+    · change -(0 : M) ∈ φ.source; rw [neg_zero]; exact h0_src
+    · change NormedSpace.exp (0 : M) ∈ interior W_symm; rw [NormedSpace.exp_zero]; exact h1_intW
+  let V₀ : Set M := φ.target ∩ (φ.symm ⁻¹' U₀) ∩ interior W_symm
+  have hV₀_open : IsOpen V₀ :=
+    (φ.continuousOn_symm.isOpen_inter_preimage φ.open_target hU₀_open).inter isOpen_interior
+  have h1V₀ : (1 : M) ∈ V₀ := by
+    have h1_eq : (1 : M) = φ 0 := by
+      rw [hφ_coe 0]; exact NormedSpace.exp_zero.symm
+    refine ⟨⟨?_, ?_⟩, h1_intW⟩
+    · rw [h1_eq]; exact φ.map_source h0_src
+    · rw [Set.mem_preimage, h1_eq, φ.left_inv h0_src]; exact h0U₀
+  let U : Set (LieSU 2) := Subtype.val ⁻¹' U₀
+  let V : Set SU2 := Subtype.val ⁻¹' V₀
+  have h_symm_mem : ∀ g : SU2, g.1 ∈ V₀ →
+      φ.symm g.1 ∈ LieSU 2 ∧ NormedSpace.exp (φ.symm g.1) = g.1 := fun g hg => by
+    have hg_tgt : g.1 ∈ φ.target := hg.1.1
+    have hX₁_U₀ : φ.symm g.1 ∈ U₀ := hg.1.2
+    let X₁ := φ.symm g.1
+    have h_exp_X₁ : NormedSpace.exp X₁ = g.1 := by
+      rw [← hφ_coe X₁]
+      exact φ.right_inv hg_tgt
+    have h_skew : star X₁ = -X₁ := by
+      have h_exp_star : NormedSpace.exp (star X₁) = NormedSpace.exp (-X₁) := by
+        have h_star_exp : NormedSpace.exp (star X₁) = star (NormedSpace.exp X₁) := by
+          change NormedSpace.exp X₁ᴴ = (NormedSpace.exp X₁)ᴴ
+          exact Matrix.exp_conjTranspose X₁
+        rw [h_star_exp, h_exp_X₁]
+        have hg_u : g.1 * star g.1 = 1 :=
+          Matrix.mem_unitaryGroup_iff.mp (Matrix.mem_specialUnitaryGroup_iff.mp g.2).1
+        have h_inv : NormedSpace.exp (-X₁) * NormedSpace.exp X₁ = 1 := by
+          rw [← Matrix.exp_add_of_commute (-X₁) X₁ ((Commute.refl X₁).neg_left), neg_add_cancel,
+            NormedSpace.exp_zero]
+        rw [h_exp_X₁] at h_inv
+        calc star g.1 = 1 * star g.1 := (Matrix.one_mul _).symm
+          _ = (NormedSpace.exp (-X₁) * g.1) * star g.1 := by rw [h_inv]
+          _ = NormedSpace.exp (-X₁) * (g.1 * star g.1) := Matrix.mul_assoc _ _ _
+          _ = NormedSpace.exp (-X₁) := by rw [hg_u, Matrix.mul_one]
+      exact φ.injOn hX₁_U₀.1.1.1.2 hX₁_U₀.1.1.2 (by
+        rw [hφ_coe (star X₁), hφ_coe (-X₁)]
+        exact h_exp_star)
+    have h_tr0 : Matrix.trace X₁ = 0 := by
+      have h_det : Complex.exp (Matrix.trace X₁) = 1 := by
+        rw [← matrix2_det_exp, h_exp_X₁]
+        exact (Matrix.mem_specialUnitaryGroup_iff.mp g.2).2
+      obtain ⟨n, hn⟩ := Complex.exp_eq_one_iff.mp h_det
+      have h_lt : ‖Matrix.trace X₁‖ < 2 * Real.pi := hX₁_U₀.1.2
+      rw [hn] at h_lt
+      have hn0 : n = 0 := by
+        have h_norm_eq : ‖(n : ℂ) * (2 * ↑Real.pi * Complex.I)‖ = |(n : ℝ)| * (2 * Real.pi) := by
+          simp [abs_mul, abs_of_pos Real.pi_pos]
+        rw [h_norm_eq] at h_lt
+        have h_abs : |(n : ℝ)| < 1 := by nlinarith [Real.pi_pos]
+        have h_int : |n| < 1 := by exact_mod_cast h_abs
+        exact Int.abs_lt_one_iff.mp h_int
+      simp [hn, hn0]
+    exact ⟨⟨h_skew, h_tr0⟩, h_exp_X₁⟩
+  let log : SU2 → LieSU 2 := fun g => su2Proj (φ.symm g.1)
+  refine ⟨log, U, V, interior W_symm, φ, hU₀_open.preimage continuous_subtype_val, h0U₀,
+    hV₀_open.preimage continuous_subtype_val, h1V₀, isOpen_interior, h1_intW,
+    (fun g hg => hg.2), ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · refine ⟨?_, ?_, ?_⟩
+    · intro X hX
+      have hX_src : X.1 ∈ φ.source := hX.1.1.1.1
+      refine ⟨⟨?_, ?_⟩, ?_⟩
+      · change NormedSpace.exp X.1 ∈ φ.target
+        rw [← hφ_coe X.1]; exact φ.map_source hX_src
+      · change φ.symm (NormedSpace.exp X.1) ∈ U₀
+        rw [← hφ_coe X.1, φ.left_inv hX_src]
+        exact hX
+      · exact hX.2
+    · intro X hX Y hY hXY
+      apply Subtype.ext
+      have hX_src : X.1 ∈ φ.source := hX.1.1.1.1
+      have hY_src : Y.1 ∈ φ.source := hY.1.1.1.1
+      have h_eq : φ X.1 = φ Y.1 := by
+        rw [hφ_coe X.1, hφ_coe Y.1]
+        exact congrArg Subtype.val hXY
+      exact φ.injOn hX_src hY_src h_eq
+    · intro g hg
+      obtain ⟨h_lie, h_exp⟩ := h_symm_mem g hg
+      exact ⟨⟨φ.symm g.1, h_lie⟩, hg.1.2, Subtype.ext h_exp⟩
+  · have h_sub_tgt : Subtype.val '' V ⊆ φ.target := by
+      rintro _ ⟨g, hg, rfl⟩
+      exact hg.1.1
+    exact su2Proj.continuous.comp_continuousOn
+      ((φ.continuousOn_symm.mono h_sub_tgt).comp continuous_subtype_val.continuousOn
+        (fun g hg => ⟨g, hg, rfl⟩))
+  · intro X hX
+    have hX_src : X.1 ∈ φ.source := hX.1.1.1.1
+    change su2Proj (φ.symm (NormedSpace.exp X.1)) = X
+    rw [← hφ_coe X.1, φ.left_inv hX_src]
+    exact su2Proj_coe X
+  · intro g hg
+    obtain ⟨h_lie, h_exp⟩ := h_symm_mem g hg
+    apply Subtype.ext
+    change NormedSpace.exp (su2Proj (φ.symm g.1)).1 = g.1
+    have h_eq : su2Proj (φ.symm g.1) = ⟨φ.symm g.1, h_lie⟩ := su2Proj_coe ⟨φ.symm g.1, h_lie⟩
+    rw [h_eq]
+    exact h_exp
+  · intro g hg
+    exact ⟨hg.1.1, rfl⟩
+  · intro X hX
+    exact ⟨hX.1.1.1.1, hφ_coe X.1⟩
+  · exact hW_symm_cont.mono interior_subset
+  · intro x hx O hO hxO
+    have hUO_open : IsOpen (U ∩ O) := (hU₀_open.preimage continuous_subtype_val).inter hO
+    obtain ⟨O₀, hO₀_open, hO₀_eq⟩ := isOpen_induced_iff.mp hUO_open
+    let W : Set SU2 := V ∩ {g : SU2 | φ.symm g.1 ∈ O₀}
+    have hW_open : IsOpen W := by
+      have h_eq_set : V₀ ∩ φ.symm ⁻¹' O₀ = V₀ ∩ (φ.target ∩ φ.symm ⁻¹' O₀) := by
+        ext y; exact ⟨fun ⟨hyV, hyO⟩ => ⟨hyV, hyV.1.1, hyO⟩, fun ⟨hyV, _, hyO⟩ => ⟨hyV, hyO⟩⟩
+      have h_open_M : IsOpen (V₀ ∩ φ.symm ⁻¹' O₀) := by
+        rw [h_eq_set]
+        exact hV₀_open.inter (φ.continuousOn_symm.isOpen_inter_preimage φ.open_target hO₀_open)
+      exact h_open_M.preimage continuous_subtype_val
+    have hx_W : su2Exp x ∈ W := by
+      have hx_src : x.1 ∈ φ.source := hx.1.1.1.1
+      have hx_UO : x ∈ U ∩ O := ⟨hx, hxO⟩
+      rw [← hO₀_eq] at hx_UO
+      refine ⟨⟨⟨?_, ?_⟩, ?_⟩, ?_⟩
+      · change NormedSpace.exp x.1 ∈ φ.target
+        rw [← hφ_coe x.1]; exact φ.map_source hx_src
+      · change φ.symm (NormedSpace.exp x.1) ∈ U₀
+        rw [← hφ_coe x.1, φ.left_inv hx_src]
+        exact hx
+      · exact hx.2
+      · change φ.symm (NormedSpace.exp x.1) ∈ O₀
+        rw [← hφ_coe x.1, φ.left_inv hx_src]
+        exact hx_UO
+    have hW_sub : W ⊆ su2Exp '' (U ∩ O) := by
+      intro g ⟨hgV, hgO⟩
+      obtain ⟨h_lie, h_exp⟩ := h_symm_mem g hgV
+      let X : LieSU 2 := ⟨φ.symm g.1, h_lie⟩
+      have hX_UO : X ∈ U ∩ O := by rw [← hO₀_eq]; exact hgO
+      exact ⟨X, hX_UO, Subtype.ext h_exp⟩
+    exact mem_nhds_iff.mpr ⟨W, hW_sub, hW_open, hx_W⟩
+
+private theorem su2_has_lie_algebra :
+    ∃ (Lie : Type) (_ : LieRing Lie) (_ : LieAlgebra ℝ Lie) (_ : FiniteDimensional ℝ Lie)
+      (_ : NormedAddCommGroup Lie) (_ : NormedSpace ℝ Lie) (_ : ContinuousSMul ℝ Lie)
+      (adjoint_action : SU2 → Lie →ₗ[ℝ] Lie)
+      (exp : Lie → SU2) (log : SU2 → Lie),
+      1 < Module.finrank ℝ Lie ∧
+      Continuous exp ∧ exp 0 = 1 ∧
+      (∀ (x : Lie) (s t : ℝ), exp ((s + t) • x) = exp (s • x) * exp (t • x)) ∧
+      adjoint_action 1 = LinearMap.id ∧
+      (∀ (g h : SU2) (X : Lie), adjoint_action (g * h) X = adjoint_action g (adjoint_action h X)) ∧
+      (∀ (g : SU2) (X Y : Lie), adjoint_action g ⁅X, Y⁆ = ⁅adjoint_action g X, adjoint_action g Y⁆) ∧
+      (∀ (g : SU2) (X : Lie), exp (adjoint_action g X) = g * exp X * g⁻¹) ∧
+      (∀ X Y : Lie, HasDerivAt (fun t : ℝ => adjoint_action (exp (t • X)) Y) ⁅X, Y⁆ 0) ∧
+      ∃ (U : Set Lie) (V : Set SU2),
+        IsOpen U ∧ (0 : Lie) ∈ U ∧ IsOpen V ∧ (1 : SU2) ∈ V ∧
+        Set.BijOn exp U V ∧ ContinuousOn log V ∧
+        (∀ x ∈ U, log (exp x) = x) ∧ (∀ g ∈ V, exp (log g) = g) ∧
+        ∀ ⦃x⦄, x ∈ U → ∀ ⦃O : Set Lie⦄, IsOpen O → x ∈ O →
+          exp '' (U ∩ O) ∈ nhds (exp x) := by
+  have : FiniteDimensional ℝ (LieSU 2) := Module.Finite.of_basis su2BasisObj
+  have h_finrank : 1 < Module.finrank ℝ (LieSU 2) := by
+    rw [Module.finrank_eq_card_basis su2BasisObj, Fintype.card_fin]
+    omega
+  obtain ⟨log, U, V, _, _, hU_open, h0U, hV_open, h1V, _, _, _, hBij, h_log_cont, h_left, h_right,
+    _, _, _, h_open_img⟩ := su2Exp_analytic_local_homeomorph
+  exact ⟨LieSU 2, inferInstance, inferInstance, inferInstance, inferInstance, inferInstance,
+    inferInstance, su2Adjoint, su2Exp, log, h_finrank, su2Exp_continuous, su2Exp_zero,
+    su2Exp_smul_add, su2Adjoint_one, su2Adjoint_mul, su2Adjoint_bracket, su2Exp_adjoint_conj,
+    su2_hasDerivAt_adjoint_exp, U, V, hU_open, h0U, hV_open, h1V, hBij, h_log_cont,
+    h_left, h_right, h_open_img⟩
+
+private theorem su2_admits_lie_group : AdmitsLieGroupStructure SU2 := by
+  classical
+  obtain ⟨log, U, V, V₀, φ, hU_open, h0U, hV_open, h1V, hV₀_open, h1V₀, hV_sub, hBij,
+    h_log_cont, h_left, h_right, h_log_eq, h_exp_eq, h_symm_cont, _⟩ :=
+    su2Exp_analytic_local_homeomorph
+  have : FiniteDimensional ℝ (LieSU 2) := Module.Finite.of_basis su2BasisObj
+  let e_lin : LieSU 2 ≃ₗ[ℝ] EuclideanSpace ℝ (Fin 3) :=
+    su2BasisObj.equivFun.trans (EuclideanSpace.equiv (Fin 3) ℝ).symm.toLinearEquiv
+  let e : LieSU 2 ≃L[ℝ] EuclideanSpace ℝ (Fin 3) := e_lin.toContinuousLinearEquiv
+  let chart1 : OpenPartialHomeomorph SU2 (EuclideanSpace ℝ (Fin 3)) :=
+    { toFun := fun g => e (log g)
+      invFun := fun v => su2Exp (e.symm v)
+      source := V
+      target := e '' U
+      map_source' := fun g hg => ⟨log g, by
+        obtain ⟨X, hXU, hXg⟩ := hBij.surjOn hg
+        rw [← hXg, h_left X hXU]; exact hXU, rfl⟩
+      map_target' := fun v hv => by
+        obtain ⟨X, hXU, rfl⟩ := hv
+        rw [e.symm_apply_apply]
+        exact hBij.mapsTo hXU
+      left_inv' := fun g hg => by
+        rw [e.symm_apply_apply]
+        exact h_right g hg
+      right_inv' := fun v hv => by
+        obtain ⟨X, hXU, rfl⟩ := hv
+        rw [e.symm_apply_apply, h_left X hXU]
+      open_source := hV_open
+      open_target := by
+        rw [ContinuousLinearEquiv.image_eq_preimage_symm]
+        exact hU_open.preimage e.symm.continuous
+      continuousOn_toFun := e.continuous.comp_continuousOn h_log_cont
+      continuousOn_invFun := su2Exp_continuous.continuousOn.comp e.symm.continuous.continuousOn
+        (fun _ _ => Set.mem_univ _) }
+  let chartAtFun : SU2 → OpenPartialHomeomorph SU2 (EuclideanSpace ℝ (Fin 3)) :=
+    fun g₀ => (Homeomorph.mulLeft g₀⁻¹).transOpenPartialHomeomorph chart1
+  have h_chart_apply : ∀ g₀ g : SU2, (chartAtFun g₀) g = e (log (g₀⁻¹ * g)) := fun _ _ => rfl
+  have h_chart_symm : ∀ g₀ v, (chartAtFun g₀).symm v = g₀ * su2Exp (e.symm v) :=
+    fun g₀ v => by
+      change (Homeomorph.mulLeft g₀⁻¹).symm (su2Exp (e.symm v)) = g₀ * su2Exp (e.symm v)
+      rw [Homeomorph.mulLeft_symm, inv_inv]
+      rfl
+  letI charted : ChartedSpace (EuclideanSpace ℝ (Fin 3)) SU2 :=
+    { atlas := Set.range chartAtFun
+      chartAt := chartAtFun
+      mem_chart_source := fun g₀ => by
+        change g₀⁻¹ * g₀ ∈ V
+        rw [inv_mul_cancel]
+        exact h1V
+      chart_mem_atlas := fun g₀ => ⟨g₀, rfl⟩ }
+  let M := Matrix (Fin 2) (Fin 2) ℂ
+  let valL : LieSU 2 →L[ℝ] M :=
+    { toLinearMap := (LieSU 2).subtype
+      cont := continuous_subtype_val }
+  let projE : M →L[ℝ] EuclideanSpace ℝ (Fin 3) := e.toContinuousLinearMap.comp su2Proj
+  have h_exp_contDiff : ContDiff ℝ ω (NormedSpace.exp : M → M) :=
+    contDiff_iff_contDiffAt.mpr fun x => (NormedSpace.exp_analytic x).contDiffAt
+  have h_chart_trans : ∀ (g₀ g₁ : SU2) (v : EuclideanSpace ℝ (Fin 3)),
+      v ∈ ((chartAtFun g₀).symm.trans (chartAtFun g₁)).source →
+      ContDiffAt ℝ ω (fun w => chartAtFun g₁ ((chartAtFun g₀).symm w)) v := by
+    intro g₀ g₁ v hv
+    have hv_open : IsOpen ((chartAtFun g₀).symm.trans (chartAtFun g₁)).source :=
+      ((chartAtFun g₀).symm.trans (chartAtFun g₁)).open_source
+    let f_inner : EuclideanSpace ℝ (Fin 3) → M := fun w =>
+      star g₁.1 * (g₀.1 * NormedSpace.exp (valL (e.symm w)))
+    have hf_inner : ContDiff ℝ ω f_inner := by
+      have h_exp_w : ContDiff ℝ ω (fun w => NormedSpace.exp (valL (e.symm w))) :=
+        h_exp_contDiff.comp (valL.comp (e.symm : EuclideanSpace ℝ (Fin 3) →L[ℝ] LieSU 2)).contDiff
+      have h_mul1 : ContDiff ℝ ω (fun w => g₀.1 * NormedSpace.exp (valL (e.symm w))) :=
+        (ContinuousLinearMap.mul ℝ M g₀.1).contDiff.comp h_exp_w
+      exact (ContinuousLinearMap.mul ℝ M (star g₁.1)).contDiff.comp h_mul1
+    have h_f_eq : ∀ w, (g₁⁻¹ * (g₀ * su2Exp (e.symm w))).1 = f_inner w := fun w => by
+      change (star g₁.1) * (g₀.1 * NormedSpace.exp (valL (e.symm w))) = f_inner w
+      rfl
+    have hv1 : g₁⁻¹ * (g₀ * su2Exp (e.symm v)) ∈ V := by
+      have hv2 : (chartAtFun g₀).symm v ∈ (chartAtFun g₁).source := hv.2
+      rw [h_chart_symm] at hv2
+      exact hv2
+    have h_mem : f_inner v ∈ V₀ := by
+      rw [← h_f_eq v]
+      exact hV_sub _ hv1
+    have h_symm_at : ContDiffAt ℝ ω φ.symm (f_inner v) :=
+      h_symm_cont.contDiffAt (hV₀_open.mem_nhds h_mem)
+    have h_comp : ContDiffAt ℝ ω (fun w => projE (φ.symm (f_inner w))) v :=
+      projE.contDiff.contDiffAt.comp v (h_symm_at.comp v hf_inner.contDiffAt)
+    refine h_comp.congr_of_eventuallyEq ?_
+    filter_upwards [hv_open.mem_nhds hv] with w hw
+    have hw1 : g₁⁻¹ * (g₀ * su2Exp (e.symm w)) ∈ V := by
+      have hw2 : (chartAtFun g₀).symm w ∈ (chartAtFun g₁).source := hw.2
+      rw [h_chart_symm] at hw2
+      exact hw2
+    have h_eq := (h_log_eq _ hw1).2
+    change (chartAtFun g₁) ((chartAtFun g₀).symm w) = projE (φ.symm (f_inner w))
+    rw [h_chart_apply, h_chart_symm]
+    change e (log (g₁⁻¹ * (g₀ * su2Exp (e.symm w)))) = e (su2Proj (φ.symm (f_inner w)))
+    rw [h_eq, h_f_eq w]
+  have hasGroupoid : HasGroupoid SU2 (contDiffGroupoid ω (𝓡 3)) :=
+    HasGroupoid.mk fun {e₁ e₂} he₁ he₂ => by
+      rcases he₁ with ⟨g₀, rfl⟩
+      rcases he₂ with ⟨g₁, rfl⟩
+      rw [contDiffGroupoid, mem_groupoid_of_pregroupoid]
+      refine ⟨?_, ?_⟩
+      · intro v hv
+        exact (h_chart_trans g₀ g₁ v (by simpa using hv.1)).contDiffWithinAt
+      · intro v hv
+        have hv' : v ∈ ((chartAtFun g₁).symm.trans (chartAtFun g₀)).source := by
+          simpa [OpenPartialHomeomorph.trans_target, OpenPartialHomeomorph.symm_symm] using hv.1
+        exact (h_chart_trans g₁ g₀ v hv').contDiffWithinAt
+  letI isManifold : IsManifold (𝓡 3) ω SU2 := { compatible := hasGroupoid.compatible }
+  have h_mul_smooth : ContMDiff ((𝓡 3).prod (𝓡 3)) (𝓡 3) ω (fun p : SU2 × SU2 => p.1 * p.2) := by
+    intro ⟨g₀, h₀⟩
+    rw [contMDiffAt_iff]
+    refine ⟨(continuous_fst.mul continuous_snd).continuousAt, ?_⟩
+    let F : EuclideanSpace ℝ (Fin 3) × EuclideanSpace ℝ (Fin 3) → M := fun p =>
+      star (g₀ * h₀).1 * ((g₀.1 * NormedSpace.exp (valL (e.symm p.1))) *
+        (h₀.1 * NormedSpace.exp (valL (e.symm p.2))))
+    have hF_smooth : ContDiff ℝ ω F := by
+      have h1 : ContDiff ℝ ω (fun p : EuclideanSpace ℝ (Fin 3) × EuclideanSpace ℝ (Fin 3) =>
+          g₀.1 * NormedSpace.exp (valL (e.symm p.1))) :=
+        (ContinuousLinearMap.mul ℝ M g₀.1).contDiff.comp
+          (h_exp_contDiff.comp ((valL.comp (e.symm : EuclideanSpace ℝ (Fin 3) →L[ℝ] LieSU 2)).comp
+            (ContinuousLinearMap.fst ℝ (EuclideanSpace ℝ (Fin 3)) (EuclideanSpace ℝ (Fin 3)))).contDiff)
+      have h2 : ContDiff ℝ ω (fun p : EuclideanSpace ℝ (Fin 3) × EuclideanSpace ℝ (Fin 3) =>
+          h₀.1 * NormedSpace.exp (valL (e.symm p.2))) :=
+        (ContinuousLinearMap.mul ℝ M h₀.1).contDiff.comp
+          (h_exp_contDiff.comp ((valL.comp (e.symm : EuclideanSpace ℝ (Fin 3) →L[ℝ] LieSU 2)).comp
+            (ContinuousLinearMap.snd ℝ (EuclideanSpace ℝ (Fin 3)) (EuclideanSpace ℝ (Fin 3)))).contDiff)
+      exact (ContinuousLinearMap.mul ℝ M (star (g₀ * h₀).1)).contDiff.comp (h1.mul h2)
+    have h_F_eq : ∀ u v, ((g₀ * h₀)⁻¹ * ((g₀ * su2Exp (e.symm u)) * (h₀ * su2Exp (e.symm v)))).1 =
+        F (u, v) := fun u v => by
+      change (star (g₀ * h₀).1) * ((g₀.1 * NormedSpace.exp (valL (e.symm u))) *
+        (h₀.1 * NormedSpace.exp (valL (e.symm v)))) = F (u, v)
+      rfl
+    have hF0 : F (0, 0) = 1 := by
+      rw [← h_F_eq 0 0]
+      simp [su2Exp_zero]
+    have h_symm_at : ContDiffAt ℝ ω φ.symm (F (0, 0)) := by
+      rw [hF0]
+      exact h_symm_cont.contDiffAt (hV₀_open.mem_nhds h1V₀)
+    have h_comp : ContDiffAt ℝ ω (fun p => projE (φ.symm (F p))) (0, 0) :=
+      projE.contDiff.contDiffAt.comp (0, 0) (h_symm_at.comp (0, 0) hF_smooth.contDiffAt)
+    have h_eq_nhds : ∀ᶠ p : EuclideanSpace ℝ (Fin 3) × EuclideanSpace ℝ (Fin 3) in nhds (0, 0),
+        (extChartAt (𝓡 3) (g₀ * h₀)
+          ((extChartAt ((𝓡 3).prod (𝓡 3)) (g₀, h₀)).symm p |> fun x => x.1 * x.2)) =
+        projE (φ.symm (F p)) := by
+      have h_cont_inner : Continuous (fun p : EuclideanSpace ℝ (Fin 3) × EuclideanSpace ℝ (Fin 3) =>
+          (g₀ * h₀)⁻¹ * ((g₀ * su2Exp (e.symm p.1)) * (h₀ * su2Exp (e.symm p.2)))) := by
+        refine continuous_const.mul ((continuous_const.mul ?_).mul (continuous_const.mul ?_))
+        · exact su2Exp_continuous.comp (e.symm.continuous.comp continuous_fst)
+        · exact su2Exp_continuous.comp (e.symm.continuous.comp continuous_snd)
+      have h_nhds_V : (fun p : EuclideanSpace ℝ (Fin 3) × EuclideanSpace ℝ (Fin 3) =>
+          (g₀ * h₀)⁻¹ * ((g₀ * su2Exp (e.symm p.1)) * (h₀ * su2Exp (e.symm p.2)))) ⁻¹' V ∈
+          nhds (0, 0) := by
+        apply h_cont_inner.continuousAt.preimage_mem_nhds
+        simp only [map_zero, su2Exp_zero, mul_one, inv_mul_cancel]
+        exact hV_open.mem_nhds h1V
+      filter_upwards [h_nhds_V] with p hp
+      have h_eq := (h_log_eq _ hp).2
+      change (chartAtFun (g₀ * h₀))
+        (((chartAtFun g₀).symm p.1) * ((chartAtFun h₀).symm p.2)) = projE (φ.symm (F p))
+      rw [h_chart_apply, h_chart_symm, h_chart_symm]
+      change e (log ((g₀ * h₀)⁻¹ * ((g₀ * su2Exp (e.symm p.1)) * (h₀ * su2Exp (e.symm p.2))))) =
+        e (su2Proj (φ.symm (F p)))
+      rw [h_eq, h_F_eq p.1 p.2]
+    have h_cont_diff_within : ContDiffWithinAt ℝ ω
+        (extChartAt (𝓡 3) (g₀ * h₀) ∘ (fun p : SU2 × SU2 => p.1 * p.2) ∘
+          (extChartAt ((𝓡 3).prod (𝓡 3)) (g₀, h₀)).symm)
+        (Set.range ((𝓡 3).prod (𝓡 3)))
+        (extChartAt ((𝓡 3).prod (𝓡 3)) (g₀, h₀) (g₀, h₀)) := by
+      have h_src0 : extChartAt ((𝓡 3).prod (𝓡 3)) (g₀, h₀) (g₀, h₀) = (0, 0) := by
+        ext i
+        · change (e (log (g₀⁻¹ * g₀))) i = 0
+          rw [inv_mul_cancel, ← su2Exp_zero, h_left 0 h0U]; simp
+        · change (e (log (h₀⁻¹ * h₀))) i = 0
+          rw [inv_mul_cancel, ← su2Exp_zero, h_left 0 h0U]; simp
+      rw [h_src0]
+      exact (h_comp.congr_of_eventuallyEq h_eq_nhds).contDiffWithinAt
+    exact h_cont_diff_within
+  have h_inv_smooth : ContMDiff (𝓡 3) (𝓡 3) ω (fun g : SU2 => g⁻¹) := by
+    intro g₀
+    rw [contMDiffAt_iff]
+    refine ⟨continuous_inv.continuousAt, ?_⟩
+    let F : EuclideanSpace ℝ (Fin 3) → M := fun u =>
+      g₀.1 * star (g₀.1 * NormedSpace.exp (valL (e.symm u)))
+    have hF_smooth : ContDiff ℝ ω F := by
+      let starL : M →L[ℝ] M :=
+        { toLinearMap :=
+            { toFun := star
+              map_add' := star_add
+              map_smul' := fun c X => by simp }
+          cont := by
+            let s : M →ₗ[ℝ] M :=
+              { toFun := star, map_add' := star_add, map_smul' := fun c X => by simp }
+            exact s.continuous_of_finiteDimensional }
+      have h1 : ContDiff ℝ ω (fun u => g₀.1 * NormedSpace.exp (valL (e.symm u))) :=
+        (ContinuousLinearMap.mul ℝ M g₀.1).contDiff.comp
+          (h_exp_contDiff.comp (valL.comp (e.symm : EuclideanSpace ℝ (Fin 3) →L[ℝ] LieSU 2)).contDiff)
+      exact (ContinuousLinearMap.mul ℝ M g₀.1).contDiff.comp (starL.contDiff.comp h1)
+    have h_F_eq : ∀ u, ((g₀⁻¹)⁻¹ * (g₀ * su2Exp (e.symm u))⁻¹).1 = F u := fun u => by
+      change (star (star g₀.1)) * star (g₀.1 * NormedSpace.exp (valL (e.symm u))) = F u
+      rw [star_star]
+    have hF0 : F 0 = 1 := by
+      rw [← h_F_eq 0]
+      simp [su2Exp_zero]
+    have h_symm_at : ContDiffAt ℝ ω φ.symm (F 0) := by
+      rw [hF0]
+      exact h_symm_cont.contDiffAt (hV₀_open.mem_nhds h1V₀)
+    have h_comp : ContDiffAt ℝ ω (fun u => projE (φ.symm (F u))) 0 :=
+      projE.contDiff.contDiffAt.comp 0 (h_symm_at.comp 0 hF_smooth.contDiffAt)
+    have h_eq_nhds : ∀ᶠ u : EuclideanSpace ℝ (Fin 3) in nhds 0,
+        extChartAt (𝓡 3) g₀⁻¹ (((extChartAt (𝓡 3) g₀).symm u)⁻¹) = projE (φ.symm (F u)) := by
+      have h_cont_inner : Continuous (fun u : EuclideanSpace ℝ (Fin 3) =>
+          (g₀⁻¹)⁻¹ * (g₀ * su2Exp (e.symm u))⁻¹) :=
+        continuous_const.mul ((continuous_const.mul (su2Exp_continuous.comp e.symm.continuous)).inv)
+      have h_nhds_V : (fun u : EuclideanSpace ℝ (Fin 3) =>
+          (g₀⁻¹)⁻¹ * (g₀ * su2Exp (e.symm u))⁻¹) ⁻¹' V ∈ nhds 0 := by
+        apply h_cont_inner.continuousAt.preimage_mem_nhds
+        simp only [map_zero, su2Exp_zero, mul_one, inv_inv, mul_inv_cancel]
+        exact hV_open.mem_nhds h1V
+      filter_upwards [h_nhds_V] with u hu
+      have h_eq := (h_log_eq _ hu).2
+      change (chartAtFun g₀⁻¹) (((chartAtFun g₀).symm u)⁻¹) = projE (φ.symm (F u))
+      rw [h_chart_apply, h_chart_symm]
+      change e (log ((g₀⁻¹)⁻¹ * (g₀ * su2Exp (e.symm u))⁻¹)) = e (su2Proj (φ.symm (F u)))
+      rw [h_eq, h_F_eq u]
+    have h_src0 : extChartAt (𝓡 3) g₀ g₀ = 0 := by
+      change (chartAtFun g₀) g₀ = 0
+      rw [h_chart_apply, inv_mul_cancel, ← su2Exp_zero, h_left 0 h0U, map_zero]
+    rw [h_src0]
+    exact (h_comp.congr_of_eventuallyEq h_eq_nhds).contDiffWithinAt
+  letI contMDiffMul : ContMDiffMul (𝓡 3) ω SU2 := ⟨h_mul_smooth⟩
+  letI lieGroup : LieGroup (𝓡 3) ω SU2 := LieGroup.mk h_inv_smooth
+  exact ⟨3, ⟨{ targetGroup := SU2, equiv := ContinuousMulEquiv.refl SU2 }⟩⟩
+
+instance su2_compactSimpleLieGroup : CompactSimpleLieGroup SU2 where
+  is_compact := YangMills.LieGroups.su2_is_compact
+  is_connected := YangMills.LieGroups.su2_is_connected
+  non_abelian := YangMills.LieGroups.su2_is_nonabelian
+  normal_subgroups_central := YangMills.LieGroups.su2_normal_subgroups_central_full
+  finite_center := YangMills.LieGroups.su2_finite_center
+  has_fundamental_character := YangMills.LieGroups.su2_has_fundamental_character
+  admits_lie_group := su2_admits_lie_group
+  has_lie_algebra := su2_has_lie_algebra
+
+end SU2CompactSimpleInstance
+
+/-- Unconditional, sorry-free inhabitant of the full PR 7636 `CurvaturePolynomialAlgebra SU2`. -/
+noncomputable def su2CurvaturePolynomialAlgebra :
+    CurvaturePolynomialAlgebra SU2 :=
+  buildCurvaturePolynomialAlgebra su2LieBasisData
+
+@[simp]
+theorem su2CurvaturePolynomialAlgebra_casimir_adjoint :
+    su2CurvaturePolynomialAlgebra.casimir_adjoint = 2 := rfl
+
+end SU2Instance
+
+#print axioms su3_compactSimpleLieGroup
+#print axioms su3CurvaturePolynomialAlgebra
+#print axioms su2_compactSimpleLieGroup
+#print axioms su2CurvaturePolynomialAlgebra
+#print axioms su2CurvaturePolynomialAlgebra_casimir_adjoint
 
 end YangMills.CurvatureJetConstructive

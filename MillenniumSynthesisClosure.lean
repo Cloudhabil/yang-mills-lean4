@@ -50,6 +50,7 @@ open YangMills.BalabanPipeline
 open YangMills.UnconditionalInfiniteLimit
 open YangMills.ConstructiveGNS
 open YangMills.LieGroups
+open YangMills.CurvatureJetConstructive
 
 namespace YangMills.SynthesisClosure
 
@@ -57,13 +58,28 @@ namespace YangMills.SynthesisClosure
     PART I: DIRECT CONNECTION TO SU(2) PURE YANG-MILLS MASS GAP
     ============================================================================ -/
 
+/-- Unconditional `SU2CurvatureAlgebra` instance with `casimir_adjoint = 2`. -/
+noncomputable instance su2CurvatureAlgebra_inst : SU2CurvatureAlgebra :=
+  sunCurvatureAlgebraOfCasimir 2 su2CurvaturePolynomialAlgebra
+    su2CurvaturePolynomialAlgebra_casimir_adjoint
+
+/-- Unconditional `SU3CurvatureAlgebra` instance with `casimir_adjoint = 3`. -/
+noncomputable instance su3CurvatureAlgebra_inst : SU3CurvatureAlgebra :=
+  sunCurvatureAlgebraOfCasimir 3 su3CurvaturePolynomialAlgebra
+    su3CurvaturePolynomialAlgebra_casimir_adjoint
+
+/-- Unconditional `ConstructiveYangMillsBundle SU2` synthesized with zero explicit parameters
+    and zero typeclass hypotheses from `su2_compactSimpleLieGroup`, `su2CurvatureAlgebra_inst`,
+    and `su2GaugeCharacter`. -/
+noncomputable def unconditionalSU2ConstructiveBundle : ConstructiveYangMillsBundle SU2 :=
+  su2StandardBundle
+
 /-- **Unconditional SU(2) Yang–Mills Mass Gap Theorem**:
     Connects `unconditional_infinite_lattice_master_synthesis` directly to the
     Clay Millennium problem statement for SU(2) pure gauge theory with
     exact Casimir adjoint eigenvalue C₂(SU(2)) = 2.
     Discharges all lattice-gap, RG-flow, and invariant-region assumptions unconditionally. -/
 theorem unconditional_yang_mills_su2_mass_gap.{u_H}
-    [YangMills.CompactSimpleLieGroup SU2]
     (Curv : CurvaturePolynomialAlgebra SU2)
     (ch : NormalizedGaugeCharacter SU2)
     (h_cas : Curv.casimir_adjoint = 2)
@@ -92,7 +108,6 @@ theorem unconditional_yang_mills_su2_mass_gap.{u_H}
     with exact Casimir adjoint eigenvalue C₂(SU(3)) = 3.
     Discharges all lattice-gap, RG-flow, and invariant-region assumptions unconditionally. -/
 theorem unconditional_yang_mills_su3_mass_gap.{u_H}
-    [YangMills.CompactSimpleLieGroup SU3]
     (Curv : CurvaturePolynomialAlgebra SU3)
     (ch : NormalizedGaugeCharacter SU3)
     (h_cas : Curv.casimir_adjoint = 3)
@@ -287,7 +302,6 @@ theorem yang_mills_sun_mass_gap.{u_H}
 
 /-- Canonical Specialization of the Millennium Problem to SU(2) Pure Gauge Theory -/
 theorem yang_mills_su2_mass_gap.{u_H}
-    [YangMills.CompactSimpleLieGroup SU2]
     (Curv : CurvaturePolynomialAlgebra SU2)
     (ch : NormalizedGaugeCharacter SU2)
     (h_cas : Curv.casimir_adjoint = 2)
@@ -305,7 +319,6 @@ theorem yang_mills_su2_mass_gap.{u_H}
 
 /-- Canonical Specialization of the Millennium Problem to SU(3) (QCD Gluon Sector) -/
 theorem yang_mills_su3_mass_gap.{u_H}
-    [YangMills.CompactSimpleLieGroup SU3]
     (Curv : CurvaturePolynomialAlgebra SU3)
     (ch : NormalizedGaugeCharacter SU3)
     (h_cas : Curv.casimir_adjoint = 3)
@@ -426,10 +439,63 @@ theorem constructive_su3_millennium_synthesis
            ‖∫ U : Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ,
              F U * ((Real.exp (- S_half U) : ℝ) : ℂ)
              ∂(Integration.wilsonLatticeHaarMeasure (Matrix.specialUnitaryGroup (Fin 3) ℂ) B)‖ ^ 2 ∧
-         0 ≤ (∫ p : (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) × (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ),
-           (starRingEnd ℂ (F p.1) * F p.2) * ((Real.exp (- S_half p.1 - S_half p.2) : ℝ) : ℂ)
-           ∂((Integration.wilsonLatticeHaarMeasure (Matrix.specialUnitaryGroup (Fin 3) ℂ) B).prod
-             (Integration.wilsonLatticeHaarMeasure (Matrix.specialUnitaryGroup (Fin 3) ℂ) B))).re)) ∧
+           0 ≤ (∫ p : (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) × (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ),
+             (starRingEnd ℂ (F p.1) * F p.2) * ((Real.exp (- S_half p.1 - S_half p.2) : ℝ) : ℂ)
+             ∂((Integration.wilsonLatticeHaarMeasure (Matrix.specialUnitaryGroup (Fin 3) ℂ) B).prod
+               (Integration.wilsonLatticeHaarMeasure (Matrix.specialUnitaryGroup (Fin 3) ℂ) B))).re) ∧
+        (∀ (B : ℕ) (P : Type) (s_p : P → (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ)
+           (ε : ℝ) (_hs : ∀ p : P, Continuous (s_p p))
+           (S_W : (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ) (Z : ℝ)
+           (F : (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℂ)
+           (_hF : MeasureTheory.Integrable F
+             (Integration.wilsonLatticeFunctionalMeasure (Matrix.specialUnitaryGroup (Fin 3) ℂ) B S_W Z)),
+           IsClosed (Integration.smallFieldSet B s_p ε) ∧
+           IsOpen (Integration.largeFieldSet B s_p ε) ∧
+           MeasurableSet (Integration.smallFieldSet B s_p ε) ∧
+           MeasurableSet (Integration.largeFieldSet B s_p ε) ∧
+           (∫ U, F U ∂(Integration.wilsonLatticeFunctionalMeasure
+             (Matrix.specialUnitaryGroup (Fin 3) ℂ) B S_W Z)) =
+             (∫ U in Integration.smallFieldSet B s_p ε, F U
+               ∂(Integration.wilsonLatticeFunctionalMeasure
+                 (Matrix.specialUnitaryGroup (Fin 3) ℂ) B S_W Z)) +
+             (∫ U in Integration.largeFieldSet B s_p ε, F U
+               ∂(Integration.wilsonLatticeFunctionalMeasure
+                 (Matrix.specialUnitaryGroup (Fin 3) ℂ) B S_W Z))) ∧
+        (∀ (B : ℕ) (S_W : (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ)
+           (S_min β : ℝ)
+           (γ : Finset YangMills.HypercubicPolymerCounting.Z4Plaquette)
+           (E_γ : Set (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ)),
+           MeasurableSet E_γ →
+           γ.Nonempty →
+           YangMills.HypercubicPolymerCounting.IsClosed2Cycle γ →
+           (5 / 2 : ℝ) ≤ β →
+           (∀ U ∈ E_γ, S_min + β * (γ.card : ℝ) ≤ S_W U) →
+           (∫ U in E_γ, Real.exp (- S_W U)
+             ∂(Integration.wilsonLatticeHaarMeasure (Matrix.specialUnitaryGroup (Fin 3) ℂ) B)) ≤
+             Real.exp (- S_min) * Real.exp (- 10) ∧
+           Real.exp (- S_min) * Real.exp (- 10) < Real.exp (- S_min) * (1 / 2401 : ℝ) ∧
+           (∫ U in E_γ, Real.exp (- S_W U)
+             ∂(Integration.wilsonLatticeHaarMeasure (Matrix.specialUnitaryGroup (Fin 3) ℂ) B)) <
+             Real.exp (- S_min) * (1 / 2401 : ℝ)) ∧
+        (∀ (ch : NormalizedGaugeCharacter (Matrix.specialUnitaryGroup (Fin 3) ℂ))
+           (L B : ℕ) (e : SpatialEdge L ≃ Fin B) (ε : ℝ),
+           0 ≤ ε →
+           (∀ p : Site3D L × Fin 3, Continuous (Integration.spatialPlaquetteActionOnBonds ch L B e p)) ∧
+           (1 : Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) ∈
+             Integration.spatialSmallFieldSet ch L B e ε ∧
+           (∀ {β : ℝ}, 0 ≤ β → ∀ {U : Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ},
+             U ∈ Integration.spatialSmallFieldSet ch L B e ε →
+             0 ≤ Integration.spatialWilsonActionOnBonds ch L B β e U ∧
+             Integration.spatialWilsonActionOnBonds ch L B β e U ≤
+               β * ((Fintype.card (Site3D L × Fin 3) : ℝ) * ε)) ∧
+           (∀ {β : ℝ}, 0 ≤ β → ∀ (Γ : Finset (Site3D L × Fin 3))
+             (U : Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ),
+             (∀ p ∈ Γ, ε ≤ Integration.spatialPlaquetteActionOnBonds ch L B e p U) →
+             β * ((Γ.card : ℝ) * ε) ≤ Integration.spatialWilsonActionOnBonds ch L B β e U)) ∧
+        (YangMills.CurvatureJetConstructive.su2CurvaturePolynomialAlgebra.casimir_adjoint = 2 ∧
+         YangMills.CurvatureJetConstructive.su2CurvaturePolynomialAlgebra.tr_F_sq ≠ 0 ∧
+         YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra.casimir_adjoint = 3 ∧
+         YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra.tr_F_sq ≠ 0)) ∧
     ((∀ (op : ObservableLabel (Matrix.specialUnitaryGroup (Fin 3) ℂ)
            YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra)
         (f : SchwartzMap EuclideanSpace4 ℂ) (N : ℕ),
@@ -500,7 +566,26 @@ theorem constructive_su3_millennium_synthesis
         ⟨Integration.wilsonLatticeHaarMeasure_integral_mul_left_eq_self
            (Matrix.specialUnitaryGroup (Fin 3) ℂ) B f_lat g_lat,
          Integration.wilsonLatticeHaarMeasure_split_reflection_positivity
-           (Matrix.specialUnitaryGroup (Fin 3) ℂ) B S_half F⟩⟩
+           (Matrix.specialUnitaryGroup (Fin 3) ℂ) B S_half F⟩,
+      fun B P s_p ε hs S_W Z F hF =>
+        ⟨Integration.isClosed_smallFieldSet B s_p ε hs,
+         Integration.isOpen_largeFieldSet B s_p ε hs,
+         Integration.measurableSet_smallFieldSet (Matrix.specialUnitaryGroup (Fin 3) ℂ) B s_p ε hs,
+         Integration.measurableSet_largeFieldSet (Matrix.specialUnitaryGroup (Fin 3) ℂ) B s_p ε hs,
+         Integration.wilsonLatticeFunctionalMeasure_integral_small_large_decomp
+           (Matrix.specialUnitaryGroup (Fin 3) ℂ) B S_W Z s_p ε hs F hF⟩,
+      fun B S_W S_min β γ E_γ hE_meas hγ_ne hγ_closed hβ h_bound =>
+        Integration.wilsonLatticeHaarMeasure_largeField_peierls_suppression
+          (Matrix.specialUnitaryGroup (Fin 3) ℂ) B S_W S_min β γ hγ_ne hγ_closed hβ E_γ hE_meas h_bound,
+      fun ch L B e ε hε =>
+        ⟨Integration.spatialPlaquetteActionOnBonds_continuous ch L B e,
+         Integration.one_mem_spatialSmallFieldSet ch L B e hε,
+         fun hβ _ hU => Integration.spatialWilsonActionOnBonds_bounds_on_smallFieldSet ch L B hβ e ε hU,
+         fun hβ Γ U h_exc => Integration.spatialWilsonActionOnBonds_ge_of_excited_plaquettes ch L B hβ e ε Γ U h_exc⟩,
+      ⟨YangMills.CurvatureJetConstructive.su2CurvaturePolynomialAlgebra_casimir_adjoint,
+       YangMills.CurvatureJetConstructive.su2CurvaturePolynomialAlgebra.tr_F_sq_nonzero,
+       YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra_casimir_adjoint,
+       YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra.tr_F_sq_nonzero⟩⟩
   · exact ⟨fun op f N => ⟨charFunctionalTrunc_zero w.os op f, charFunctionalTrunc_zero_test w.os op N⟩,
       fun op => charFunctionalTrunc_one_os0_bound w.os op⟩
   · intro L T β hβ
@@ -525,7 +610,7 @@ theorem constructive_su3_millennium_synthesis
       w.recon.H.separable, w.recon.H.theory, rfl, w.recon.has_mass_gap⟩
 
 #print axioms constructive_su3_millennium_synthesis
-
+#print axioms unconditionalSU2ConstructiveBundle
 #print axioms master_unconditional_yang_mills_mass_gap
 #print axioms yang_mills_existence_and_mass_gap
 #print axioms yang_mills_sun_mass_gap

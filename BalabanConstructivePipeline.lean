@@ -27,6 +27,7 @@ import ToposConstructiveRG
 import RGCrossoverCertificate
 import HaarWilsonLattice
 import OsterwalderSchraderReconstruction
+import HypercubicPolymerCounting
 import BalabanPRT1
 import BalabanPRT2
 import BalabanREG
@@ -1529,6 +1530,247 @@ theorem pureHaarWilsonLattice_wilsonMeasure_bridge
     wilsonPartitionFunction_pos G B S_W hS_cont,
     wilsonLatticeSchwingerFunction_zero_unconditional G B S_W hS_cont obs0⟩
 
+/-- **Concrete Single-Plaquette Wilson Action Density on Bond-Indexed Configurations `Fin B → G`**:
+    `s_p(U) = 1 - χ(U_{∂p})` for a spatial plaquette `p : Site3D L × Fin 3`. -/
+noncomputable def spatialPlaquetteActionOnBonds {G : Type*} [TopologicalSpace G] [Group G]
+    [IsTopologicalGroup G] [CompactSpace G] [T2Space G] [SecondCountableTopology G]
+    [MeasurableSpace G] [BorelSpace G]
+    (ch : NormalizedGaugeCharacter G) (L B : ℕ) (e : SpatialEdge L ≃ Fin B)
+    (p : Site3D L × Fin 3) (U : Fin B → G) : ℝ :=
+  1 - ch.χ (spatialPlaquetteHolonomy (fun edge => U (e edge)) p.1 p.2)
+
+theorem spatialPlaquetteActionOnBonds_continuous {G : Type*} [TopologicalSpace G] [Group G]
+    [IsTopologicalGroup G] [CompactSpace G] [T2Space G] [SecondCountableTopology G]
+    [MeasurableSpace G] [BorelSpace G]
+    (ch : NormalizedGaugeCharacter G) (L B : ℕ) (e : SpatialEdge L ≃ Fin B)
+    (p : Site3D L × Fin 3) :
+    Continuous (spatialPlaquetteActionOnBonds ch L B e p) := by
+  have h_re : Continuous (fun U : Fin B → G => (fun edge : SpatialEdge L => U (e edge))) :=
+    continuous_pi fun edge => continuous_apply (e edge)
+  exact continuous_const.sub
+    (ch.χ_continuous.comp ((spatialPlaquetteHolonomy_continuous (G := G) L p.1 p.2).comp h_re))
+
+@[simp]
+theorem spatialPlaquetteActionOnBonds_one {G : Type*} [TopologicalSpace G] [Group G]
+    [IsTopologicalGroup G] [CompactSpace G] [T2Space G] [SecondCountableTopology G]
+    [MeasurableSpace G] [BorelSpace G]
+    (ch : NormalizedGaugeCharacter G) (L B : ℕ) (e : SpatialEdge L ≃ Fin B)
+    (p : Site3D L × Fin 3) :
+    spatialPlaquetteActionOnBonds ch L B e p 1 = 0 := by
+  simp [spatialPlaquetteActionOnBonds, spatialPlaquetteHolonomy, ch.χ_one]
+
+theorem spatialPlaquetteActionOnBonds_bounds {G : Type*} [TopologicalSpace G] [Group G]
+    [IsTopologicalGroup G] [CompactSpace G] [T2Space G] [SecondCountableTopology G]
+    [MeasurableSpace G] [BorelSpace G]
+    (ch : NormalizedGaugeCharacter G) (L B : ℕ) (e : SpatialEdge L ≃ Fin B)
+    (p : Site3D L × Fin 3) (U : Fin B → G) :
+    0 ≤ spatialPlaquetteActionOnBonds ch L B e p U ∧
+    spatialPlaquetteActionOnBonds ch L B e p U ≤ 2 := by
+  unfold spatialPlaquetteActionOnBonds
+  have h_le := ch.χ_le_one (spatialPlaquetteHolonomy (fun edge => U (e edge)) p.1 p.2)
+  have h_ge := ch.neg_one_le_χ (spatialPlaquetteHolonomy (fun edge => U (e edge)) p.1 p.2)
+  constructor <;> linarith
+
+theorem spatialWilsonActionOnBonds_eq_sum {G : Type*} [TopologicalSpace G] [Group G]
+    [IsTopologicalGroup G] [CompactSpace G] [T2Space G] [SecondCountableTopology G]
+    [MeasurableSpace G] [BorelSpace G]
+    (ch : NormalizedGaugeCharacter G) (L B : ℕ) (β : ℝ) (e : SpatialEdge L ≃ Fin B)
+    (U : Fin B → G) :
+    spatialWilsonActionOnBonds ch L B β e U =
+      β * ∑ p : Site3D L × Fin 3, spatialPlaquetteActionOnBonds ch L B e p U :=
+  rfl
+
+/-- **Bałaban Small-Field Configuration Set**:
+    `smallFieldSet B s_p ε := {U : Fin B → G | ∀ p, s_p p U ≤ ε}`. -/
+def smallFieldSet {G : Type*} {P : Type*} (B : ℕ) (s_p : P → (Fin B → G) → ℝ) (ε : ℝ) :
+    Set (Fin B → G) :=
+  {U : Fin B → G | ∀ p : P, s_p p U ≤ ε}
+
+/-- **Bałaban Large-Field Configuration Set**:
+    `largeFieldSet B s_p ε := (smallFieldSet B s_p ε)ᶜ`. -/
+def largeFieldSet {G : Type*} {P : Type*} (B : ℕ) (s_p : P → (Fin B → G) → ℝ) (ε : ℝ) :
+    Set (Fin B → G) :=
+  (smallFieldSet B s_p ε)ᶜ
+
+/-- Concrete spatial small-field configuration set for `spatialPlaquetteActionOnBonds`. -/
+noncomputable def spatialSmallFieldSet {G : Type*} [TopologicalSpace G] [Group G]
+    [IsTopologicalGroup G] [CompactSpace G] [T2Space G] [SecondCountableTopology G]
+    [MeasurableSpace G] [BorelSpace G]
+    (ch : NormalizedGaugeCharacter G) (L B : ℕ) (e : SpatialEdge L ≃ Fin B) (ε : ℝ) :
+    Set (Fin B → G) :=
+  smallFieldSet B (spatialPlaquetteActionOnBonds ch L B e) ε
+
+/-- Concrete spatial large-field configuration set for `spatialPlaquetteActionOnBonds`. -/
+noncomputable def spatialLargeFieldSet {G : Type*} [TopologicalSpace G] [Group G]
+    [IsTopologicalGroup G] [CompactSpace G] [T2Space G] [SecondCountableTopology G]
+    [MeasurableSpace G] [BorelSpace G]
+    (ch : NormalizedGaugeCharacter G) (L B : ℕ) (e : SpatialEdge L ≃ Fin B) (ε : ℝ) :
+    Set (Fin B → G) :=
+  largeFieldSet B (spatialPlaquetteActionOnBonds ch L B e) ε
+
+theorem one_mem_spatialSmallFieldSet {G : Type*} [TopologicalSpace G] [Group G]
+    [IsTopologicalGroup G] [CompactSpace G] [T2Space G] [SecondCountableTopology G]
+    [MeasurableSpace G] [BorelSpace G]
+    (ch : NormalizedGaugeCharacter G) (L B : ℕ) (e : SpatialEdge L ≃ Fin B)
+    {ε : ℝ} (hε : 0 ≤ ε) :
+    (1 : Fin B → G) ∈ spatialSmallFieldSet ch L B e ε := by
+  intro p
+  rw [spatialPlaquetteActionOnBonds_one]
+  exact hε
+
+theorem spatialWilsonActionOnBonds_bounds_on_smallFieldSet
+    {G : Type*} [TopologicalSpace G] [Group G]
+    [IsTopologicalGroup G] [CompactSpace G] [T2Space G] [SecondCountableTopology G]
+    [MeasurableSpace G] [BorelSpace G]
+    (ch : NormalizedGaugeCharacter G) (L B : ℕ) {β : ℝ} (hβ : 0 ≤ β)
+    (e : SpatialEdge L ≃ Fin B) (ε : ℝ)
+    {U : Fin B → G} (hU : U ∈ spatialSmallFieldSet ch L B e ε) :
+    0 ≤ spatialWilsonActionOnBonds ch L B β e U ∧
+    spatialWilsonActionOnBonds ch L B β e U ≤
+      β * ((Fintype.card (Site3D L × Fin 3) : ℝ) * ε) := by
+  rw [spatialWilsonActionOnBonds_eq_sum]
+  constructor
+  · exact mul_nonneg hβ (Finset.sum_nonneg fun p _ =>
+      (spatialPlaquetteActionOnBonds_bounds ch L B e p U).1)
+  · refine mul_le_mul_of_nonneg_left ?_ hβ
+    calc ∑ p : Site3D L × Fin 3, spatialPlaquetteActionOnBonds ch L B e p U
+        ≤ ∑ _ : Site3D L × Fin 3, ε := Finset.sum_le_sum fun p _ => hU p
+      _ = (Fintype.card (Site3D L × Fin 3) : ℝ) * ε := by simp
+
+theorem spatialWilsonActionOnBonds_ge_of_excited_plaquettes
+    {G : Type*} [TopologicalSpace G] [Group G]
+    [IsTopologicalGroup G] [CompactSpace G] [T2Space G] [SecondCountableTopology G]
+    [MeasurableSpace G] [BorelSpace G]
+    (ch : NormalizedGaugeCharacter G) (L B : ℕ) {β : ℝ} (hβ : 0 ≤ β)
+    (e : SpatialEdge L ≃ Fin B) (ε : ℝ)
+    (Γ : Finset (Site3D L × Fin 3)) (U : Fin B → G)
+    (h_exc : ∀ p ∈ Γ, ε ≤ spatialPlaquetteActionOnBonds ch L B e p U) :
+    β * ((Γ.card : ℝ) * ε) ≤ spatialWilsonActionOnBonds ch L B β e U := by
+  rw [spatialWilsonActionOnBonds_eq_sum]
+  refine mul_le_mul_of_nonneg_left ?_ hβ
+  have h_sub : Γ ⊆ Finset.univ := Finset.subset_univ Γ
+  calc (Γ.card : ℝ) * ε
+      = ∑ _ ∈ Γ, ε := by simp
+    _ ≤ ∑ p ∈ Γ, spatialPlaquetteActionOnBonds ch L B e p U :=
+        Finset.sum_le_sum h_exc
+    _ ≤ ∑ p ∈ Finset.univ, spatialPlaquetteActionOnBonds ch L B e p U :=
+        Finset.sum_le_sum_of_subset_of_nonneg h_sub fun p _ _ =>
+          (spatialPlaquetteActionOnBonds_bounds ch L B e p U).1
+
+theorem isClosed_smallFieldSet {G : Type*} [TopologicalSpace G] {P : Type*}
+    (B : ℕ) (s_p : P → (Fin B → G) → ℝ) (ε : ℝ)
+    (hs : ∀ p : P, Continuous (s_p p)) :
+    IsClosed (smallFieldSet B s_p ε) := by
+  unfold smallFieldSet
+  simpa only [Set.ofPred_forall] using isClosed_iInter fun p => isClosed_le (hs p) continuous_const
+
+theorem isOpen_largeFieldSet {G : Type*} [TopologicalSpace G] {P : Type*}
+    (B : ℕ) (s_p : P → (Fin B → G) → ℝ) (ε : ℝ)
+    (hs : ∀ p : P, Continuous (s_p p)) :
+    IsOpen (largeFieldSet B s_p ε) :=
+  (isClosed_smallFieldSet B s_p ε hs).isOpen_compl
+
+theorem measurableSet_smallFieldSet (G : Type*) [TopologicalSpace G] [SecondCountableTopology G]
+    [MeasurableSpace G] [BorelSpace G] {P : Type*}
+    (B : ℕ) (s_p : P → (Fin B → G) → ℝ) (ε : ℝ)
+    (hs : ∀ p : P, Continuous (s_p p)) :
+    MeasurableSet (smallFieldSet B s_p ε) :=
+  (isClosed_smallFieldSet B s_p ε hs).measurableSet
+
+theorem measurableSet_largeFieldSet (G : Type*) [TopologicalSpace G] [SecondCountableTopology G]
+    [MeasurableSpace G] [BorelSpace G] {P : Type*}
+    (B : ℕ) (s_p : P → (Fin B → G) → ℝ) (ε : ℝ)
+    (hs : ∀ p : P, Continuous (s_p p)) :
+    MeasurableSet (largeFieldSet B s_p ε) :=
+  (isOpen_largeFieldSet B s_p ε hs).measurableSet
+
+/-- **Measurable Small-Field / Large-Field Decomposition of the Haar Path Integral**:
+    For any continuous plaquette action densities `s_p : P → (Fin B → G) → ℝ` and any
+    integrable observable `F : (Fin B → G) → ℂ`, the expectation under
+    `wilsonLatticeFunctionalMeasure G B S_W Z` decomposes additively into its
+    small-field and large-field set integrals. -/
+theorem wilsonLatticeFunctionalMeasure_integral_small_large_decomp
+    (G : Type*) [TopologicalSpace G] [Group G]
+    [IsTopologicalGroup G] [CompactSpace G] [T2Space G] [SecondCountableTopology G]
+    [MeasurableSpace G] [BorelSpace G] {P : Type*}
+    (B : ℕ) (S_W : (Fin B → G) → ℝ) (Z : ℝ)
+    (s_p : P → (Fin B → G) → ℝ) (ε : ℝ)
+    (hs : ∀ p : P, Continuous (s_p p))
+    (F : (Fin B → G) → ℂ)
+    (hF : Integrable F (wilsonLatticeFunctionalMeasure G B S_W Z)) :
+    ∫ U, F U ∂(wilsonLatticeFunctionalMeasure G B S_W Z) =
+      (∫ U in smallFieldSet B s_p ε, F U ∂(wilsonLatticeFunctionalMeasure G B S_W Z)) +
+      (∫ U in largeFieldSet B s_p ε, F U ∂(wilsonLatticeFunctionalMeasure G B S_W Z)) :=
+  (MeasureTheory.integral_add_compl (measurableSet_smallFieldSet G B s_p ε hs) hF).symm
+
+/-- **Measurable Small-Field / Large-Field Decomposition of `wilsonLatticeSchwingerFunction`**: -/
+theorem wilsonLatticeSchwingerFunction_small_large_decomp
+    (G : Type*) [TopologicalSpace G] [Group G]
+    [IsTopologicalGroup G] [CompactSpace G] [T2Space G] [SecondCountableTopology G]
+    [MeasurableSpace G] [BorelSpace G] {P : Type*}
+    (B : ℕ) (S_W : (Fin B → G) → ℝ) (Z : ℝ)
+    (s_p : P → (Fin B → G) → ℝ) (ε : ℝ)
+    (hs : ∀ p : P, Continuous (s_p p))
+    (n : ℕ) (obs : Fin n → ((Fin B → G) → ℂ))
+    (h_int : Integrable (fun U => ∏ i : Fin n, obs i U) (wilsonLatticeFunctionalMeasure G B S_W Z)) :
+    wilsonLatticeSchwingerFunction G B S_W Z n obs =
+      (∫ U in smallFieldSet B s_p ε, (∏ i : Fin n, obs i U) ∂(wilsonLatticeFunctionalMeasure G B S_W Z)) +
+      (∫ U in largeFieldSet B s_p ε, (∏ i : Fin n, obs i U) ∂(wilsonLatticeFunctionalMeasure G B S_W Z)) :=
+  wilsonLatticeFunctionalMeasure_integral_small_large_decomp G B S_W Z s_p ε hs
+    (fun U => ∏ i : Fin n, obs i U) h_int
+
+/-- **Large-Field Peierls Exponential Suppression on the Haar Measure**:
+    On any measurable large-field excitation event `E_γ ⊆ (Fin B → G)` where the total Wilson action
+    satisfies `∀ U ∈ E_γ, S_min + β * (γ.card : ℝ) ≤ S_W U` for a non-empty closed 2-cycle
+    `γ : Finset Z4Plaquette` (`IsClosed2Cycle γ`) at coupling `β ≥ 5/2`, the Haar-measure
+    Boltzmann weight integral satisfies the explicit Peierls–Klarner bound:
+    `∫ U in E_γ, Real.exp (- S_W U) ∂(wilsonLatticeHaarMeasure G B) ≤ Real.exp (- S_min) * Real.exp (- 10)`
+    and `< Real.exp (- S_min) * (1 / 2401)`. -/
+theorem wilsonLatticeHaarMeasure_largeField_peierls_suppression
+    (G : Type*) [TopologicalSpace G] [Group G]
+    [IsTopologicalGroup G] [CompactSpace G] [T2Space G] [MeasurableSpace G] [BorelSpace G]
+    (B : ℕ) (S_W : (Fin B → G) → ℝ) (S_min β : ℝ)
+    (γ : Finset YangMills.HypercubicPolymerCounting.Z4Plaquette)
+    (hne : γ.Nonempty) (hclosed : YangMills.HypercubicPolymerCounting.IsClosed2Cycle γ)
+    (hβ : (5 / 2 : ℝ) ≤ β)
+    (E_γ : Set (Fin B → G)) (hE_meas : MeasurableSet E_γ)
+    (h_action : ∀ U ∈ E_γ, S_min + β * (γ.card : ℝ) ≤ S_W U) :
+    (∫ U in E_γ, Real.exp (- S_W U) ∂(wilsonLatticeHaarMeasure G B)) ≤
+      Real.exp (- S_min) * Real.exp (- 10) ∧
+    Real.exp (- S_min) * Real.exp (- 10) < Real.exp (- S_min) * (1 / 2401) ∧
+    (∫ U in E_γ, Real.exp (- S_W U) ∂(wilsonLatticeHaarMeasure G B)) <
+      Real.exp (- S_min) * (1 / 2401) := by
+  have h_peierls := YangMills.HypercubicPolymerCounting.closed_2cycle_wilson_peierls_dominates_klarner
+    hne hclosed hβ
+  have h_klarner := YangMills.HypercubicPolymerCounting.exp_neg_ten_lt_inv_2401
+  have h_strict : Real.exp (- S_min) * Real.exp (- 10) < Real.exp (- S_min) * (1 / 2401) :=
+    mul_lt_mul_of_pos_left h_klarner (Real.exp_pos (- S_min))
+  have h_le : (∫ U in E_γ, Real.exp (- S_W U) ∂(wilsonLatticeHaarMeasure G B)) ≤
+      Real.exp (- S_min) * Real.exp (- 10) := by
+    by_cases h_int : IntegrableOn (fun U => Real.exp (- S_W U)) E_γ (wilsonLatticeHaarMeasure G B)
+    · let C : ℝ := Real.exp (- S_min) * Real.exp (- β * (γ.card : ℝ))
+      have hC_nonneg : 0 ≤ C := by positivity
+      have h_pt : ∀ U ∈ E_γ, Real.exp (- S_W U) ≤ C := fun U hU => by
+        dsimp [C]
+        rw [← Real.exp_add]
+        apply Real.exp_le_exp.mpr
+        have hU_le := h_action U hU
+        linarith
+      have h_const_int : IntegrableOn (fun _ : Fin B → G => C) E_γ (wilsonLatticeHaarMeasure G B) :=
+        (MeasureTheory.integrable_const C).integrableOn
+      have h_mono := MeasureTheory.setIntegral_mono_on h_int h_const_int hE_meas h_pt
+      have h_set_le : (∫ _ in E_γ, C ∂(wilsonLatticeHaarMeasure G B)) ≤
+          ∫ _ : Fin B → G, C ∂(wilsonLatticeHaarMeasure G B) :=
+        MeasureTheory.setIntegral_le_integral (MeasureTheory.integrable_const C)
+          (Filter.Eventually.of_forall fun _ => hC_nonneg)
+      have h_univ : (∫ _ : Fin B → G, C ∂(wilsonLatticeHaarMeasure G B)) = C := by simp
+      have hC_le : C ≤ Real.exp (- S_min) * Real.exp (- 10) :=
+        mul_le_mul_of_nonneg_left h_peierls.1.le (Real.exp_pos (- S_min)).le
+      linarith
+    · rw [MeasureTheory.integral_undef h_int]
+      positivity
+  exact ⟨h_le, h_strict, lt_of_le_of_lt h_le h_strict⟩
+
 /-- Pointwise n-point Schwinger correlation functions on non-coincident configurations -/
 def stdSchwinger {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
     (Curv : CurvaturePolynomialAlgebra G) (n : ℕ)
@@ -1908,6 +2150,19 @@ theorem balaban_master_continuum_yang_mills_mass_gap.{u_G, u_L, u_H}
 #print axioms wilsonLatticeHaarMeasure_split_reflection_positivity
 #print axioms spatialHaar_measurePreserving_wilsonLatticeHaarMeasure
 #print axioms pureHaarWilsonLattice_wilsonMeasure_bridge
+#print axioms isClosed_smallFieldSet
+#print axioms isOpen_largeFieldSet
+#print axioms measurableSet_smallFieldSet
+#print axioms measurableSet_largeFieldSet
+#print axioms spatialPlaquetteActionOnBonds_continuous
+#print axioms spatialPlaquetteActionOnBonds_one
+#print axioms spatialPlaquetteActionOnBonds_bounds
+#print axioms one_mem_spatialSmallFieldSet
+#print axioms spatialWilsonActionOnBonds_bounds_on_smallFieldSet
+#print axioms spatialWilsonActionOnBonds_ge_of_excited_plaquettes
+#print axioms wilsonLatticeFunctionalMeasure_integral_small_large_decomp
+#print axioms wilsonLatticeSchwingerFunction_small_large_decomp
+#print axioms wilsonLatticeHaarMeasure_largeField_peierls_suppression
 #print axioms balaban_constructive_pipeline_yields_os0
 #print axioms balaban_constructive_pipeline_yields_e0_double_and_single_prime
 #print axioms balaban_constructive_pipeline_discharges_c3

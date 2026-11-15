@@ -997,8 +997,11 @@ private lemma su2_conj_diag (h : SU2) :
     fin_cases i <;> fin_cases j <;> simp [su2OfPair, hα', hβ', lam, c, s]
 
 
-private lemma su2_isConnected : IsConnected (Set.univ : Set SU2) :=
+theorem su2_isConnected : IsConnected (Set.univ : Set SU2) :=
   IsPathConnected.isConnected ⟨1, Set.mem_univ 1, fun h _ => joinedIn_univ.mpr (su2_joined_one h)⟩
+
+theorem su2_is_connected : IsConnected (Set.univ : Set SU2) :=
+  su2_isConnected
 
 private lemma su2_normal_subgroups_central (N2 : Subgroup SU2) (hN2 : N2.Normal)
     (h_ex : ∃ h ∈ N2, h ≠ 1 ∧ h ≠ su2OfPair (-1) 0 (by simp)) : N2 = ⊤ := by
@@ -1715,6 +1718,97 @@ theorem su3_normal_subgroups_central :
   · refine Or.inr ⟨h_le, @Finite.of_injective N (Subgroup.center SU3) su3_finite_center
       (fun x => ⟨x.1, h_le x.2⟩) (fun a b h => Subtype.ext (by simpa using congrArg Subtype.val h))⟩
 
+/-- Compactness of `SU(2)` as a closed bounded subset of `Matrix (Fin 2) (Fin 2) ℂ`. -/
+theorem su2_is_compact : IsCompact (Set.univ : Set SU2) := by
+  let B : Set (Matrix (Fin 2) (Fin 2) ℂ) :=
+    Set.pi Set.univ fun _ => Set.pi Set.univ fun _ => Metric.closedBall (0 : ℂ) 1
+  have hB : IsCompact B :=
+    isCompact_univ_pi fun _ => isCompact_univ_pi fun _ => isCompact_closedBall (0 : ℂ) 1
+  let S : Set (Matrix (Fin 2) (Fin 2) ℂ) := {M | M ∈ Matrix.specialUnitaryGroup (Fin 2) ℂ}
+  have h_star_cont : Continuous (star : Matrix (Fin 2) (Fin 2) ℂ → Matrix (Fin 2) (Fin 2) ℂ) := by
+    let starL : Matrix (Fin 2) (Fin 2) ℂ →ₗ[ℝ] Matrix (Fin 2) (Fin 2) ℂ :=
+      { toFun := star
+        map_add' := star_add
+        map_smul' := fun c X => by simp }
+    exact starL.continuous_of_finiteDimensional
+  have hS_closed : IsClosed S := by
+    have h_eq : S = {M : Matrix (Fin 2) (Fin 2) ℂ | star M * M = 1} ∩
+        {M : Matrix (Fin 2) (Fin 2) ℂ | Matrix.det M = 1} := by
+      ext M; simp [S, Matrix.mem_specialUnitaryGroup_iff, Matrix.mem_unitaryGroup_iff']
+    rw [h_eq]
+    refine IsClosed.inter (isClosed_eq (h_star_cont.mul continuous_id) continuous_const) ?_
+    have h_det_cont : Continuous (fun M : Matrix (Fin 2) (Fin 2) ℂ => Matrix.det M) := by
+      simp only [Matrix.det_fin_two]
+      have h_entry : ∀ i j : Fin 2, Continuous (fun M : Matrix (Fin 2) (Fin 2) ℂ => M i j) :=
+        fun i j => (continuous_apply j).comp (continuous_apply i)
+      fun_prop
+    exact isClosed_eq h_det_cont continuous_const
+  have hSB : S ⊆ B := by
+    intro M hM i _ j _
+    have hU : M * star M = 1 :=
+      Matrix.mem_unitaryGroup_iff.mp (Matrix.mem_specialUnitaryGroup_iff.mp hM).1
+    have hii := congrArg (fun N : Matrix (Fin 2) (Fin 2) ℂ => (N i i).re) hU
+    simp only [Matrix.mul_apply, Matrix.star_apply, Matrix.one_apply, ↓reduceIte, Complex.one_re,
+      Fin.sum_univ_two] at hii
+    have hsum : ∑ k : Fin 2, ‖M i k‖ ^ 2 = 1 := by
+      have hsq : ∀ k : Fin 2, (M i k * star (M i k)).re = ‖M i k‖ ^ 2 := fun k => by
+        rw [Complex.sq_norm, Complex.normSq_apply]; simp [Complex.mul_re]
+      simp only [Fin.sum_univ_two, Complex.add_re] at hii
+      simp only [Fin.sum_univ_two]
+      rw [← hsq 0, ← hsq 1]
+      exact hii
+    have hle : ‖M i j‖ ^ 2 ≤ 1 := by
+      simp only [Fin.sum_univ_two] at hsum
+      fin_cases j <;> dsimp <;> nlinarith [sq_nonneg ‖M i 0‖, sq_nonneg ‖M i 1‖]
+    have hnorm : ‖M i j‖ ≤ 1 := by
+      nlinarith [norm_nonneg (M i j)]
+    exact mem_closedBall_zero_iff.mpr hnorm
+  have hS_compact : IsCompact S := hB.of_isClosed_subset hS_closed hSB
+  have h_img : Subtype.val '' (Set.univ : Set SU2) = S := by
+    ext M; simp [S]
+  exact Topology.IsEmbedding.subtypeVal.isCompact_iff.mpr (by rw [h_img]; exact hS_compact)
+
+private lemma su2_neg1_mem_center : su2OfPair (-1) 0 (by simp) ∈ Subgroup.center SU2 := by
+  rw [Subgroup.mem_center_iff]
+  intro u
+  apply Subtype.ext; ext i j
+  fin_cases i <;> fin_cases j <;>
+    simp [su2OfPair, Matrix.mul_apply, Fin.sum_univ_two] <;> ring
+
+private lemma su2_center_eq_one_or_neg1 (h : SU2) (hh : h ∈ Subgroup.center SU2) :
+    h = 1 ∨ h = su2OfPair (-1) 0 (by simp) := by
+  by_contra h_not
+  push_neg at h_not
+  have h_top : Subgroup.center SU2 = ⊤ :=
+    su2_normal_subgroups_central (Subgroup.center SU2) inferInstance ⟨h, hh, h_not.1, h_not.2⟩
+  obtain ⟨g1, g2, hne⟩ := su2_is_nonabelian
+  have hg1 : g1 ∈ Subgroup.center SU2 := h_top ▸ Subgroup.mem_top g1
+  exact hne ((Subgroup.mem_center_iff.mp hg1 g2).symm)
+
+/-- Finiteness of the discrete center `Subgroup.center SU2` (`{±I}`). -/
+theorem su2_finite_center : Finite (Subgroup.center SU2) := by
+  let S : Finset SU2 := {1, su2OfPair (-1) 0 (by simp)}
+  have hS_fin : Finite (S : Set SU2) := (Finset.finite_toSet S).to_subtype
+  refine @Finite.of_injective (Subgroup.center SU2) (S : Set SU2) hS_fin
+    (fun x => ⟨x.1, ?_⟩) (fun a b h => Subtype.ext (by simpa using congrArg Subtype.val h))
+  rw [Finset.mem_coe, Finset.mem_insert, Finset.mem_singleton]
+  exact su2_center_eq_one_or_neg1 x.1 x.2
+
+/-- Full PR 7636 simplicity up to the finite discrete center for `SU(2)`. -/
+theorem su2_normal_subgroups_central_full :
+    ∀ (N : Subgroup SU2), N.Normal → N = ⊤ ∨ (N ≤ Subgroup.center SU2 ∧ Finite N) := by
+  intro N hN
+  by_cases h_ex : ∃ h ∈ N, h ≠ 1 ∧ h ≠ su2OfPair (-1) 0 (by simp)
+  · exact Or.inl (su2_normal_subgroups_central N hN h_ex)
+  · push_neg at h_ex
+    have h_le : N ≤ Subgroup.center SU2 := by
+      intro h hh
+      by_cases h1 : h = 1
+      · rw [h1]; exact Subgroup.one_mem _
+      · rw [h_ex h hh h1]; exact su2_neg1_mem_center
+    refine Or.inr ⟨h_le, @Finite.of_injective N (Subgroup.center SU2) su2_finite_center
+      (fun x => ⟨x.1, h_le x.2⟩) (fun a b h => Subtype.ext (by simpa using congrArg Subtype.val h))⟩
+
 /-! ============================================================================
     PART VIII: UNIVERSAL COMPACT SIMPLE GAUGE BUNDLE EXTENSIONS
     ============================================================================ -/
@@ -1780,5 +1874,9 @@ theorem universal_compact_simple_gauge_extension (t : CompactSimpleLieType) :
 #print axioms sun3_normal_subgroups_central
 #print axioms sun2_is_connected
 #print axioms sun3_is_connected
+#print axioms su2_is_connected
+#print axioms su2_is_compact
+#print axioms su2_finite_center
+#print axioms su2_normal_subgroups_central_full
 
 end YangMills.LieGroups
