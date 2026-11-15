@@ -1384,6 +1384,77 @@ def directChannelOPEWitness_of_rg_ope_expansion
     h_gap
     h_rg_rem
 
+/-! ============================================================================
+    PART VIII: HILBERT-SPACE & GNS SPECTRAL PROJECTION BRIDGE FOR THE 4-POINT OPE
+    ============================================================================ -/
+
+/-- **Single-Channel Cauchy–Schwarz Spectral Projection Lower Bound**:
+    In any complex inner product space `ℋ`, for any normalized intermediate channel state
+    `ψ₁ : ℋ` (`‖ψ₁‖ = 1`) and any vector `Φ : ℋ`, the norm-squared `‖Φ‖ ^ 2` is bounded
+    below by the squared modulus of the single-channel transition amplitude `‖inner ℂ ψ₁ Φ‖ ^ 2`. -/
+theorem hilbert_cauchy_schwarz_channel_lower_bound
+    {ℋ : Type*} [NormedAddCommGroup ℋ] [InnerProductSpace ℂ ℋ]
+    (ψ₁ Φ : ℋ) (h_unit : ‖ψ₁‖ = 1) :
+    ‖inner ℂ ψ₁ Φ‖ ^ 2 ≤ ‖Φ‖ ^ 2 := by
+  have h_cs : ‖inner ℂ ψ₁ Φ‖ ≤ ‖ψ₁‖ * ‖Φ‖ := norm_inner_le_norm ψ₁ Φ
+  rw [h_unit, one_mul] at h_cs
+  exact pow_le_pow_left₀ (norm_nonneg _) h_cs 2
+
+/-- **GNS Completed Hilbert Space Semigroup Channel Projection Bound**:
+    On `GNSCompletedHilbert os`, for any normalized state `ψ₁` (`‖ψ₁‖ = 1`) orthogonal to
+    `gnsCompletedVacuum os` and any subtracted glueball pair vector `Ψ : GNSCompletedHilbert os`,
+    the Euclidean semigroup-evolved norm-squared `‖gnsCompletedSemigroup os r hr Ψ‖ ^ 2`
+    is bounded below by `‖inner ℂ ψ₁ (gnsCompletedSemigroup os r hr Ψ)‖ ^ 2`. -/
+theorem gnsCompleted_semigroup_channel_projection_bound
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (ψ₁ Ψ : GNSCompletedHilbert os)
+    (h_unit : ‖ψ₁‖ = 1)
+    (_h_ortho : inner ℂ (gnsCompletedVacuum os) ψ₁ = 0)
+    (r : ℝ) (hr : 0 ≤ r) :
+    ‖inner ℂ ψ₁ (gnsCompletedSemigroup os r hr Ψ)‖ ^ 2 ≤
+      ‖gnsCompletedSemigroup os r hr Ψ‖ ^ 2 :=
+  hilbert_cauchy_schwarz_channel_lower_bound ψ₁ (gnsCompletedSemigroup os r hr Ψ) h_unit
+
+/-- **Direct-Channel OPE Witness Constructor via Hilbert-Space Spectral Projection**:
+    Constructs `DirectChannelOPEWitness os (glueballOps4 Curv) R` from a normalized
+    1-glueball state `ψ₁ : ℋ` (`‖ψ₁‖ = 1`) and time-reflected pair state `Φ : ℝ → ℋ`
+    via Cauchy–Schwarz (`hilbert_cauchy_schwarz_channel_lower_bound`), without requiring a
+    direct 4-point Haar integral estimate. -/
+def directChannelOPEWitness_of_spectral_projection
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    {ℋ : Type*} [NormedAddCommGroup ℋ] [InnerProductSpace ℂ ℋ]
+    (R : ℝ)
+    (ope : YangMills.OPE.OperatorProductExpansion
+      YangMills.OPE.actionDensityOp YangMills.OPE.actionDensityOp 5)
+    (h_mem : YangMills.OPE.actionDensityOp ∈ ope.intermediateOps)
+    (deltaRem : ℝ) (h_gap : deltaRem < 4)
+    (ψ₁ : ℋ) (Φ : ℝ → ℋ) (h_unit : ‖ψ₁‖ = 1)
+    (h_os2_reflection_norm : ∀ (scale : ℝ), 0 < scale → scale < R / 2 →
+      ‖Φ scale‖ ^ 2 ≤
+        ‖os.schwinger 4 (glueballOps4 Curv)
+            ![scale • unitTimeVec, 0, (R + scale) • unitTimeVec, R • unitTimeVec] -
+          os.schwinger 2 ![glueballOp Curv, glueballOp Curv] ![scale • unitTimeVec, 0] *
+          os.schwinger 2 ![glueballOp Curv, glueballOp Curv]
+            ![(R + scale) • unitTimeVec, R • unitTimeVec]‖)
+    (h_trilinear_uv_overlap : ∀ (scale : ℝ), 0 < scale → scale < R / 2 →
+      (ope.coeff YangMills.OPE.actionDensityOp h_mem).amplitude * scale ^ (-(4 : ℝ)) -
+        ope.remainderBound * scale ^ (-deltaRem) ≤
+        ‖inner ℂ ψ₁ (Φ scale)‖ ^ 2) :
+    DirectChannelOPEWitness os (glueballOps4 Curv) R :=
+  directChannelOPEWitness_of_rg_ope_expansion os R ope h_mem deltaRem h_gap
+    (fun scale hscale hscale_small =>
+      ((h_trilinear_uv_overlap scale hscale hscale_small).trans
+        (hilbert_cauchy_schwarz_channel_lower_bound ψ₁ (Φ scale) h_unit)).trans
+        (h_os2_reflection_norm scale hscale hscale_small))
+
+#print axioms hilbert_cauchy_schwarz_channel_lower_bound
+#print axioms gnsCompleted_semigroup_channel_projection_bound
+#print axioms directChannelOPEWitness_of_spectral_projection
+
 #print axioms epstein_glaser_kernel_desingularization
 #print axioms epstein_glaser_integrand_desingularized
 #print axioms epstein_glaser_disjoint_supports_invariance

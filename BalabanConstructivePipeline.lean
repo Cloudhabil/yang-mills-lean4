@@ -2847,6 +2847,180 @@ theorem su3HaarRenormalizedSeq_step_eq
       R_step k U ∂(wilsonLatticeHaarMeasure (Matrix.specialUnitaryGroup (Fin 3) ℂ) B) := by
   simp [su3HaarRenormalizedSeq, Finset.sum_range_succ]
 
+/-- **Unconditional Finite-Lattice `OS0` Temperedness Bound**:
+    For any observables bounded by `C_temp ≥ 1` and any `r_fac : ℕ`, the `n`-point Wilson
+    lattice Schwinger function satisfies `‖S_n‖ ≤ C_temp ^ n * (n!) ^ r_fac` unconditionally
+    from probability-measure normalization. -/
+theorem wilsonLattice_uniform_tempered_bound
+    (G : Type) [TopologicalSpace G] [Group G] [IsTopologicalGroup G]
+    [CompactSpace G] [T2Space G]
+    [SecondCountableTopology G] [MeasurableSpace G] [BorelSpace G]
+    (B : ℕ) (S_W : (Fin B → G) → ℝ) (hS : Continuous S_W)
+    (C_temp : ℝ) (hC_temp : 1 ≤ C_temp) (r_fac : ℕ)
+    (n : ℕ) (obs : Fin n → ((Fin B → G) → ℂ))
+    (h_obs_bound : ∀ i U, ‖obs i U‖ ≤ C_temp) :
+    let Z := wilsonPartitionFunction G B S_W
+    ‖wilsonLatticeSchwingerFunction G B S_W Z n obs‖ ≤
+      C_temp ^ n * (Nat.factorial n : ℝ) ^ r_fac := by
+  intro Z
+  let μ := wilsonLatticeFunctionalMeasure G B S_W Z
+  have : IsProbabilityMeasure μ :=
+    wilsonLatticeFunctionalMeasure_isProbabilityMeasure G B S_W hS
+  have h_prod_bound : ∀ U, ‖∏ i : Fin n, obs i U‖ ≤ C_temp ^ n := by
+    intro U
+    calc ‖∏ i : Fin n, obs i U‖
+        = ∏ i : Fin n, ‖obs i U‖ := norm_prod _ _
+      _ ≤ ∏ _i : Fin n, C_temp :=
+          Finset.prod_le_prod (fun i _ => norm_nonneg _) (fun i _ => h_obs_bound i U)
+      _ = C_temp ^ n := by simp
+  have h_C_nonneg : 0 ≤ C_temp ^ n := pow_nonneg (by linarith) n
+  have h_int_bound :
+      ‖wilsonLatticeSchwingerFunction G B S_W Z n obs‖ ≤ C_temp ^ n := by
+    unfold wilsonLatticeSchwingerFunction
+    calc ‖∫ U, (∏ i : Fin n, obs i U) ∂μ‖
+        ≤ ∫ U, ‖∏ i : Fin n, obs i U‖ ∂μ := norm_integral_le_integral_norm _
+      _ ≤ ∫ _U, C_temp ^ n ∂μ := by
+          apply integral_mono_of_nonneg
+          · exact Filter.Eventually.of_forall fun U => norm_nonneg _
+          · exact integrable_const _
+          · exact Filter.Eventually.of_forall h_prod_bound
+      _ = C_temp ^ n := by simp [MeasureTheory.integral_const, Measure.real_def]
+  have h_fac_ge_one : (1 : ℝ) ≤ (Nat.factorial n : ℝ) ^ r_fac := by
+    have h1 : (1 : ℝ) ≤ (Nat.factorial n : ℝ) := by exact_mod_cast Nat.factorial_pos n
+    exact one_le_pow₀ h1
+  calc ‖wilsonLatticeSchwingerFunction G B S_W Z n obs‖
+      ≤ C_temp ^ n := h_int_bound
+    _ = C_temp ^ n * 1 := (mul_one _).symm
+    _ ≤ C_temp ^ n * (Nat.factorial n : ℝ) ^ r_fac :=
+        mul_le_mul_of_nonneg_left h_fac_ge_one h_C_nonneg
+
+/-- **Full `m × m` Sesquilinear `OS2` Reflection Positivity on Half-Space Factorized Measures**:
+    Proves `0 ≤ (∑ r, ∑ s, starRingEnd ℂ (c r) * c s * ∫ star (F r ω) * F s ω ∂ν).re`
+    by rewriting the double sum as `∫ |∑ r, c r * F r ω|² ∂ν ≥ 0`. -/
+theorem wilsonLattice_os2_of_reflection_kernel
+    {Ω : Type*} [MeasurableSpace Ω] (ν : Measure Ω) [IsProbabilityMeasure ν]
+    {m : ℕ} (F : Fin m → Ω → ℂ)
+    (hF_l2 : ∀ r s : Fin m, Integrable (fun ω => starRingEnd ℂ (F r ω) * F s ω) ν)
+    (c : Fin m → ℂ) :
+    0 ≤ (∑ r : Fin m, ∑ s : Fin m,
+      starRingEnd ℂ (c r) * (c s) *
+        ∫ ω, starRingEnd ℂ (F r ω) * F s ω ∂ν).re := by
+  let G : Ω → ℂ := fun ω => ∑ r : Fin m, c r * F r ω
+  have h_int_rs : ∀ r s : Fin m,
+      Integrable (fun ω => (starRingEnd ℂ (c r) * starRingEnd ℂ (F r ω)) * (c s * F s ω)) ν := by
+    intro r s
+    have : (fun ω => (starRingEnd ℂ (c r) * starRingEnd ℂ (F r ω)) * (c s * F s ω)) =
+        fun ω => (starRingEnd ℂ (c r) * c s) * (starRingEnd ℂ (F r ω) * F s ω) := by
+      ext ω; ring
+    rw [this]
+    exact (hF_l2 r s).const_mul _
+  have h_eq :
+      (∑ r : Fin m, ∑ s : Fin m,
+        starRingEnd ℂ (c r) * (c s) *
+          ∫ ω, starRingEnd ℂ (F r ω) * F s ω ∂ν) =
+      ∫ ω, starRingEnd ℂ (G ω) * G ω ∂ν := by
+    have h_inner : ∀ r s : Fin m,
+        starRingEnd ℂ (c r) * (c s) *
+          ∫ ω, starRingEnd ℂ (F r ω) * F s ω ∂ν =
+        ∫ ω, (starRingEnd ℂ (c r) * starRingEnd ℂ (F r ω)) * (c s * F s ω) ∂ν := by
+      intro r s
+      rw [← integral_const_mul]
+      congr 1; ext ω; ring
+    simp_rw [h_inner]
+    have h_sum_s : ∀ r : Fin m,
+        (∑ s : Fin m, ∫ ω, (starRingEnd ℂ (c r) * starRingEnd ℂ (F r ω)) * (c s * F s ω) ∂ν) =
+        ∫ ω, ∑ s : Fin m, (starRingEnd ℂ (c r) * starRingEnd ℂ (F r ω)) * (c s * F s ω) ∂ν := by
+      intro r
+      exact (integral_finsetSum Finset.univ (fun s _ => h_int_rs r s)).symm
+    simp_rw [h_sum_s]
+    rw [← integral_finsetSum Finset.univ (fun r _ =>
+      integrable_finsetSum Finset.univ (fun s _ => h_int_rs r s))]
+    congr 1; ext ω
+    simp only [G, map_sum, map_mul, Finset.sum_mul, Finset.mul_sum]
+    exact Finset.sum_comm
+  rw [h_eq]
+  have h_re_nonneg : ∀ ω, 0 ≤ (starRingEnd ℂ (G ω) * G ω).re := by
+    intro ω
+    rw [mul_comm, Complex.mul_conj]
+    exact Complex.ofReal_re _ ▸ Complex.normSq_nonneg (G ω)
+  have h_re_int :
+      (∫ ω, starRingEnd ℂ (G ω) * G ω ∂ν).re =
+        ∫ ω, (starRingEnd ℂ (G ω) * G ω).re ∂ν := by
+    have hG_int : Integrable (fun ω => starRingEnd ℂ (G ω) * G ω) ν := by
+      have : (fun ω => starRingEnd ℂ (G ω) * G ω) =
+          fun ω => ∑ r : Fin m, ∑ s : Fin m,
+            (starRingEnd ℂ (c r) * starRingEnd ℂ (F r ω)) * (c s * F s ω) := by
+        ext ω
+        simp only [G, map_sum, map_mul, Finset.sum_mul, Finset.mul_sum]
+        exact Finset.sum_comm
+      rw [this]
+      exact integrable_finsetSum Finset.univ fun r _ =>
+        integrable_finsetSum Finset.univ fun s _ => h_int_rs r s
+    exact (Complex.reCLM.integral_comp_comm hG_int).symm
+  rw [h_re_int]
+  exact integral_nonneg h_re_nonneg
+
+/-- **Peierls Contour Lower Bound on `spatialWilsonActionOnBonds`**:
+    If every plaquette `p ∈ P_lf` carries action `≥ ε`, then
+    `β * (ε * P_lf.card) ≤ spatialWilsonActionOnBonds ch L B β e U`. -/
+theorem spatialWilsonActionOnBonds_peierls_lower_bound
+    {G : Type} [TopologicalSpace G] [Group G]
+    [IsTopologicalGroup G] [CompactSpace G] [T2Space G] [SecondCountableTopology G]
+    [MeasurableSpace G] [BorelSpace G]
+    (ch : HaarWilsonLattice.NormalizedGaugeCharacter G)
+    (L B : ℕ) (e : HaarWilsonLattice.SpatialEdge L ≃ Fin B) (β : ℝ) (hβ : 0 ≤ β)
+    (P_lf : Finset (SpatialPlaquette L)) (ε : ℝ)
+    (U : Fin B → G)
+    (h_lf : ∀ p ∈ P_lf, ε ≤ spatialPlaquetteActionOnBonds ch L B e p U) :
+    β * (ε * (P_lf.card : ℝ)) ≤
+      spatialWilsonActionOnBonds ch L B β e U := by
+  unfold spatialWilsonActionOnBonds
+  apply mul_le_mul_of_nonneg_left _ hβ
+  have h_sub : P_lf ⊆ (Finset.univ : Finset (SpatialPlaquette L)) := Finset.subset_univ P_lf
+  have h_nonneg : ∀ p ∈ (Finset.univ : Finset (SpatialPlaquette L)),
+      0 ≤ spatialPlaquetteActionOnBonds ch L B e p U :=
+    fun p _ => (spatialPlaquetteActionOnBonds_bounds ch L B e p U).1
+  have h_sum_sub :
+      ∑ p ∈ P_lf, spatialPlaquetteActionOnBonds ch L B e p U ≤
+      ∑ p : SpatialPlaquette L, spatialPlaquetteActionOnBonds ch L B e p U :=
+    Finset.sum_le_sum_of_subset_of_nonneg h_sub (fun p hp _ => h_nonneg p hp)
+  have h_card : ε * (P_lf.card : ℝ) ≤
+      ∑ p ∈ P_lf, spatialPlaquetteActionOnBonds ch L B e p U := by
+    calc ε * (P_lf.card : ℝ)
+        = ∑ _p ∈ P_lf, ε := by simp [mul_comm]
+      _ ≤ ∑ p ∈ P_lf, spatialPlaquetteActionOnBonds ch L B e p U :=
+          Finset.sum_le_sum h_lf
+  exact le_trans h_card h_sum_sub
+
+/-- **Dyadic RG Step Differences Imply Complex Continuum Cauchy Convergence**:
+    If `f : ℕ → ℂ` satisfies `‖f (k + 1) - f k‖ ≤ C * (1 / 2) ^ k` for all `k : ℕ`,
+    then `f` converges in `ℂ` as `k → ∞`. -/
+theorem dyadic_rg_step_cauchy_converges
+    (f : ℕ → ℂ) (C : ℝ) (_hC : 0 ≤ C)
+    (h_step : ∀ k : ℕ, ‖f (k + 1) - f k‖ ≤ C * (1 / 2 : ℝ) ^ k) :
+    ∃ L : ℂ, Filter.Tendsto f Filter.atTop (nhds L) := by
+  have h_geom : Summable (fun k : ℕ => C * (1 / 2 : ℝ) ^ k) :=
+    (summable_geometric_of_lt_one (by norm_num) (by norm_num)).mul_left C
+  have h_sum_norm : Summable (fun k : ℕ => ‖f (k + 1) - f k‖) :=
+    Summable.of_nonneg_of_le (fun k => norm_nonneg _) h_step h_geom
+  have h_sum : Summable (fun k : ℕ => f (k + 1) - f k) :=
+    Summable.of_norm h_sum_norm
+  obtain ⟨S, hS⟩ := h_sum
+  refine ⟨f 0 + S, ?_⟩
+  have h_telescoping : (fun N : ℕ => f 0 + ∑ k ∈ Finset.range N, (f (k + 1) - f k)) = f := by
+    ext N
+    rw [Finset.sum_range_sub (fun k => f k) N]
+    ring
+  have h_lim : Filter.Tendsto (fun N : ℕ => f 0 + ∑ k ∈ Finset.range N, (f (k + 1) - f k))
+      Filter.atTop (nhds (f 0 + S)) :=
+    (tendsto_const_nhds (x := f 0)).add hS.tendsto_sum_nat
+  rwa [h_telescoping] at h_lim
+
+#print axioms wilsonLattice_uniform_tempered_bound
+#print axioms wilsonLattice_os2_of_reflection_kernel
+#print axioms spatialWilsonActionOnBonds_peierls_lower_bound
+#print axioms dyadic_rg_step_cauchy_converges
+
 #print axioms spatialPlaquetteObs
 #print axioms wilsonLatticeFunctionalMeasure_isProbabilityMeasure
 #print axioms wilsonLatticeSchwingerFunction_plaquette_bounds

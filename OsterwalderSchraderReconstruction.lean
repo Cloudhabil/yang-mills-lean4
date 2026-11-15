@@ -2168,6 +2168,105 @@ noncomputable def os_of_haar_continuum_limit
   os4_exponential_clustering := limit_transfer_os4_exponential_clustering S_lat S_lim h_lim m_phys h_os4
   os_short_distance_asymptotic_freedom := h_uv
 
+/-- Pointwise smeared integrand `(∏ i, f i (x i)) * S_lim n ops x` on `(ℝ⁴)ⁿ`. -/
+noncomputable def canonicalSmearedIntegrand
+    {G : Type} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (S_lim : (n : ℕ) → (Fin n → ObservableLabel G Curv) → (Fin n → EuclideanSpace4) → ℂ)
+    (n : ℕ) (ops : Fin n → ObservableLabel G Curv)
+    (f : Fin n → SchwartzMap EuclideanSpace4 ℂ)
+    (x : Fin n → EuclideanSpace4) : ℂ :=
+  (∏ i : Fin n, (f i : EuclideanSpace4 → ℂ) (x i)) * S_lim n ops x
+
+/-- **Canonical Bochner-Smeared Schwinger Functional (`canonicalSmearedSchwinger`)**:
+    Integrates `canonicalSmearedIntegrand` over `Fin n → EuclideanSpace4`. -/
+noncomputable def canonicalSmearedSchwinger
+    {G : Type} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (S_lim : (n : ℕ) → (Fin n → ObservableLabel G Curv) → (Fin n → EuclideanSpace4) → ℂ)
+    (n : ℕ) (ops : Fin n → ObservableLabel G Curv)
+    (f : Fin n → SchwartzMap EuclideanSpace4 ℂ) : ℂ :=
+  ∫ x : Fin n → EuclideanSpace4, canonicalSmearedIntegrand S_lim n ops f x
+
+/-- **Unconditional Disjoint-Support Compatibility (`h_smeared_compat`)**:
+    `canonicalSmearedSchwinger` satisfies `h_smeared_compat` definitionally (`rfl`). -/
+theorem canonicalSmearedSchwinger_compat
+    {G : Type} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (S_lim : (n : ℕ) → (Fin n → ObservableLabel G Curv) → (Fin n → EuclideanSpace4) → ℂ)
+    (n : ℕ) (ops : Fin n → ObservableLabel G Curv)
+    (f : Fin n → SchwartzMap EuclideanSpace4 ℂ)
+    (_h_disj : DisjointSupports f) :
+    canonicalSmearedSchwinger S_lim n ops f =
+      ∫ x : Fin n → EuclideanSpace4,
+        (∏ i : Fin n, (f i : EuclideanSpace4 → ℂ) (x i)) * S_lim n ops x :=
+  rfl
+
+/-- **Unconditional Pointwise Multilinearity of `canonicalSmearedIntegrand`**: -/
+theorem canonicalSmearedIntegrand_linear
+    {G : Type} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (S_lim : (n : ℕ) → (Fin n → ObservableLabel G Curv) → (Fin n → EuclideanSpace4) → ℂ)
+    (n : ℕ) (ops : Fin n → ObservableLabel G Curv)
+    (i : Fin n) (c1 c2 : ℂ) (f1 f2 : SchwartzMap EuclideanSpace4 ℂ)
+    (rest : Fin n → SchwartzMap EuclideanSpace4 ℂ)
+    (x : Fin n → EuclideanSpace4) :
+    canonicalSmearedIntegrand S_lim n ops (Function.update rest i (c1 • f1 + c2 • f2)) x =
+      c1 * canonicalSmearedIntegrand S_lim n ops (Function.update rest i f1) x +
+      c2 * canonicalSmearedIntegrand S_lim n ops (Function.update rest i f2) x := by
+  unfold canonicalSmearedIntegrand
+  have h_prod :
+      ∀ (g : SchwartzMap EuclideanSpace4 ℂ),
+        (∏ j : Fin n, (Function.update rest i g j : EuclideanSpace4 → ℂ) (x j)) =
+          (g : EuclideanSpace4 → ℂ) (x i) *
+            ∏ j ∈ Finset.univ.erase i, (rest j : EuclideanSpace4 → ℂ) (x j) := by
+    intro g
+    rw [← Finset.mul_prod_erase Finset.univ
+      (fun j => (Function.update rest i g j : EuclideanSpace4 → ℂ) (x j)) (Finset.mem_univ i)]
+    rw [Function.update_self]
+    congr 1
+    apply Finset.prod_congr rfl
+    intro j hj
+    rw [Function.update_of_ne (Finset.ne_of_mem_erase hj)]
+  rw [h_prod (c1 • f1 + c2 • f2), h_prod f1, h_prod f2]
+  simp only [SchwartzMap.add_apply, SchwartzMap.smul_apply, smul_eq_mul]
+  ring
+
+/-- **Bochner Integral Multilinearity of `canonicalSmearedSchwinger` (`h_smeared_linear`)**: -/
+theorem canonicalSmearedSchwinger_linear
+    {G : Type} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (S_lim : (n : ℕ) → (Fin n → ObservableLabel G Curv) → (Fin n → EuclideanSpace4) → ℂ)
+    (h_int : ∀ (n : ℕ) (ops : Fin n → ObservableLabel G Curv)
+      (f : Fin n → SchwartzMap EuclideanSpace4 ℂ),
+      MeasureTheory.Integrable (canonicalSmearedIntegrand S_lim n ops f))
+    (n : ℕ) (ops : Fin n → ObservableLabel G Curv)
+    (i : Fin n) (c1 c2 : ℂ) (f1 f2 : SchwartzMap EuclideanSpace4 ℂ)
+    (rest : Fin n → SchwartzMap EuclideanSpace4 ℂ) :
+    canonicalSmearedSchwinger S_lim n ops (Function.update rest i (c1 • f1 + c2 • f2)) =
+      c1 * canonicalSmearedSchwinger S_lim n ops (Function.update rest i f1) +
+      c2 * canonicalSmearedSchwinger S_lim n ops (Function.update rest i f2) := by
+  unfold canonicalSmearedSchwinger
+  have h_eq :
+      (fun x => canonicalSmearedIntegrand S_lim n ops (Function.update rest i (c1 • f1 + c2 • f2)) x) =
+      (fun x =>
+        c1 * canonicalSmearedIntegrand S_lim n ops (Function.update rest i f1) x +
+        c2 * canonicalSmearedIntegrand S_lim n ops (Function.update rest i f2) x) := by
+    ext x
+    exact canonicalSmearedIntegrand_linear S_lim n ops i c1 c2 f1 f2 rest x
+  rw [h_eq]
+  have h1 : MeasureTheory.Integrable
+      (fun x => c1 * canonicalSmearedIntegrand S_lim n ops (Function.update rest i f1) x) :=
+    (h_int n ops (Function.update rest i f1)).const_mul c1
+  have h2 : MeasureTheory.Integrable
+      (fun x => c2 * canonicalSmearedIntegrand S_lim n ops (Function.update rest i f2) x) :=
+    (h_int n ops (Function.update rest i f2)).const_mul c2
+  rw [MeasureTheory.integral_add h1 h2, MeasureTheory.integral_const_mul, MeasureTheory.integral_const_mul]
+
+#print axioms canonicalSmearedSchwinger_compat
+#print axioms canonicalSmearedIntegrand_linear
+#print axioms canonicalSmearedSchwinger_linear
+
 #print axioms os_of_haar_continuum_limit
 #print axioms limit_transfer_schwinger_zero
 #print axioms limit_transfer_os0_temperedness

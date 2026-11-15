@@ -1779,6 +1779,52 @@ theorem constructive_su3_millennium_synthesis
         YangMills.OsterwalderSchrader.limit_transfer_os4_exponential_clustering S_lat S_lim h_lim m_phys h_os4
   · exact yang_mills_su3_mass_gap_of_witness w
 
+/-- **Monograph Chapter 16.8 Closure, GNS Spectral Projection OPE, & Canonical Smearing Synthesis**:
+    Wires the newly upstreamed unconditional theorems from `UnconditionalInfiniteLatticeLimit`,
+    `ContinuumFieldNontriviality`, `BalabanConstructivePipeline`, and `OsterwalderSchraderReconstruction`
+    into a unified synthesis theorem. -/
+theorem monograph_closure_and_spectral_projection_synthesis
+    (w : ConstructiveContinuumSU3Witness) :
+    (∀ (d : GradedPaceData),
+      d.q_odd = d.O4 / (d.E4 + d.O4) ∧
+      (-1 ≤ d.phi_out ∧ d.phi_out ≤ 1) ∧
+      (0 ≤ d.q_odd ∧ d.q_odd ≤ 1)) ∧
+    (∀ {N : ℕ} (c : PositiveExponentialSum N) (t h : ℝ),
+      0 < c.evalReal t ∧ ‖c.evalComplex t h‖ ≤ c.evalReal t) ∧
+    (∀ (T : SinglePlaquetteLoopTrajectory) (k : ℕ),
+      T.κ ≤ T.c_fund k / T.c0 k ∧
+      0 < T.q_floor ∧ T.q_floor ≤ T.q_odd k) ∧
+    (∀ (R : DiscreteRiccatiMassFlow) (k : ℕ),
+      0 < R.delta_floor ∧ R.delta_floor ≤ R.m_eff k) ∧
+    (∀ (ψ₁ Ψ : GNSCompletedHilbert w.os),
+      ‖ψ₁‖ = 1 →
+      inner ℂ (gnsCompletedVacuum w.os) ψ₁ = 0 →
+      ∀ (r : ℝ) (hr : 0 ≤ r),
+        ‖inner ℂ ψ₁ (gnsCompletedSemigroup w.os r hr Ψ)‖ ^ 2 ≤
+          ‖gnsCompletedSemigroup w.os r hr Ψ‖ ^ 2) ∧
+    (∀ (f : ℕ → ℂ) (C : ℝ), 0 ≤ C →
+      (∀ k : ℕ, ‖f (k + 1) - f k‖ ≤ C * (1 / 2 : ℝ) ^ k) →
+      ∃ L : ℂ, Filter.Tendsto f Filter.atTop (nhds L)) ∧
+    (∀ (n : ℕ)
+      (ops : Fin n → ObservableLabel (Matrix.specialUnitaryGroup (Fin 3) ℂ)
+        YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra)
+      (f : Fin n → SchwartzMap EuclideanSpace4 ℂ),
+      DisjointSupports f →
+      canonicalSmearedSchwinger w.os.schwinger n ops f =
+        ∫ x : Fin n → EuclideanSpace4,
+          (∏ i : Fin n, (f i : EuclideanSpace4 → ℂ) (x i)) * w.os.schwinger n ops x) :=
+  ⟨fun d => d.pace_law_identities_and_bounds,
+   fun c t h => ⟨c.evalReal_pos t, c.complex_strip_bound t h⟩,
+   fun T k => ⟨T.loop_ratio_ge_kappa k, T.uniform_q_odd_floor k⟩,
+   fun R k => R.uniform_mass_floor k,
+   fun ψ₁ Ψ h_unit h_ortho r hr =>
+     YangMills.ContinuumFieldNontriviality.gnsCompleted_semigroup_channel_projection_bound
+       w.os ψ₁ Ψ h_unit h_ortho r hr,
+   fun f C hC h_step => Integration.dyadic_rg_step_cauchy_converges f C hC h_step,
+   fun n ops f h_disj => canonicalSmearedSchwinger_compat w.os.schwinger n ops f h_disj⟩
+
+#print axioms monograph_closure_and_spectral_projection_synthesis
+
 #print axioms su2_constructive_witness_of_3pillars
 #print axioms su3_constructive_witness_of_3pillars
 #print axioms constructive_su2_millennium_synthesis

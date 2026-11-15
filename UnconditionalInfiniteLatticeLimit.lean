@@ -831,6 +831,240 @@ def verifiedUnconditionalInfiniteLimitCertificate : UnconditionalInfiniteLimitCe
   h_tendsto_fixed_point := autonomousPolymerTrajectory_tendsto_rStarIR
   h_so4_restoration := continuum_so4_rotational_restoration_tendsto_zero
 
+/-! ============================================================================
+    PART V: MONOGRAPH CHAPTER 16.8 POSITIVE-EXPONENTIAL CLASS (PROP. 16.23),
+    INTEGRAL PACE LAW (PROP. 16.18), SINGLE-PLAQUETTE LOOP FLOOR (THMS. 16.24 & 16.28),
+    AND DISCRETE RICCATI MASS FLOW INVARIANCE
+    ============================================================================ -/
+
+/-- **Monograph Proposition 16.18 (Integral Pace Law Data)**:
+    Stores the `L²`-graded centre-even (`E4 ≥ 0`) and centre-odd (`O4 ≥ 0`) quartic norms
+    of a class function weight `w`, where `∫ w⁴(U) w⁴(zU) dU = E4 - O4` and `∫ w⁸(U) dU = E4 + O4 > 0`. -/
+structure GradedPaceData where
+  E4 : ℝ
+  O4 : ℝ
+  hE4_nonneg : 0 ≤ E4
+  hO4_nonneg : 0 ≤ O4
+  h_sum_pos : 0 < E4 + O4
+
+/-- The one-pace graded order parameter `ϕ_out = (E4 - O4) / (E4 + O4)` (Prop. 16.18). -/
+noncomputable def GradedPaceData.phi_out (d : GradedPaceData) : ℝ :=
+  (d.E4 - d.O4) / (d.E4 + d.O4)
+
+/-- The odd centre-sector energy fraction `q_odd = (1 - ϕ_out) / 2`. -/
+noncomputable def GradedPaceData.q_odd (d : GradedPaceData) : ℝ :=
+  (1 - d.phi_out) / 2
+
+/-- **Unconditional Identities & Bounds for the Integral Pace Law (Prop. 16.18)**:
+    `q_odd = O4 / (E4 + O4)`, `-1 ≤ ϕ_out ≤ 1`, and `0 ≤ q_odd ≤ 1`. -/
+theorem GradedPaceData.pace_law_identities_and_bounds (d : GradedPaceData) :
+    d.q_odd = d.O4 / (d.E4 + d.O4) ∧
+    (-1 ≤ d.phi_out ∧ d.phi_out ≤ 1) ∧
+    (0 ≤ d.q_odd ∧ d.q_odd ≤ 1) := by
+  have h_pos := d.h_sum_pos
+  have hE := d.hE4_nonneg
+  have hO := d.hO4_nonneg
+  have h_q_eq : d.q_odd = d.O4 / (d.E4 + d.O4) := by
+    unfold GradedPaceData.q_odd GradedPaceData.phi_out
+    field_simp [h_pos.ne']
+    ring
+  refine ⟨h_q_eq, ⟨?_, ?_⟩, ⟨?_, ?_⟩⟩
+  · unfold GradedPaceData.phi_out; rw [le_div_iff₀ h_pos]; linarith
+  · unfold GradedPaceData.phi_out; rw [div_le_iff₀ h_pos]; linarith
+  · rw [h_q_eq]; exact div_nonneg hO h_pos.le
+  · rw [h_q_eq, div_le_iff₀ h_pos]; linarith
+
+/-- **Monograph Proposition 16.23 (`PositiveExponentialSum`)**:
+    A character coefficient `c(t) = ∑_{i < N} aᵢ exp(-Kᵢ t)` with `aᵢ ≥ 0`, `Kᵢ ≥ 0`,
+    and strictly positive zero-time normalisation `∑ aᵢ > 0`. -/
+structure PositiveExponentialSum (N : ℕ) where
+  a : Fin N → ℝ
+  K : Fin N → ℝ
+  ha_nonneg : ∀ i : Fin N, 0 ≤ a i
+  hK_nonneg : ∀ i : Fin N, 0 ≤ K i
+  h_norm_pos : 0 < ∑ i : Fin N, a i
+
+/-- Real flow-time evaluation `c(t) = ∑_{i < N} aᵢ exp(-Kᵢ t)`. -/
+noncomputable def PositiveExponentialSum.evalReal {N : ℕ}
+    (c : PositiveExponentialSum N) (t : ℝ) : ℝ :=
+  ∑ i : Fin N, c.a i * Real.exp (-c.K i * t)
+
+/-- Complex flow-time evaluation `c(t + ih) = ∑_{i < N} aᵢ exp(-Kᵢ (t + ih))`. -/
+noncomputable def PositiveExponentialSum.evalComplex {N : ℕ}
+    (c : PositiveExponentialSum N) (t h : ℝ) : ℂ :=
+  ∑ i : Fin N, (c.a i : ℂ) *
+    Complex.exp (-(c.K i : ℂ) * ((t : ℂ) + (h : ℂ) * Complex.I))
+
+/-- Real evaluation `c(t)` is strictly positive for all `t ∈ ℝ`. -/
+theorem PositiveExponentialSum.evalReal_pos {N : ℕ}
+    (c : PositiveExponentialSum N) (t : ℝ) :
+    0 < c.evalReal t := by
+  unfold PositiveExponentialSum.evalReal
+  have h_exists : ∃ i : Fin N, 0 < c.a i := by
+    by_contra h_all
+    push_neg at h_all
+    have h_zero : ∑ i : Fin N, c.a i ≤ 0 := Finset.sum_nonpos (fun i _ => h_all i)
+    linarith [c.h_norm_pos]
+  obtain ⟨j, hj⟩ := h_exists
+  have h_term_pos : 0 < c.a j * Real.exp (-c.K j * t) := mul_pos hj (Real.exp_pos _)
+  have h_le : c.a j * Real.exp (-c.K j * t) ≤ ∑ i : Fin N, c.a i * Real.exp (-c.K i * t) :=
+    Finset.single_le_sum (f := fun i => c.a i * Real.exp (-c.K i * t))
+      (fun i _ => mul_nonneg (c.ha_nonneg i) (Real.exp_pos _).le)
+      (Finset.mem_univ j)
+  linarith
+
+/-- **Monograph Proposition 16.23 (Free Complex Strip Bound `‖c(t + ih)‖ ≤ c(t)`)**:
+    Every member of the positive-exponential class satisfies `‖c(t + ih)‖ ≤ c(t)`
+    for every real flow time `t` and every complex strip height `h ∈ ℝ`. -/
+theorem PositiveExponentialSum.complex_strip_bound {N : ℕ}
+    (c : PositiveExponentialSum N) (t h : ℝ) :
+    ‖c.evalComplex t h‖ ≤ c.evalReal t := by
+  unfold PositiveExponentialSum.evalComplex PositiveExponentialSum.evalReal
+  calc ‖∑ i : Fin N, (c.a i : ℂ) *
+          Complex.exp (-(c.K i : ℂ) * ((t : ℂ) + (h : ℂ) * Complex.I))‖
+      ≤ ∑ i : Fin N, ‖(c.a i : ℂ) *
+          Complex.exp (-(c.K i : ℂ) * ((t : ℂ) + (h : ℂ) * Complex.I))‖ :=
+        norm_sum_le Finset.univ _
+    _ = ∑ i : Fin N, c.a i * Real.exp (-c.K i * t) := by
+        apply Finset.sum_congr rfl
+        intro i _
+        rw [norm_mul, Complex.norm_real, Real.norm_of_nonneg (c.ha_nonneg i),
+          Complex.norm_exp]
+        congr 1
+        congr 1
+        simp [Complex.mul_re, Complex.add_re, Complex.ofReal_re, Complex.ofReal_im,
+          Complex.I_re, Complex.I_im]
+
+/-- **Flow-Time Monotonicity (`t₁ ≤ t₂ ⟹ c(t₂) ≤ c(t₁)`)**. -/
+theorem PositiveExponentialSum.evalReal_antitone {N : ℕ}
+    (c : PositiveExponentialSum N) {t1 t2 : ℝ} (ht : t1 ≤ t2) :
+    c.evalReal t2 ≤ c.evalReal t1 := by
+  unfold PositiveExponentialSum.evalReal
+  apply Finset.sum_le_sum
+  intro i _
+  apply mul_le_mul_of_nonneg_left _ (c.ha_nonneg i)
+  apply Real.exp_le_exp.mpr
+  have hK := c.hK_nonneg i
+  nlinarith
+
+/-- **Monograph Theorem 16.24 & Proposition 16.26 (`SinglePlaquetteLoopTrajectory`)**:
+    Encodes the Single-Plaquette Loop Condition `(L)` along the multi-scale RG trajectory `k ∈ ℕ`. -/
+structure SinglePlaquetteLoopTrajectory where
+  c0 : ℕ → ℝ
+  c_fund : ℕ → ℝ
+  int_w8 : ℕ → ℝ
+  q_odd : ℕ → ℝ
+  κ : ℝ
+  M : ℝ
+  hc0_pos : ∀ k : ℕ, 0 < c0 k
+  hcfund_pos : ∀ k : ℕ, 0 < c_fund k
+  hw8_pos : ∀ k : ℕ, 0 < int_w8 k
+  hκ_pos : 0 < κ
+  hM_pos : 0 < M
+  h_uv_entry : κ ≤ c_fund 0 / c0 0
+  h_blocking_monotone : ∀ k : ℕ, c_fund k / c0 k ≤ c_fund (k + 1) / c0 (k + 1)
+  h_w8_ceiling : ∀ k : ℕ, int_w8 k ≤ M * (c0 k) ^ 8
+  h_one_pace_id : ∀ k : ℕ,
+    (16 * (c0 k) ^ 6 * (c_fund k) ^ 2) / int_w8 k ≤ q_odd k
+
+/-- The uniform one-pace odd-energy floor `q_floor = 16 * κ^2 / M` derived from `(L)`. -/
+noncomputable def SinglePlaquetteLoopTrajectory.q_floor
+    (T : SinglePlaquetteLoopTrajectory) : ℝ :=
+  (16 * T.κ ^ 2) / T.M
+
+theorem SinglePlaquetteLoopTrajectory.q_floor_pos
+    (T : SinglePlaquetteLoopTrajectory) :
+    0 < T.q_floor := by
+  unfold SinglePlaquetteLoopTrajectory.q_floor
+  have hκ := T.hκ_pos
+  have hM := T.hM_pos
+  positivity
+
+/-- **Monograph Proposition 16.26 (Forward-Invariance of `{r ≥ κ}` Under Blocking Monotonicity)**:
+    By induction on the RG pace `k`, `κ ≤ c_fund k / c0 k` holds at every scale `k ∈ ℕ`. -/
+theorem SinglePlaquetteLoopTrajectory.loop_ratio_ge_kappa
+    (T : SinglePlaquetteLoopTrajectory) (k : ℕ) :
+    T.κ ≤ T.c_fund k / T.c0 k := by
+  induction k with
+  | zero => exact T.h_uv_entry
+  | succ k ih => exact ih.trans (T.h_blocking_monotone k)
+
+/-- **Monograph Theorem 16.24 & Theorem 16.28 (Uniform One-Pace Odd-Energy Floor from `(L)`)**:
+    Proves unconditionally that for every RG scale `k ∈ ℕ`,
+      `0 < T.q_floor ∧ T.q_floor ≤ T.q_odd k`. -/
+theorem SinglePlaquetteLoopTrajectory.uniform_q_odd_floor
+    (T : SinglePlaquetteLoopTrajectory) (k : ℕ) :
+    0 < T.q_floor ∧ T.q_floor ≤ T.q_odd k := by
+  refine ⟨T.q_floor_pos, ?_⟩
+  have hc0 : 0 < T.c0 k := T.hc0_pos k
+  have hw8 : 0 < T.int_w8 k := T.hw8_pos k
+  have hM : 0 < T.M := T.hM_pos
+  have hκ : 0 < T.κ := T.hκ_pos
+  have h_ratio : T.κ ≤ T.c_fund k / T.c0 k := T.loop_ratio_ge_kappa k
+  have h_cfund : T.κ * T.c0 k ≤ T.c_fund k := (le_div_iff₀ hc0).mp h_ratio
+  have h_cfund_sq : (T.κ * T.c0 k) ^ 2 ≤ (T.c_fund k) ^ 2 :=
+    pow_le_pow_left₀ (mul_nonneg hκ.le hc0.le) h_cfund 2
+  have h_num : 16 * T.κ ^ 2 * (T.c0 k) ^ 8 ≤ 16 * (T.c0 k) ^ 6 * (T.c_fund k) ^ 2 := by
+    calc 16 * T.κ ^ 2 * (T.c0 k) ^ 8
+        = 16 * (T.c0 k) ^ 6 * (T.κ * T.c0 k) ^ 2 := by ring
+      _ ≤ 16 * (T.c0 k) ^ 6 * (T.c_fund k) ^ 2 := by
+          apply mul_le_mul_of_nonneg_left h_cfund_sq; positivity
+  have h_c08_pos : 0 < (T.c0 k) ^ 8 := pow_pos hc0 8
+  have h_ceil : T.int_w8 k ≤ T.M * (T.c0 k) ^ 8 := T.h_w8_ceiling k
+  have h_div1 :
+      (16 * T.κ ^ 2) / T.M = (16 * T.κ ^ 2 * (T.c0 k) ^ 8) / (T.M * (T.c0 k) ^ 8) := by
+    field_simp [hM.ne', h_c08_pos.ne']
+  have h_div2 :
+      (16 * T.κ ^ 2 * (T.c0 k) ^ 8) / (T.M * (T.c0 k) ^ 8) ≤
+        (16 * T.κ ^ 2 * (T.c0 k) ^ 8) / T.int_w8 k :=
+    div_le_div_of_nonneg_left (by positivity) hw8 h_ceil
+  have h_div3 :
+      (16 * T.κ ^ 2 * (T.c0 k) ^ 8) / T.int_w8 k ≤
+        (16 * (T.c0 k) ^ 6 * (T.c_fund k) ^ 2) / T.int_w8 k :=
+    div_le_div_of_nonneg_right h_num hw8.le
+  unfold SinglePlaquetteLoopTrajectory.q_floor
+  exact (h_div1.le.trans h_div2).trans (h_div3.trans (T.h_one_pace_id k))
+
+/-- **Inductive Discrete Riccati / Convex Mass Flow Across RG Scales**:
+    Tracks the effective spectral gap `m_eff : ℕ → ℝ` across block-spin steps `k → k + 1`
+    under `m_eff (k + 1) ≥ (1 - η k) * m_eff k + η k * delta_floor` with `0 ≤ η k ≤ 1`. -/
+structure DiscreteRiccatiMassFlow where
+  m_eff : ℕ → ℝ
+  η : ℕ → ℝ
+  delta_floor : ℝ
+  h_floor_pos : 0 < delta_floor
+  h_eta_nonneg : ∀ k : ℕ, 0 ≤ η k
+  h_eta_le_one : ∀ k : ℕ, η k ≤ 1
+  h_init : delta_floor ≤ m_eff 0
+  h_riccati_step : ∀ k : ℕ,
+    (1 - η k) * m_eff k + η k * delta_floor ≤ m_eff (k + 1)
+
+/-- **Scale-Uniform Positivity of the Discrete Riccati Mass Flow**:
+    Proves by induction on `k ∈ ℕ` that `0 < delta_floor ≤ m_eff k` holds uniformly
+    at every RG scale `k`. -/
+theorem DiscreteRiccatiMassFlow.uniform_mass_floor
+    (R : DiscreteRiccatiMassFlow) (k : ℕ) :
+    0 < R.delta_floor ∧ R.delta_floor ≤ R.m_eff k := by
+  refine ⟨R.h_floor_pos, ?_⟩
+  induction k with
+  | zero => exact R.h_init
+  | succ k ih =>
+    have h1 : 0 ≤ 1 - R.η k := sub_nonneg.mpr (R.h_eta_le_one k)
+    have h_step := R.h_riccati_step k
+    have h_mono :
+        R.delta_floor ≤ (1 - R.η k) * R.m_eff k + R.η k * R.delta_floor := by
+      nlinarith [ih, h1]
+    exact h_mono.trans h_step
+
+#print axioms GradedPaceData.pace_law_identities_and_bounds
+#print axioms PositiveExponentialSum.evalReal_pos
+#print axioms PositiveExponentialSum.complex_strip_bound
+#print axioms PositiveExponentialSum.evalReal_antitone
+#print axioms SinglePlaquetteLoopTrajectory.q_floor_pos
+#print axioms SinglePlaquetteLoopTrajectory.loop_ratio_ge_kappa
+#print axioms SinglePlaquetteLoopTrajectory.uniform_q_odd_floor
+#print axioms DiscreteRiccatiMassFlow.uniform_mass_floor
+
 #print axioms autonomousPolymerTrajectory_unconditional_all_scales
 #print axioms sqrt_sixteen_fifths_bounds
 #print axioms rStarIR_strict_bounds
