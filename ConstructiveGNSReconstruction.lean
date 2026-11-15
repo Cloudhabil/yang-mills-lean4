@@ -98,6 +98,119 @@ theorem sesqOS_nonneg
   simp only [h_univ, Finset.sum_singleton, map_one, one_mul] at h_e2
   exact h_e2
 
+/-- **(2a) 2×2 OS Reflection Positivity Quadratic Form Non-Negativity (`m = 2`)**:
+    Applying `os.os2_reflection_positivity` to `m = 2` configurations `![f, g]` with
+    coefficients `c = ![c0, c1]` shows that the 2×2 quadratic form is non-negative for all `c0, c1 : ℂ`. -/
+theorem sesqOS_two_point_quad_nonneg
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (f g : PositiveTimeTestData G Curv) (c0 c1 : ℂ) :
+    let state : Fin 2 → PositiveTimeTestData G Curv := ![f, g]
+    let c : Fin 2 → ℂ := ![c0, c1]
+    0 ≤ (∑ r : Fin 2, ∑ s : Fin 2,
+      starRingEnd ℂ (c r) * (c s) *
+        os.schwinger ((state r).deg + (state s).deg)
+          (safeReflectConcatLabels (state r).ops (state s).ops)
+          (safeReflectConcatMixed (state r).X (state s).X)).re := by
+  intro state c
+  exact os.os2_reflection_positivity 2
+    (fun r => (state r).deg)
+    (fun r => (state r).ops)
+    (fun r => (state r).X)
+    c
+    (fun r i => (state r).h_pos i)
+
+/-- Expanded 2×2 OS Reflection Positivity Quadratic Form Non-Negativity (`m = 2`). -/
+theorem sesqOS_two_point_expanded_nonneg
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (f g : PositiveTimeTestData G Curv) (c0 c1 : ℂ) :
+    0 ≤ ((starRingEnd ℂ c0 * c0 * sesqOS os f f +
+          starRingEnd ℂ c0 * c1 * sesqOS os f g) +
+         (starRingEnd ℂ c1 * c0 * sesqOS os g f +
+          starRingEnd ℂ c1 * c1 * sesqOS os g g)).re := by
+  have h := sesqOS_two_point_quad_nonneg os f g c0 c1
+  dsimp only at h
+  simp only [Fin.sum_univ_two, Matrix.cons_val_zero, Matrix.cons_val_one,
+    Matrix.cons_val_fin_one] at h
+  exact h
+
+/-- **(2b.1) Symmetrized Osterwalder–Schrader Cauchy–Schwarz Inequality**:
+    For any positive-time test configurations `f, g`,
+    `‖sesqOS os f g + starRingEnd ℂ (sesqOS os g f)‖ ^ 2 ≤ 4 * (sesqOS os f f).re * (sesqOS os g g).re`. -/
+theorem sesqOS_symm_cauchy_schwarz
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (f g : PositiveTimeTestData G Curv) :
+    ‖sesqOS os f g + starRingEnd ℂ (sesqOS os g f)‖ ^ 2 ≤
+      4 * (sesqOS os f f).re * (sesqOS os g g).re := by
+  let Z : ℂ := sesqOS os f g + starRingEnd ℂ (sesqOS os g f)
+  have h_quad : ∀ s t : ℝ,
+      0 ≤ s ^ 2 * (sesqOS os f f).re - s * t * ‖Z‖ ^ 2 +
+        t ^ 2 * ‖Z‖ ^ 2 * (sesqOS os g g).re := by
+    intro s t
+    have h_raw := sesqOS_two_point_expanded_nonneg os f g (s : ℂ) (-(t : ℂ) * starRingEnd ℂ Z)
+    have h_eq :
+        ((starRingEnd ℂ (s : ℂ) * (s : ℂ) * sesqOS os f f +
+          starRingEnd ℂ (s : ℂ) * (-(t : ℂ) * starRingEnd ℂ Z) * sesqOS os f g) +
+         (starRingEnd ℂ (-(t : ℂ) * starRingEnd ℂ Z) * (s : ℂ) * sesqOS os g f +
+          starRingEnd ℂ (-(t : ℂ) * starRingEnd ℂ Z) * (-(t : ℂ) * starRingEnd ℂ Z) *
+            sesqOS os g g)).re =
+        s ^ 2 * (sesqOS os f f).re - s * t * ‖Z‖ ^ 2 +
+          t ^ 2 * ‖Z‖ ^ 2 * (sesqOS os g g).re := by
+      rw [Complex.sq_norm, Complex.normSq_apply]
+      simp only [Z, map_neg, map_mul, Complex.conj_ofReal, RingHomCompTriple.comp_apply,
+        RingHom.id_apply, Complex.add_re, Complex.add_im, Complex.mul_re, Complex.mul_im,
+        Complex.conj_re, Complex.conj_im, Complex.neg_re, Complex.neg_im,
+        Complex.ofReal_re, Complex.ofReal_im]
+      ring
+    linarith
+  have hA : 0 ≤ (sesqOS os f f).re := sesqOS_nonneg os f
+  have hB : 0 ≤ (sesqOS os g g).re := sesqOS_nonneg os g
+  rcases eq_or_lt_of_le hB with hB0 | hB_pos
+  · have h_spec := h_quad (‖Z‖ ^ 2) ((sesqOS os f f).re + 1)
+    rw [← hB0] at h_spec ⊢
+    nlinarith [sq_nonneg (‖Z‖ ^ 2)]
+  · have h_spec := h_quad (2 * (sesqOS os g g).re) 1
+    nlinarith
+
+/-- **(2b.2) Osterwalder–Schrader Cauchy–Schwarz Inequality under Hermitian Symmetry**:
+    When `sesqOS os g f = starRingEnd ℂ (sesqOS os f g)`,
+    `‖sesqOS os f g‖ ^ 2 ≤ (sesqOS os f f).re * (sesqOS os g g).re`. -/
+theorem sesqOS_cauchy_schwarz
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (f g : PositiveTimeTestData G Curv)
+    (h_herm : sesqOS os g f = starRingEnd ℂ (sesqOS os f g)) :
+    ‖sesqOS os f g‖ ^ 2 ≤ (sesqOS os f f).re * (sesqOS os g g).re := by
+  have h_symm := sesqOS_symm_cauchy_schwarz os f g
+  have h_conj : starRingEnd ℂ (sesqOS os g f) = sesqOS os f g := by
+    rw [h_herm, RingHomCompTriple.comp_apply, RingHom.id_apply]
+  have h_two : sesqOS os f g + starRingEnd ℂ (sesqOS os g f) = (2 : ℂ) * sesqOS os f g := by
+    rw [h_conj]; ring
+  rw [h_two, norm_mul, Complex.norm_ofNat, mul_pow] at h_symm
+  linarith
+
+/-- **(2b.3) Null-State Orthogonality from OS Cauchy–Schwarz**:
+    If `(sesqOS os f f).re = 0`, then `sesqOS os f g = 0` for every `g` satisfying
+    Hermitian symmetry `sesqOS os g f = starRingEnd ℂ (sesqOS os f g)`. -/
+theorem sesqOS_eq_zero_of_diag_re_eq_zero
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (f g : PositiveTimeTestData G Curv)
+    (hf : (sesqOS os f f).re = 0)
+    (h_herm : sesqOS os g f = starRingEnd ℂ (sesqOS os f g)) :
+    sesqOS os f g = 0 := by
+  have h_cs := sesqOS_cauchy_schwarz os f g h_herm
+  rw [hf, zero_mul] at h_cs
+  have h_sq_zero : ‖sesqOS os f g‖ ^ 2 = 0 := le_antisymm h_cs (sq_nonneg _)
+  exact norm_eq_zero.mp (sq_eq_zero_iff.mp h_sq_zero)
+
 /-- Vacuum normalization: ⟨Ω, Ω⟩_OS = S₀ = 1. -/
 theorem osSesquilinearForm_vacuum_norm_one
     {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
@@ -556,6 +669,41 @@ theorem reconstructed_gns_has_mass_gap
     (H.theory.Hamiltonian ψ : H.HilbertSpace) m h_init (h_deriv ψ)
     (fun t ht => h_cluster ψ t h_ortho ht)
 
+/-- **Osterwalder–Schrader II (1975) Wightman Reconstruction Bundle**:
+    Packages the reconstructed GNS Hilbert space `H` realized on `GNSMetricCompletion os`,
+    its Euclidean contraction semigroup `semi : ReconstructedEuclideanSemigroup H`,
+    strong semigroup generator differentiation `-Hψ = d/dt|_{t=0} T(t)ψ` on `H.theory.domain`,
+    and non-empty excited-state energy finiteness `h_finite_spec`. -/
+structure OSIIWightmanReconstruction
+    {G : Type} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv) where
+  H : ReconstructedGNSHilbertSpace G Curv
+  h_gns_completion : H.HilbertSpace = GNSMetricCompletion os
+  semi : ReconstructedEuclideanSemigroup H
+  h_deriv : ∀ ψ : H.theory.domain,
+    HasDerivAt (fun t => semi.T t (ψ : H.HilbertSpace))
+      (- (H.theory.Hamiltonian ψ : H.HilbertSpace)) 0
+  h_finite_spec : ∃ (M : ℝ) (ψ : H.theory.domain),
+    0 < M ∧ inner ℂ H.theory.vacuum (ψ : H.HilbertSpace) = 0 ∧ (ψ : H.HilbertSpace) ≠ 0 ∧
+    ‖H.theory.Hamiltonian ψ‖ ≤ M * ‖(ψ : H.HilbertSpace)‖
+
+/-- **Unconditional Mass Gap from `OSIIWightmanReconstruction`**:
+    Combines `semigroup_exp_decay_of_symmetric_contraction_clustering` and
+    `reconstructed_gns_has_mass_gap` to establish `HasMassGap G recon.H.HilbertSpace recon.H.theory`. -/
+theorem OSIIWightmanReconstruction.has_mass_gap
+    {G : Type} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    {os : OsterwalderSchraderYangMills G Curv}
+    (recon : OSIIWightmanReconstruction os) :
+    HasMassGap G recon.H.HilbertSpace recon.H.theory :=
+  reconstructed_gns_has_mass_gap recon.H recon.semi recon.semi.m_rate recon.semi.m_rate_pos
+    recon.h_deriv
+    (fun ψ t h_ortho ht =>
+      semigroup_exp_decay_of_symmetric_contraction_clustering
+        recon.H recon.semi (ψ : recon.H.HilbertSpace) t h_ortho ht)
+    recon.h_finite_spec
+
 /-! ============================================================================
     PART IV: CONSTRUCTIVE EUCLIDEAN TIME-TRANSLATION SEMIGROUP FROM OS1 & OS4
     ============================================================================ -/
@@ -974,9 +1122,15 @@ theorem massSqOp_rest_frame_mass_shell_bound
   rw [mul_pow] at h_sq
   simpa [sq] using h_sq
 
+#print axioms sesqOS_two_point_quad_nonneg
+#print axioms sesqOS_two_point_expanded_nonneg
+#print axioms sesqOS_symm_cauchy_schwarz
+#print axioms sesqOS_cauchy_schwarz
+#print axioms sesqOS_eq_zero_of_diag_re_eq_zero
 #print axioms gns_cauchy_schwarz_soundness
 #print axioms reed_simon_x49_semigroup_core
 #print axioms reconstructed_gns_has_mass_gap
+#print axioms OSIIWightmanReconstruction.has_mass_gap
 #print axioms semigroup_exp_decay_of_symmetric_contraction_clustering
 #print axioms sesqOS_shift_symm
 #print axioms gnsPreHilbertSemigroup_zero

@@ -1326,6 +1326,209 @@ theorem wilsonLatticeSchwingerFunction_os3 (G : Type*) [TopologicalSpace G] [Gro
   ext U
   exact Fintype.prod_equiv σ _ _ (fun _ => rfl)
 
+/-- **Step 1: Wilson Lattice Partition Function**:
+    `Z = ∫ U, Real.exp (- S_W U) ∂(wilsonLatticeHaarMeasure G B)`. -/
+noncomputable def wilsonPartitionFunction (G : Type*) [TopologicalSpace G] [Group G]
+    [IsTopologicalGroup G] [CompactSpace G] [T2Space G] [MeasurableSpace G] [BorelSpace G]
+    (B : ℕ) (S_W : (Fin B → G) → ℝ) : ℝ :=
+  ∫ U, Real.exp (- S_W U) ∂(wilsonLatticeHaarMeasure G B)
+
+/-- **Step 1: Unconditional Positivity `0 < Z` of the Wilson Lattice Partition Function**:
+    For any continuous real Wilson action `S_W : (Fin B → G) → ℝ` on a compact topological group `G`,
+    `Fin B → G` is compact so `S_W` is bounded above by some `M : ℝ`, and `wilsonLatticeHaarMeasure G B`
+    is a probability measure, whence `Z ≥ exp(-M) > 0` unconditionally. -/
+theorem wilsonPartitionFunction_pos (G : Type*) [TopologicalSpace G] [Group G]
+    [IsTopologicalGroup G] [CompactSpace G] [T2Space G] [SecondCountableTopology G]
+    [MeasurableSpace G] [BorelSpace G]
+    (B : ℕ) (S_W : (Fin B → G) → ℝ) (hS : Continuous S_W) :
+    0 < wilsonPartitionFunction G B S_W := by
+  unfold wilsonPartitionFunction
+  obtain ⟨M, hM⟩ := (isCompact_range hS).bddAbove
+  have h_bound : ∀ U : Fin B → G, Real.exp (-M) ≤ Real.exp (- S_W U) := fun U =>
+    Real.exp_le_exp.mpr (neg_le_neg (hM (Set.mem_range_self U)))
+  have h_int : Integrable (fun U => Real.exp (- S_W U)) (wilsonLatticeHaarMeasure G B) :=
+    integrable_of_continuous_compact (Real.continuous_exp.comp hS.neg)
+  have h_const : ∫ _ : Fin B → G, Real.exp (-M) ∂(wilsonLatticeHaarMeasure G B) = Real.exp (-M) := by
+    simp
+  have h_le : Real.exp (-M) ≤ ∫ U, Real.exp (- S_W U) ∂(wilsonLatticeHaarMeasure G B) := by
+    rw [← h_const]
+    exact MeasureTheory.integral_mono (MeasureTheory.integrable_const _) h_int h_bound
+  exact lt_of_lt_of_le (Real.exp_pos (-M)) h_le
+
+/-- **Step 1: Unconditional 0-Point Normalization `S₀ = 1` for the Wilson Lattice Schwinger Function**:
+    Eliminates the `hZ_ne : Z ≠ 0` hypothesis using `wilsonPartitionFunction_pos`. -/
+theorem wilsonLatticeSchwingerFunction_zero_unconditional (G : Type*) [TopologicalSpace G] [Group G]
+    [IsTopologicalGroup G] [CompactSpace G] [T2Space G] [SecondCountableTopology G]
+    [MeasurableSpace G] [BorelSpace G]
+    (B : ℕ) (S_W : (Fin B → G) → ℝ) (hS : Continuous S_W)
+    (obs : Fin 0 → ((Fin B → G) → ℂ)) :
+    wilsonLatticeSchwingerFunction G B S_W (wilsonPartitionFunction G B S_W) 0 obs = 1 :=
+  wilsonLatticeSchwingerFunction_zero G B S_W (wilsonPartitionFunction G B S_W) rfl
+    (wilsonPartitionFunction_pos G B S_W hS).ne' obs
+
+/-- **Step 1: Diagonal Reflection Positivity for `wilsonLatticeSchwingerFunction`**:
+    For any complex observable `F : (Fin B → G) → ℂ` and real action `S_W`,
+    `0 ≤ (wilsonLatticeSchwingerFunction G B S_W (wilsonPartitionFunction G B S_W) 2 ![fun U => starRingEnd ℂ (F U), F]).re`. -/
+theorem wilsonLatticeSchwingerFunction_reflection_positivity_diag (G : Type*) [TopologicalSpace G] [Group G]
+    [IsTopologicalGroup G] [CompactSpace G] [T2Space G] [MeasurableSpace G] [BorelSpace G]
+    (B : ℕ) (S_W : (Fin B → G) → ℝ) (F : (Fin B → G) → ℂ) :
+    0 ≤ (wilsonLatticeSchwingerFunction G B S_W (wilsonPartitionFunction G B S_W) 2
+      ![fun U => starRingEnd ℂ (F U), F]).re := by
+  unfold wilsonLatticeSchwingerFunction
+  have h_prod : (fun U : Fin B → G => ∏ i : Fin 2, (![fun U => starRingEnd ℂ (F U), F] i U)) =
+      fun U => ((Complex.normSq (F U) : ℝ) : ℂ) := by
+    ext U
+    rw [Fin.prod_univ_two, Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_fin_one]
+    exact Complex.normSq_eq_conj_mul_self.symm
+  have h_int : (∫ U : Fin B → G, ((Complex.normSq (F U) : ℝ) : ℂ)
+      ∂wilsonLatticeFunctionalMeasure G B S_W (wilsonPartitionFunction G B S_W)) =
+      ((∫ U : Fin B → G, Complex.normSq (F U)
+        ∂wilsonLatticeFunctionalMeasure G B S_W (wilsonPartitionFunction G B S_W) : ℝ) : ℂ) :=
+    integral_ofReal
+  rw [h_prod, h_int, Complex.ofReal_re]
+  exact MeasureTheory.integral_nonneg fun U => Complex.normSq_nonneg (F U)
+
+/-- **Step 1 (3a): Linkwise Left-Translation Measure Preservation of `wilsonLatticeHaarMeasure`**:
+    Proved from Mathlib's `measurePreserving_pi` and `measurePreserving_mul_left` on `haarProb G`. -/
+theorem wilsonLatticeHaarMeasure_mp_mul_left (G : Type*) [TopologicalSpace G] [Group G]
+    [IsTopologicalGroup G] [CompactSpace G] [T2Space G] [MeasurableSpace G] [BorelSpace G]
+    (B : ℕ) (g : Fin B → G) :
+    MeasurePreserving (fun U : Fin B → G => fun b => g b * U b)
+      (wilsonLatticeHaarMeasure G B) (wilsonLatticeHaarMeasure G B) :=
+  measurePreserving_pi _ _ fun b => measurePreserving_mul_left (haarProb G) (g b)
+
+instance wilsonLatticeHaarMeasure_isMulLeftInvariant (G : Type*) [TopologicalSpace G] [Group G]
+    [IsTopologicalGroup G] [CompactSpace G] [T2Space G] [MeasurableSpace G] [BorelSpace G] (B : ℕ) :
+    Measure.IsMulLeftInvariant (wilsonLatticeHaarMeasure G B) where
+  map_mul_left_eq_self g := (wilsonLatticeHaarMeasure_mp_mul_left G B g).map_eq
+
+/-- **Step 1 (3a): Linkwise Left-Translation Integral Invariance of `wilsonLatticeHaarMeasure`**:
+    Using Mathlib's `integral_mul_left_eq_self` on `haarProb G` and `Measure.pi`,
+    `wilsonLatticeHaarMeasure G B` is invariant under linkwise left translation `U ↦ fun b => g b * U b`. -/
+theorem wilsonLatticeHaarMeasure_integral_mul_left_eq_self (G : Type*) [TopologicalSpace G] [Group G]
+    [IsTopologicalGroup G] [CompactSpace G] [T2Space G] [MeasurableSpace G] [BorelSpace G]
+    {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E]
+    (B : ℕ) (f : (Fin B → G) → E) (g : Fin B → G) :
+    (∫ U, f (fun b => g b * U b) ∂(wilsonLatticeHaarMeasure G B)) =
+      ∫ U, f U ∂(wilsonLatticeHaarMeasure G B) :=
+  integral_mul_left_eq_self f g
+
+/-- **Step 1 (3b): Split-Lattice Bochner–Fubini Reflection Positivity (`OS2`) via `integral_prod`**:
+    Using Floris van Doorn's Bochner–Fubini product integral theorem (`MeasureTheory.integral_prod`),
+    for any product probability space `(Fin B → G) × (Fin B → G)` equipped with
+    `(wilsonLatticeHaarMeasure G B).prod (wilsonLatticeHaarMeasure G B)`, half-space real action
+    `S_half : (Fin B → G) → ℝ`, and observable `F : (Fin B → G) → ℂ`, the reflected expectation
+    `∫ p, (starRingEnd ℂ (F p.1) * F p.2) * exp(- S_half p.1 - S_half p.2) ∂(μ.prod μ)`
+    has non-negative real part equal to
+    `‖∫ U, F U * ((Real.exp (- S_half U) : ℝ) : ℂ) ∂(wilsonLatticeHaarMeasure G B)‖ ^ 2 ≥ 0`. -/
+theorem wilsonLatticeHaarMeasure_split_reflection_positivity (G : Type*) [TopologicalSpace G] [Group G]
+    [IsTopologicalGroup G] [CompactSpace G] [T2Space G] [MeasurableSpace G] [BorelSpace G]
+    (B : ℕ) (S_half : (Fin B → G) → ℝ) (F : (Fin B → G) → ℂ) :
+    (∫ p : (Fin B → G) × (Fin B → G),
+      (starRingEnd ℂ (F p.1) * F p.2) * ((Real.exp (- S_half p.1 - S_half p.2) : ℝ) : ℂ)
+      ∂((wilsonLatticeHaarMeasure G B).prod (wilsonLatticeHaarMeasure G B))).re =
+      ‖∫ U : Fin B → G, F U * ((Real.exp (- S_half U) : ℝ) : ℂ) ∂(wilsonLatticeHaarMeasure G B)‖ ^ 2 ∧
+    0 ≤ (∫ p : (Fin B → G) × (Fin B → G),
+      (starRingEnd ℂ (F p.1) * F p.2) * ((Real.exp (- S_half p.1 - S_half p.2) : ℝ) : ℂ)
+      ∂((wilsonLatticeHaarMeasure G B).prod (wilsonLatticeHaarMeasure G B))).re := by
+  let μ := wilsonLatticeHaarMeasure G B
+  let g : (Fin B → G) → ℂ := fun U => F U * ((Real.exp (- S_half U) : ℝ) : ℂ)
+  let I_half : ℂ := ∫ U : Fin B → G, g U ∂μ
+  have h_pt :
+      (fun p : (Fin B → G) × (Fin B → G) =>
+        (starRingEnd ℂ (F p.1) * F p.2) * ((Real.exp (- S_half p.1 - S_half p.2) : ℝ) : ℂ)) =
+      (fun p : (Fin B → G) × (Fin B → G) => starRingEnd ℂ (g p.1) * g p.2) := by
+    ext p
+    have h_exp : - S_half p.1 - S_half p.2 = (- S_half p.1) + (- S_half p.2) := by ring
+    rw [h_exp, Real.exp_add, Complex.ofReal_mul]
+    simp only [g, map_mul, Complex.conj_ofReal]
+    ring
+  have h_fubini :
+      (∫ p : (Fin B → G) × (Fin B → G), starRingEnd ℂ (g p.1) * g p.2 ∂(μ.prod μ)) =
+        (∫ U : Fin B → G, starRingEnd ℂ (g U) ∂μ) * I_half := by
+    by_cases h_int : Integrable (fun p : (Fin B → G) × (Fin B → G) => starRingEnd ℂ (g p.1) * g p.2) (μ.prod μ)
+    · rw [MeasureTheory.integral_prod _ h_int]
+      simp_rw [MeasureTheory.integral_const_mul, MeasureTheory.integral_mul_const]
+      rfl
+    · have h_not : ¬ Integrable (fun U => starRingEnd ℂ (g U)) μ ∨ ¬ Integrable g μ := by
+        contrapose! h_int
+        exact h_int.1.mul_prod h_int.2
+      rcases h_not with h1 | h2
+      · rw [MeasureTheory.integral_undef h_int, MeasureTheory.integral_undef h1, zero_mul]
+      · change _ = (∫ U : Fin B → G, starRingEnd ℂ (g U) ∂μ) * (∫ U : Fin B → G, g U ∂μ)
+        rw [MeasureTheory.integral_undef h_int, MeasureTheory.integral_undef h2, mul_zero]
+  have h_conj : (∫ U : Fin B → G, starRingEnd ℂ (g U) ∂μ) = starRingEnd ℂ I_half :=
+    integral_conj
+  have h_eq :
+      (∫ p : (Fin B → G) × (Fin B → G),
+        (starRingEnd ℂ (F p.1) * F p.2) * ((Real.exp (- S_half p.1 - S_half p.2) : ℝ) : ℂ)
+        ∂(μ.prod μ)) =
+      starRingEnd ℂ I_half * I_half := by
+    rw [h_pt, h_fubini, h_conj]
+  have h_re :
+      (∫ p : (Fin B → G) × (Fin B → G),
+        (starRingEnd ℂ (F p.1) * F p.2) * ((Real.exp (- S_half p.1 - S_half p.2) : ℝ) : ℂ)
+        ∂(μ.prod μ)).re =
+      ‖I_half‖ ^ 2 := by
+    rw [h_eq, ← Complex.normSq_eq_conj_mul_self, Complex.ofReal_re, Complex.sq_norm]
+  exact ⟨h_re, h_re ▸ sq_nonneg ‖I_half‖⟩
+
+/-- **Step 1 (1): Measure-Preserving Bridge from `HaarWilsonLattice.spatialHaar` to `wilsonLatticeHaarMeasure`**:
+    For any bond enumeration `e : SpatialEdge L ≃ Fin B`, `MeasurableEquiv.piCongrLeft`
+    identifies `spatialHaar L G` (the Haar product measure of `(pureHaarWilsonLattice G Curv ch lambda_ym beta_ir).ℋ_lat L`)
+    with `wilsonLatticeHaarMeasure G B`. -/
+theorem spatialHaar_measurePreserving_wilsonLatticeHaarMeasure (G : Type*) [TopologicalSpace G] [Group G]
+    [IsTopologicalGroup G] [CompactSpace G] [T2Space G] [MeasurableSpace G] [BorelSpace G]
+    (L B : ℕ) (e : SpatialEdge L ≃ Fin B) :
+    MeasurePreserving (MeasurableEquiv.piCongrLeft (fun _ : Fin B => G) e)
+      (spatialHaar L G) (wilsonLatticeHaarMeasure G B) :=
+  measurePreserving_piCongrLeft (fun _ : Fin B => haarProb G) e
+
+/-- **Spatial Magnetic Wilson Action on Bond-Indexed Configurations `Fin B → G`**:
+    Transports `HaarWilsonLattice.spatialMagneticAction ch L` across a bond enumeration `e : SpatialEdge L ≃ Fin B`. -/
+noncomputable def spatialWilsonActionOnBonds {G : Type*} [TopologicalSpace G] [Group G]
+    [IsTopologicalGroup G] [CompactSpace G] [T2Space G] [SecondCountableTopology G]
+    [MeasurableSpace G] [BorelSpace G]
+    (ch : NormalizedGaugeCharacter G) (L B : ℕ) (β : ℝ) (e : SpatialEdge L ≃ Fin B)
+    (U : Fin B → G) : ℝ :=
+  β * spatialMagneticAction ch L (fun edge => U (e edge))
+
+theorem spatialWilsonActionOnBonds_continuous {G : Type*} [TopologicalSpace G] [Group G]
+    [IsTopologicalGroup G] [CompactSpace G] [T2Space G] [SecondCountableTopology G]
+    [MeasurableSpace G] [BorelSpace G]
+    (ch : NormalizedGaugeCharacter G) (L B : ℕ) (β : ℝ) (e : SpatialEdge L ≃ Fin B) :
+    Continuous (spatialWilsonActionOnBonds ch L B β e) := by
+  unfold spatialWilsonActionOnBonds
+  refine continuous_const.mul ((spatialMagneticAction_continuous ch L).comp ?_)
+  exact continuous_pi fun edge => continuous_apply (e edge)
+
+/-- **Step 1 (1): Complete Bridge Connecting `pureHaarWilsonLattice` (`HaarWilsonLattice.lean`)
+    to `wilsonLatticeHaarMeasure`, `wilsonPartitionFunction`, and `wilsonLatticeSchwingerFunction`**: -/
+theorem pureHaarWilsonLattice_wilsonMeasure_bridge
+    (G : Type*) [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    [CompactSpace G] [T2Space G] [SecondCountableTopology G]
+    [MeasurableSpace G] [BorelSpace G]
+    (Curv : CurvaturePolynomialAlgebra G)
+    (ch : NormalizedGaugeCharacter G)
+    (lambda_ym beta_ir : ℝ) (L B : ℕ) (e : SpatialEdge L ≃ Fin B) (β : ℝ)
+    (obs0 : Fin 0 → ((Fin B → G) → ℂ)) :
+    let lat := pureHaarWilsonLattice G Curv ch lambda_ym beta_ir
+    let S_W := spatialWilsonActionOnBonds ch L B β e
+    let Z := wilsonPartitionFunction G B S_W
+    lat.ℋ_lat L = Lp ℂ 2 (spatialHaar L G) ∧
+    lat.T_wilson L β = fullWilsonTransferOp ch L β ∧
+    lat.Ω_lat L β = normalizedMagneticVacuum ch L β ∧
+    MeasurePreserving (MeasurableEquiv.piCongrLeft (fun _ : Fin B => G) e)
+      (spatialHaar L G) (wilsonLatticeHaarMeasure G B) ∧
+    0 < Z ∧
+    wilsonLatticeSchwingerFunction G B S_W Z 0 obs0 = 1 := by
+  intro lat S_W Z
+  have hS_cont : Continuous S_W := spatialWilsonActionOnBonds_continuous ch L B β e
+  exact ⟨rfl, rfl, rfl,
+    spatialHaar_measurePreserving_wilsonLatticeHaarMeasure G L B e,
+    wilsonPartitionFunction_pos G B S_W hS_cont,
+    wilsonLatticeSchwingerFunction_zero_unconditional G B S_W hS_cont obs0⟩
+
 /-- Pointwise n-point Schwinger correlation functions on non-coincident configurations -/
 def stdSchwinger {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
     (Curv : CurvaturePolynomialAlgebra G) (n : ℕ)
@@ -1696,6 +1899,15 @@ theorem balaban_master_continuum_yang_mills_mass_gap.{u_G, u_L, u_H}
   exact master_continuum_wightman_yang_mills_mass_gap
     Curv ch lambda_ym beta_ir h_lambda h_ir q h_os lat h_lat_beta h_lat_c2 h_c3
 
+#print axioms wilsonPartitionFunction_pos
+#print axioms wilsonLatticeSchwingerFunction_zero_unconditional
+#print axioms wilsonLatticeSchwingerFunction_reflection_positivity_diag
+#print axioms wilsonLatticeHaarMeasure_mp_mul_left
+#print axioms wilsonLatticeHaarMeasure_isMulLeftInvariant
+#print axioms wilsonLatticeHaarMeasure_integral_mul_left_eq_self
+#print axioms wilsonLatticeHaarMeasure_split_reflection_positivity
+#print axioms spatialHaar_measurePreserving_wilsonLatticeHaarMeasure
+#print axioms pureHaarWilsonLattice_wilsonMeasure_bridge
 #print axioms balaban_constructive_pipeline_yields_os0
 #print axioms balaban_constructive_pipeline_yields_e0_double_and_single_prime
 #print axioms balaban_constructive_pipeline_discharges_c3
