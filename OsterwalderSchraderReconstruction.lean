@@ -1808,6 +1808,373 @@ theorem sun_millennium_statement_of_constructive_pipeline.{u_H} (N : ℕ) [Fact 
     ⟨Curv', ℋ, _, _, _, _, theory, h_cas', h_gap, _⟩
   exact ⟨Curv', ℋ, inferInstance, inferInstance, inferInstance, inferInstance, theory, h_cas', h_gap⟩
 
+/-! ============================================================================
+    PHASE II GOAL 7: POINTWISE `k → ∞` LIMIT-TRANSFER THEOREMS FOR OS AXIOMS
+    ============================================================================ -/
+
+/-- **Goal 7(a): Pointwise `k → ∞` Limit Transfer for `S₀ = 1`**: -/
+theorem limit_transfer_schwinger_zero
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (S_lat : ℕ → (n : ℕ) → (Fin n → ObservableLabel G Curv) → (Fin n → EuclideanSpace4) → ℂ)
+    (S_lim : (n : ℕ) → (Fin n → ObservableLabel G Curv) → (Fin n → EuclideanSpace4) → ℂ)
+    (h_lim : ∀ n ops x, Filter.Tendsto (fun k => S_lat k n ops x) Filter.atTop (nhds (S_lim n ops x)))
+    (h0 : ∀ k ops x, S_lat k 0 ops x = 1) :
+    ∀ ops x, S_lim 0 ops x = 1 := by
+  intro ops x
+  have h := h_lim 0 ops x
+  simp_rw [h0] at h
+  exact tendsto_nhds_unique h tendsto_const_nhds
+
+/-- **Goal 7(b): Pointwise `k → ∞` Limit Transfer for `OS0` Temperedness Bounds**: -/
+theorem limit_transfer_os0_temperedness
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (S_lat : ℕ → (n : ℕ) → (Fin n → ObservableLabel G Curv) → (Fin n → EuclideanSpace4) → ℂ)
+    (S_lim : (n : ℕ) → (Fin n → ObservableLabel G Curv) → (Fin n → EuclideanSpace4) → ℂ)
+    (h_lim : ∀ n ops x, Filter.Tendsto (fun k => S_lat k n ops x) Filter.atTop (nhds (S_lim n ops x)))
+    (C_temp : ℝ) (r_fac : ℕ)
+    (h_temp : ∀ k n ops x, Pairwise (fun i j => x i ≠ x j) →
+      ‖S_lat k n ops x‖ ≤ C_temp ^ n * (Nat.factorial n : ℝ) ^ r_fac) :
+    ∀ n ops x, Pairwise (fun i j => x i ≠ x j) →
+      ‖S_lim n ops x‖ ≤ C_temp ^ n * (Nat.factorial n : ℝ) ^ r_fac := by
+  intro n ops x h_pair
+  exact le_of_tendsto (h_lim n ops x).norm
+    (Filter.Eventually.of_forall fun k => h_temp k n ops x h_pair)
+
+/-- **Goal 7(c): Pointwise `k → ∞` Limit Transfer for `OS1` (`SO(4) ⋉ ℝ⁴` Euclidean Invariance)
+    from Vanishing Lattice Rotational/Discretization Anisotropy Defect**: -/
+theorem limit_transfer_os1_from_anisotropy_defect
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (S_lat : ℕ → (n : ℕ) → (Fin n → ObservableLabel G Curv) → (Fin n → EuclideanSpace4) → ℂ)
+    (S_lim : (n : ℕ) → (Fin n → ObservableLabel G Curv) → (Fin n → EuclideanSpace4) → ℂ)
+    (h_lim : ∀ n ops x, Filter.Tendsto (fun k => S_lat k n ops x) Filter.atTop (nhds (S_lim n ops x)))
+    (h_defect : ∀ (n : ℕ) (ops : Fin n → ObservableLabel G Curv)
+      (R : Matrix (Fin 4) (Fin 4) ℝ) (v : EuclideanSpace4) (x : Fin n → EuclideanSpace4),
+      R.transpose * R = 1 → Matrix.det R = 1 →
+      ∃ δ : ℕ → ℝ, Filter.Tendsto δ Filter.atTop (nhds 0) ∧
+        ∀ k, ‖S_lat k n
+            (fun i => match ops i with
+              | .localCurv P => .localCurv (Curv.transform R P)
+              | .wilsonChar chi => .wilsonChar chi)
+            (fun i => euclideanTransform R v (x i)) -
+          S_lat k n ops x‖ ≤ δ k) :
+    ∀ (n : ℕ) (ops : Fin n → ObservableLabel G Curv)
+      (R : Matrix (Fin 4) (Fin 4) ℝ) (v : EuclideanSpace4) (x : Fin n → EuclideanSpace4),
+      R.transpose * R = 1 → Matrix.det R = 1 →
+      S_lim n
+        (fun i => match ops i with
+          | .localCurv P => .localCurv (Curv.transform R P)
+          | .wilsonChar chi => .wilsonChar chi)
+        (fun i => euclideanTransform R v (x i)) =
+      S_lim n ops x := by
+  intro n ops R v x hR hdet
+  rcases h_defect n ops R v x hR hdet with ⟨δ, hδ, h_bound⟩
+  let ops' : Fin n → ObservableLabel G Curv := fun i => match ops i with
+    | .localCurv P => .localCurv (Curv.transform R P)
+    | .wilsonChar chi => .wilsonChar chi
+  let x' : Fin n → EuclideanSpace4 := fun i => euclideanTransform R v (x i)
+  have h_diff : Filter.Tendsto (fun k => S_lat k n ops' x' - S_lat k n ops x)
+      Filter.atTop (nhds (S_lim n ops' x' - S_lim n ops x)) :=
+    (h_lim n ops' x').sub (h_lim n ops x)
+  have h_le0 : ‖S_lim n ops' x' - S_lim n ops x‖ ≤ 0 :=
+    le_of_tendsto_of_tendsto' h_diff.norm hδ h_bound
+  exact sub_eq_zero.mp (norm_le_zero_iff.mp h_le0)
+
+/-- **Goal 7(d): Pointwise `k → ∞` Limit Transfer for `OS2` Reflection Positivity**: -/
+theorem limit_transfer_os2_reflection_positivity
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (S_lat : ℕ → (n : ℕ) → (Fin n → ObservableLabel G Curv) → (Fin n → EuclideanSpace4) → ℂ)
+    (S_lim : (n : ℕ) → (Fin n → ObservableLabel G Curv) → (Fin n → EuclideanSpace4) → ℂ)
+    (h_lim : ∀ n ops x, Filter.Tendsto (fun k => S_lat k n ops x) Filter.atTop (nhds (S_lim n ops x)))
+    (h_os2 : ∀ (k m : ℕ) (deg : Fin m → ℕ)
+      (ops : (r : Fin m) → Fin (deg r) → ObservableLabel G Curv)
+      (X : (r : Fin m) → Fin (deg r) → EuclideanSpace4)
+      (c : Fin m → ℂ),
+      (∀ (r : Fin m) (i : Fin (deg r)), 0 < toCoords (X r i) 0) →
+      0 ≤ (∑ r : Fin m, ∑ s : Fin m,
+        starRingEnd ℂ (c r) * (c s) *
+          S_lat k (deg r + deg s)
+            (safeReflectConcatLabels (ops r) (ops s))
+            (safeReflectConcatMixed (X r) (X s))).re) :
+    ∀ (m : ℕ) (deg : Fin m → ℕ)
+      (ops : (r : Fin m) → Fin (deg r) → ObservableLabel G Curv)
+      (X : (r : Fin m) → Fin (deg r) → EuclideanSpace4)
+      (c : Fin m → ℂ),
+      (∀ (r : Fin m) (i : Fin (deg r)), 0 < toCoords (X r i) 0) →
+      0 ≤ (∑ r : Fin m, ∑ s : Fin m,
+        starRingEnd ℂ (c r) * (c s) *
+          S_lim (deg r + deg s)
+            (safeReflectConcatLabels (ops r) (ops s))
+            (safeReflectConcatMixed (X r) (X s))).re := by
+  intro m deg ops X c hX
+  have h_sum : Filter.Tendsto
+      (fun k => (∑ r : Fin m, ∑ s : Fin m,
+        starRingEnd ℂ (c r) * (c s) *
+          S_lat k (deg r + deg s)
+            (safeReflectConcatLabels (ops r) (ops s))
+            (safeReflectConcatMixed (X r) (X s))).re)
+      Filter.atTop
+      (nhds (∑ r : Fin m, ∑ s : Fin m,
+        starRingEnd ℂ (c r) * (c s) *
+          S_lim (deg r + deg s)
+            (safeReflectConcatLabels (ops r) (ops s))
+            (safeReflectConcatMixed (X r) (X s))).re) := by
+    refine Complex.continuous_re.continuousAt.tendsto.comp ?_
+    refine tendsto_finset_sum _ fun r _ => ?_
+    refine tendsto_finset_sum _ fun s _ => ?_
+    exact (h_lim (deg r + deg s)
+      (safeReflectConcatLabels (ops r) (ops s))
+      (safeReflectConcatMixed (X r) (X s))).const_mul _
+  exact ge_of_tendsto h_sum (Filter.Eventually.of_forall fun k => h_os2 k m deg ops X c hX)
+
+/-- **Goal 7(e): Pointwise `k → ∞` Limit Transfer for `OS3` Permutation Symmetry**: -/
+theorem limit_transfer_os3_permutation_symmetry
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (S_lat : ℕ → (n : ℕ) → (Fin n → ObservableLabel G Curv) → (Fin n → EuclideanSpace4) → ℂ)
+    (S_lim : (n : ℕ) → (Fin n → ObservableLabel G Curv) → (Fin n → EuclideanSpace4) → ℂ)
+    (h_lim : ∀ n ops x, Filter.Tendsto (fun k => S_lat k n ops x) Filter.atTop (nhds (S_lim n ops x)))
+    (h_os3 : ∀ k (n : ℕ) (σ : Equiv.Perm (Fin n))
+      (ops : Fin n → ObservableLabel G Curv) (x : Fin n → EuclideanSpace4),
+      S_lat k n (ops ∘ σ) (x ∘ σ) = S_lat k n ops x) :
+    ∀ (n : ℕ) (σ : Equiv.Perm (Fin n))
+      (ops : Fin n → ObservableLabel G Curv) (x : Fin n → EuclideanSpace4),
+      S_lim n (ops ∘ σ) (x ∘ σ) = S_lim n ops x := by
+  intro n σ ops x
+  have h1 := h_lim n (ops ∘ σ) (x ∘ σ)
+  simp_rw [h_os3] at h1
+  exact tendsto_nhds_unique h1 (h_lim n ops x)
+
+/-- **Goal 7(f): Pointwise `k → ∞` Limit Transfer for `OS4` Exponential Clustering**: -/
+theorem limit_transfer_os4_exponential_clustering
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (S_lat : ℕ → (n : ℕ) → (Fin n → ObservableLabel G Curv) → (Fin n → EuclideanSpace4) → ℂ)
+    (S_lim : (n : ℕ) → (Fin n → ObservableLabel G Curv) → (Fin n → EuclideanSpace4) → ℂ)
+    (h_lim : ∀ n ops x, Filter.Tendsto (fun k => S_lat k n ops x) Filter.atTop (nhds (S_lim n ops x)))
+    (m_phys : ℝ)
+    (h_os4 : ∀ (n m : ℕ)
+      (ops1 : Fin n → ObservableLabel G Curv)
+      (ops2 : Fin m → ObservableLabel G Curv)
+      (X : Fin n → EuclideanSpace4)
+      (Y : Fin m → EuclideanSpace4)
+      (a : EuclideanSpace4),
+      (∀ i : Fin n, 0 < toCoords (X i) 0) →
+      (∀ j : Fin m, 0 < toCoords (Y j) 0) →
+      0 ≤ toCoords a 0 → ‖a‖ = 1 →
+      ∃ C_fg : ℝ, 0 ≤ C_fg ∧
+        ∀ (k : ℕ) (scale : ℝ), 0 ≤ scale →
+          ‖S_lat k (n + m)
+              (safeReflectConcatLabels ops1 ops2)
+              (safeReflectConcatMixed X (translateConfig (scale • a) Y)) -
+            starRingEnd ℂ (S_lat k n (reverseConjLabels ops1) (reverseReflectConfig X)) *
+              S_lat k m ops2 Y‖ ≤
+            C_fg * Real.exp (-m_phys * scale)) :
+    ∀ (n m : ℕ)
+      (ops1 : Fin n → ObservableLabel G Curv)
+      (ops2 : Fin m → ObservableLabel G Curv)
+      (X : Fin n → EuclideanSpace4)
+      (Y : Fin m → EuclideanSpace4)
+      (a : EuclideanSpace4),
+      (∀ i : Fin n, 0 < toCoords (X i) 0) →
+      (∀ j : Fin m, 0 < toCoords (Y j) 0) →
+      0 ≤ toCoords a 0 → ‖a‖ = 1 →
+      ∃ C_fg : ℝ, 0 ≤ C_fg ∧
+        ∀ (scale : ℝ), 0 ≤ scale →
+          ‖S_lim (n + m)
+              (safeReflectConcatLabels ops1 ops2)
+              (safeReflectConcatMixed X (translateConfig (scale • a) Y)) -
+            starRingEnd ℂ (S_lim n (reverseConjLabels ops1) (reverseReflectConfig X)) *
+              S_lim m ops2 Y‖ ≤
+            C_fg * Real.exp (-m_phys * scale) := by
+  intro n m ops1 ops2 X Y a hX hY ha0 ha_norm
+  rcases h_os4 n m ops1 ops2 X Y a hX hY ha0 ha_norm with ⟨C_fg, hC_nonneg, h_bound⟩
+  refine ⟨C_fg, hC_nonneg, fun scale hscale => ?_⟩
+  have h_lhs : Filter.Tendsto
+      (fun k => ‖S_lat k (n + m)
+          (safeReflectConcatLabels ops1 ops2)
+          (safeReflectConcatMixed X (translateConfig (scale • a) Y)) -
+        starRingEnd ℂ (S_lat k n (reverseConjLabels ops1) (reverseReflectConfig X)) *
+          S_lat k m ops2 Y‖)
+      Filter.atTop
+      (nhds ‖S_lim (n + m)
+          (safeReflectConcatLabels ops1 ops2)
+          (safeReflectConcatMixed X (translateConfig (scale • a) Y)) -
+        starRingEnd ℂ (S_lim n (reverseConjLabels ops1) (reverseReflectConfig X)) *
+          S_lim m ops2 Y‖) := by
+    refine Filter.Tendsto.norm ?_
+    refine (h_lim (n + m) (safeReflectConcatLabels ops1 ops2)
+      (safeReflectConcatMixed X (translateConfig (scale • a) Y))).sub ?_
+    exact (continuous_star.continuousAt.tendsto.comp
+      (h_lim n (reverseConjLabels ops1) (reverseReflectConfig X))).mul
+      (h_lim m ops2 Y)
+  exact le_of_tendsto h_lhs (Filter.Eventually.of_forall fun k => h_bound k scale hscale)
+
+/-- **Pillar 1 Constructor (`os_of_haar_continuum_limit`)**:
+    Assembles a concrete `OsterwalderSchraderYangMills G Curv` continuum Schwinger system from
+    a pointwise `k → ∞` convergent lattice/multiscale hierarchy `S_lat k → S_lim` via
+    Goal 7's six `limit_transfer_*` theorems (`S₀ = 1`, `OS0`, `OS1`, `OS2`, `OS3`, `OS4`). -/
+noncomputable def os_of_haar_continuum_limit
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (S_lat : ℕ → (n : ℕ) → (Fin n → ObservableLabel G Curv) → (Fin n → EuclideanSpace4) → ℂ)
+    (S_lim : (n : ℕ) → (Fin n → ObservableLabel G Curv) → (Fin n → EuclideanSpace4) → ℂ)
+    (h_lim : ∀ n ops x, Filter.Tendsto (fun k => S_lat k n ops x) Filter.atTop (nhds (S_lim n ops x)))
+    (S_smeared : (n : ℕ) → (Fin n → ObservableLabel G Curv) →
+      (Fin n → SchwartzMap EuclideanSpace4 ℂ) → ℂ)
+    (h_smeared_linear : ∀ (n : ℕ) (ops : Fin n → ObservableLabel G Curv) (i : Fin n)
+      (c1 c2 : ℂ) (f1 f2 : SchwartzMap EuclideanSpace4 ℂ)
+      (rest : Fin n → SchwartzMap EuclideanSpace4 ℂ),
+      S_smeared n ops (Function.update rest i (c1 • f1 + c2 • f2)) =
+        c1 * S_smeared n ops (Function.update rest i f1) +
+        c2 * S_smeared n ops (Function.update rest i f2))
+    (h_smeared_compat : ∀ (n : ℕ) (ops : Fin n → ObservableLabel G Curv)
+      (f : Fin n → SchwartzMap EuclideanSpace4 ℂ),
+      DisjointSupports f →
+      S_smeared n ops f =
+        ∫ x : Fin n → EuclideanSpace4,
+          (∏ i : Fin n, (f i : EuclideanSpace4 → ℂ) (x i)) * S_lim n ops x)
+    (C_temp : ℝ) (hC_temp : 1 ≤ C_temp) (r_fac : ℕ) (hr_fac : 0 < r_fac)
+    (h_temp : ∀ k n ops x, Pairwise (fun i j => x i ≠ x j) →
+      ‖S_lat k n ops x‖ ≤ C_temp ^ n * (Nat.factorial n : ℝ) ^ r_fac)
+    (h_smeared_os0 : ∀ (k_gen : ℕ) (gen : Fin k_gen → ObservableLabel G Curv),
+      ∃ (α β : ℝ) (s : ℕ), 0 < α ∧ 0 < β ∧
+        (∀ (n : ℕ) (idx : Fin n → Fin k_gen)
+           (f : Fin n → SchwartzMap EuclideanSpace4 ℂ),
+           DisjointSupports f →
+           ‖S_smeared n (fun i => gen (idx i)) f‖ ≤
+             (α ^ n) * ((Nat.factorial n : ℝ) ^ β) *
+             ∏ i : Fin n, SchwartzMap.seminorm ℝ s s (f i)))
+    (h0 : ∀ k ops x, S_lat k 0 ops x = 1)
+    (h_defect : ∀ (n : ℕ) (ops : Fin n → ObservableLabel G Curv)
+      (R : Matrix (Fin 4) (Fin 4) ℝ) (v : EuclideanSpace4) (x : Fin n → EuclideanSpace4),
+      R.transpose * R = 1 → Matrix.det R = 1 →
+      ∃ δ : ℕ → ℝ, Filter.Tendsto δ Filter.atTop (nhds 0) ∧
+        ∀ k, ‖S_lat k n
+            (fun i => match ops i with
+              | .localCurv P => .localCurv (Curv.transform R P)
+              | .wilsonChar chi => .wilsonChar chi)
+            (fun i => euclideanTransform R v (x i)) -
+          S_lat k n ops x‖ ≤ δ k)
+    (h_os2 : ∀ (k m : ℕ) (deg : Fin m → ℕ)
+      (ops : (r : Fin m) → Fin (deg r) → ObservableLabel G Curv)
+      (X : (r : Fin m) → Fin (deg r) → EuclideanSpace4)
+      (c : Fin m → ℂ),
+      (∀ (r : Fin m) (i : Fin (deg r)), 0 < toCoords (X r i) 0) →
+      0 ≤ (∑ r : Fin m, ∑ s : Fin m,
+        starRingEnd ℂ (c r) * (c s) *
+          S_lat k (deg r + deg s)
+            (safeReflectConcatLabels (ops r) (ops s))
+            (safeReflectConcatMixed (X r) (X s))).re)
+    (h_os3 : ∀ k (n : ℕ) (σ : Equiv.Perm (Fin n))
+      (ops : Fin n → ObservableLabel G Curv) (x : Fin n → EuclideanSpace4),
+      S_lat k n (ops ∘ σ) (x ∘ σ) = S_lat k n ops x)
+    (m_phys : ℝ) (hm_phys : 0 < m_phys)
+    (h_os4 : ∀ (n m : ℕ)
+      (ops1 : Fin n → ObservableLabel G Curv)
+      (ops2 : Fin m → ObservableLabel G Curv)
+      (X : Fin n → EuclideanSpace4)
+      (Y : Fin m → EuclideanSpace4)
+      (a : EuclideanSpace4),
+      (∀ i : Fin n, 0 < toCoords (X i) 0) →
+      (∀ j : Fin m, 0 < toCoords (Y j) 0) →
+      0 ≤ toCoords a 0 → ‖a‖ = 1 →
+      ∃ C_fg : ℝ, 0 ≤ C_fg ∧
+        ∀ (k : ℕ) (scale : ℝ), 0 ≤ scale →
+          ‖S_lat k (n + m)
+              (safeReflectConcatLabels ops1 ops2)
+              (safeReflectConcatMixed X (translateConfig (scale • a) Y)) -
+            starRingEnd ℂ (S_lat k n (reverseConjLabels ops1) (reverseReflectConfig X)) *
+              S_lat k m ops2 Y‖ ≤
+            C_fg * Real.exp (-m_phys * scale))
+    (h_uv : ∀ (P : Curv.Poly) (x : EuclideanSpace4),
+      P ≠ 0 → 4 ≤ Curv.classicalDim P → x ≠ 0 →
+      let d := Curv.classicalDim P
+      let γ := Curv.anomalous_exponent P
+      let c_P := Curv.uv_two_point_coeff P
+      let opP : ObservableLabel G Curv := .localCurv P
+      let opP_conj : ObservableLabel G Curv := .localCurv (Curv.conj P)
+      Filter.Tendsto
+        (fun (scale : ℝ) =>
+          (scale ^ (2 * d)) * ((-Real.log scale) ^ γ) *
+          (S_lim 2 ![opP_conj, opP] ![scale • x, 0] -
+            S_lim 1 ![opP_conj] ![scale • x] * S_lim 1 ![opP] ![0]).re)
+        (nhdsWithin 0 (Set.Ioi 0))
+        (nhds (c_P / (‖x‖ ^ (2 * d))))) :
+    OsterwalderSchraderYangMills G Curv where
+  schwinger := S_lim
+  schwinger_smeared := S_smeared
+  schwinger_smeared_linear := h_smeared_linear
+  schwinger_smeared_integral_compat := h_smeared_compat
+  schwinger_zero := limit_transfer_schwinger_zero S_lat S_lim h_lim h0
+  os0_temperedness := by
+    intro k_gen gen
+    rcases h_smeared_os0 k_gen gen with ⟨α, β, s, hα, hβ, h_sm⟩
+    refine ⟨max α C_temp, max β (r_fac : ℝ), s, lt_of_lt_of_le hα (le_max_left _ _),
+      lt_of_lt_of_le hβ (le_max_left _ _), ?_, ?_⟩
+    · intro n idx f hf
+      have h_pow : α ^ n ≤ (max α C_temp) ^ n := pow_le_pow_left₀ hα.le (le_max_left _ _) n
+      have h_fac : (Nat.factorial n : ℝ) ^ β ≤ (Nat.factorial n : ℝ) ^ (max β (r_fac : ℝ)) :=
+        Real.rpow_le_rpow_of_exponent_le (by exact_mod_cast Nat.factorial_pos n) (le_max_left _ _)
+      have h_sem : 0 ≤ ∏ i : Fin n, SchwartzMap.seminorm ℝ s s (f i) :=
+        Finset.prod_nonneg fun i _ => apply_nonneg (SchwartzMap.seminorm ℝ s s) (f i)
+      calc ‖S_smeared n (fun i => gen (idx i)) f‖
+          ≤ α ^ n * (Nat.factorial n : ℝ) ^ β *
+              ∏ i : Fin n, SchwartzMap.seminorm ℝ s s (f i) := h_sm n idx f hf
+        _ ≤ (max α C_temp) ^ n * (Nat.factorial n : ℝ) ^ (max β (r_fac : ℝ)) *
+              ∏ i : Fin n, SchwartzMap.seminorm ℝ s s (f i) := by
+            gcongr
+    · intro n idx x r hr h_sep
+      have h_pair : Pairwise (fun i j => x i ≠ x j) := by
+        intro i j hij h_eq
+        have h_le := h_sep i j hij
+        rw [h_eq, sub_self, norm_zero] at h_le
+        linarith
+      have h_lim_bnd :=
+        limit_transfer_os0_temperedness S_lat S_lim h_lim C_temp r_fac h_temp n
+          (fun i => gen (idx i)) x h_pair
+      have hC_pos : 0 < C_temp := lt_of_lt_of_le zero_lt_one hC_temp
+      have h_pow : C_temp ^ n ≤ (max α C_temp) ^ n :=
+        pow_le_pow_left₀ hC_pos.le (le_max_right _ _) n
+      have h_fac : (Nat.factorial n : ℝ) ^ r_fac ≤
+          (Nat.factorial n : ℝ) ^ (max β (r_fac : ℝ)) := by
+        rw [← Real.rpow_natCast]
+        exact Real.rpow_le_rpow_of_exponent_le (by exact_mod_cast Nat.factorial_pos n)
+          (le_max_right _ _)
+      have h_x1 : 1 ≤ (1 + ∑ i : Fin n, ‖x i‖ ^ 2) ^ (s * n) :=
+        one_le_pow₀ (by
+          have : 0 ≤ ∑ i : Fin n, ‖x i‖ ^ 2 := Finset.sum_nonneg fun i _ => sq_nonneg _
+          linarith)
+      have h_r1 : 1 ≤ (1 + 1 / r) ^ (s * n) :=
+        one_le_pow₀ (by
+          have : 0 ≤ 1 / r := div_nonneg zero_le_one hr.le
+          linarith)
+      calc ‖S_lim n (fun i => gen (idx i)) x‖
+          ≤ C_temp ^ n * (Nat.factorial n : ℝ) ^ r_fac := h_lim_bnd
+        _ ≤ (max α C_temp) ^ n * (Nat.factorial n : ℝ) ^ (max β (r_fac : ℝ)) := by
+            gcongr
+        _ = (max α C_temp) ^ n * (Nat.factorial n : ℝ) ^ (max β (r_fac : ℝ)) * 1 * 1 := by ring
+        _ ≤ (max α C_temp) ^ n * (Nat.factorial n : ℝ) ^ (max β (r_fac : ℝ)) *
+              (1 + ∑ i : Fin n, ‖x i‖ ^ 2) ^ (s * n) * (1 + 1 / r) ^ (s * n) := by
+            gcongr
+  os1_euclidean_invariance := limit_transfer_os1_from_anisotropy_defect S_lat S_lim h_lim h_defect
+  os2_reflection_positivity := limit_transfer_os2_reflection_positivity S_lat S_lim h_lim h_os2
+  os3_permutation_symmetry := limit_transfer_os3_permutation_symmetry S_lat S_lim h_lim h_os3
+  mass_rate := m_phys
+  mass_rate_pos := hm_phys
+  os4_exponential_clustering := limit_transfer_os4_exponential_clustering S_lat S_lim h_lim m_phys h_os4
+  os_short_distance_asymptotic_freedom := h_uv
+
+#print axioms os_of_haar_continuum_limit
+#print axioms limit_transfer_schwinger_zero
+#print axioms limit_transfer_os0_temperedness
+#print axioms limit_transfer_os1_from_anisotropy_defect
+#print axioms limit_transfer_os2_reflection_positivity
+#print axioms limit_transfer_os3_permutation_symmetry
+#print axioms limit_transfer_os4_exponential_clustering
 #print axioms os_semigroup_clustering_implies_hamiltonian_gap
 #print axioms transfer_power_adjoint
 #print axioms lattice_reflection_positivity

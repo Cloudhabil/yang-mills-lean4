@@ -355,6 +355,170 @@ theorem yang_mills_su2_mass_gap_of_witness (w : ConstructiveContinuumSU2Witness)
     w.recon.H.HilbertSpace, w.recon.H.normedGroup, w.recon.H.innerProduct, w.recon.H.complete,
     w.recon.H.separable, w.recon.H.theory, rfl, w.recon.has_mass_gap⟩
 
+/-- **Pillar 1 + Pillar 2 + Pillar 3 `SU(2)` Witness Assembly**:
+    Constructs `ConstructiveContinuumSU2Witness` directly from:
+    1. Pillar 1 (`os_of_haar_continuum_limit` from a convergent lattice Haar hierarchy),
+    2. Pillar 3 (`OSIIWightmanReconstruction os`), and
+    3. Pillar 2 (`directChannelOPEWitness_of_rg_ope_expansion` from `OperatorProductExpansion`). -/
+noncomputable def su2_constructive_witness_of_3pillars
+    (S_lat : ℕ → (n : ℕ) →
+      (Fin n → ObservableLabel SU2
+        YangMills.CurvatureJetConstructive.su2CurvaturePolynomialAlgebra) →
+      (Fin n → EuclideanSpace4) → ℂ)
+    (S_lim : (n : ℕ) →
+      (Fin n → ObservableLabel SU2
+        YangMills.CurvatureJetConstructive.su2CurvaturePolynomialAlgebra) →
+      (Fin n → EuclideanSpace4) → ℂ)
+    (h_lim : ∀ n ops x,
+      Filter.Tendsto (fun k => S_lat k n ops x) Filter.atTop (nhds (S_lim n ops x)))
+    (S_smeared : (n : ℕ) →
+      (Fin n → ObservableLabel SU2
+        YangMills.CurvatureJetConstructive.su2CurvaturePolynomialAlgebra) →
+      (Fin n → SchwartzMap EuclideanSpace4 ℂ) → ℂ)
+    (h_smeared_linear : ∀ (n : ℕ)
+      (ops : Fin n → ObservableLabel SU2
+        YangMills.CurvatureJetConstructive.su2CurvaturePolynomialAlgebra)
+      (i : Fin n) (c1 c2 : ℂ) (f1 f2 : SchwartzMap EuclideanSpace4 ℂ)
+      (rest : Fin n → SchwartzMap EuclideanSpace4 ℂ),
+      S_smeared n ops (Function.update rest i (c1 • f1 + c2 • f2)) =
+        c1 * S_smeared n ops (Function.update rest i f1) +
+        c2 * S_smeared n ops (Function.update rest i f2))
+    (h_smeared_compat : ∀ (n : ℕ)
+      (ops : Fin n → ObservableLabel SU2
+        YangMills.CurvatureJetConstructive.su2CurvaturePolynomialAlgebra)
+      (f : Fin n → SchwartzMap EuclideanSpace4 ℂ),
+      DisjointSupports f →
+      S_smeared n ops f =
+        ∫ x : Fin n → EuclideanSpace4,
+          (∏ i : Fin n, (f i : EuclideanSpace4 → ℂ) (x i)) * S_lim n ops x)
+    (C_temp : ℝ) (hC_temp : 1 ≤ C_temp) (r_fac : ℕ) (hr_fac : 0 < r_fac)
+    (h_temp : ∀ k n ops x, Pairwise (fun i j => x i ≠ x j) →
+      ‖S_lat k n ops x‖ ≤ C_temp ^ n * (Nat.factorial n : ℝ) ^ r_fac)
+    (h_smeared_os0 : ∀ (k_gen : ℕ)
+      (gen : Fin k_gen → ObservableLabel SU2
+        YangMills.CurvatureJetConstructive.su2CurvaturePolynomialAlgebra),
+      ∃ (α β : ℝ) (s : ℕ), 0 < α ∧ 0 < β ∧
+        (∀ (n : ℕ) (idx : Fin n → Fin k_gen)
+           (f : Fin n → SchwartzMap EuclideanSpace4 ℂ),
+           DisjointSupports f →
+           ‖S_smeared n (fun i => gen (idx i)) f‖ ≤
+             (α ^ n) * ((Nat.factorial n : ℝ) ^ β) *
+             ∏ i : Fin n, SchwartzMap.seminorm ℝ s s (f i)))
+    (h0 : ∀ k ops x, S_lat k 0 ops x = 1)
+    (h_defect : ∀ (n : ℕ)
+      (ops : Fin n → ObservableLabel SU2
+        YangMills.CurvatureJetConstructive.su2CurvaturePolynomialAlgebra)
+      (R : Matrix (Fin 4) (Fin 4) ℝ) (v : EuclideanSpace4) (x : Fin n → EuclideanSpace4),
+      R.transpose * R = 1 → Matrix.det R = 1 →
+      ∃ δ : ℕ → ℝ, Filter.Tendsto δ Filter.atTop (nhds 0) ∧
+        ∀ k, ‖S_lat k n
+            (fun i => match ops i with
+              | .localCurv P => .localCurv
+                  (YangMills.CurvatureJetConstructive.su2CurvaturePolynomialAlgebra.transform R P)
+              | .wilsonChar chi => .wilsonChar chi)
+            (fun i => euclideanTransform R v (x i)) -
+          S_lat k n ops x‖ ≤ δ k)
+    (h_os2 : ∀ (k m : ℕ) (deg : Fin m → ℕ)
+      (ops : (r : Fin m) → Fin (deg r) → ObservableLabel SU2
+        YangMills.CurvatureJetConstructive.su2CurvaturePolynomialAlgebra)
+      (X : (r : Fin m) → Fin (deg r) → EuclideanSpace4)
+      (c : Fin m → ℂ),
+      (∀ (r : Fin m) (i : Fin (deg r)), 0 < toCoords (X r i) 0) →
+      0 ≤ (∑ r : Fin m, ∑ s : Fin m,
+        starRingEnd ℂ (c r) * (c s) *
+          S_lat k (deg r + deg s)
+            (safeReflectConcatLabels (ops r) (ops s))
+            (safeReflectConcatMixed (X r) (X s))).re)
+    (h_os3 : ∀ k (n : ℕ) (σ : Equiv.Perm (Fin n))
+      (ops : Fin n → ObservableLabel SU2
+        YangMills.CurvatureJetConstructive.su2CurvaturePolynomialAlgebra)
+      (x : Fin n → EuclideanSpace4),
+      S_lat k n (ops ∘ σ) (x ∘ σ) = S_lat k n ops x)
+    (m_phys : ℝ) (hm_phys : 0 < m_phys)
+    (h_os4 : ∀ (n m : ℕ)
+      (ops1 : Fin n → ObservableLabel SU2
+        YangMills.CurvatureJetConstructive.su2CurvaturePolynomialAlgebra)
+      (ops2 : Fin m → ObservableLabel SU2
+        YangMills.CurvatureJetConstructive.su2CurvaturePolynomialAlgebra)
+      (X : Fin n → EuclideanSpace4) (Y : Fin m → EuclideanSpace4) (a : EuclideanSpace4),
+      (∀ i : Fin n, 0 < toCoords (X i) 0) →
+      (∀ j : Fin m, 0 < toCoords (Y j) 0) →
+      0 ≤ toCoords a 0 → ‖a‖ = 1 →
+      ∃ C_fg : ℝ, 0 ≤ C_fg ∧
+        ∀ (k : ℕ) (scale : ℝ), 0 ≤ scale →
+          ‖S_lat k (n + m)
+              (safeReflectConcatLabels ops1 ops2)
+              (safeReflectConcatMixed X (translateConfig (scale • a) Y)) -
+            starRingEnd ℂ (S_lat k n (reverseConjLabels ops1) (reverseReflectConfig X)) *
+              S_lat k m ops2 Y‖ ≤
+            C_fg * Real.exp (-m_phys * scale))
+    (h_uv : ∀ (P : YangMills.CurvatureJetConstructive.su2CurvaturePolynomialAlgebra.Poly)
+      (x : EuclideanSpace4),
+      P ≠ 0 → 4 ≤ YangMills.CurvatureJetConstructive.su2CurvaturePolynomialAlgebra.classicalDim P →
+      x ≠ 0 →
+      let d := YangMills.CurvatureJetConstructive.su2CurvaturePolynomialAlgebra.classicalDim P
+      let γ := YangMills.CurvatureJetConstructive.su2CurvaturePolynomialAlgebra.anomalous_exponent P
+      let c_P := YangMills.CurvatureJetConstructive.su2CurvaturePolynomialAlgebra.uv_two_point_coeff P
+      let opP : ObservableLabel SU2
+        YangMills.CurvatureJetConstructive.su2CurvaturePolynomialAlgebra := .localCurv P
+      let opP_conj : ObservableLabel SU2
+        YangMills.CurvatureJetConstructive.su2CurvaturePolynomialAlgebra :=
+        .localCurv (YangMills.CurvatureJetConstructive.su2CurvaturePolynomialAlgebra.conj P)
+      Filter.Tendsto
+        (fun (scale : ℝ) =>
+          (scale ^ (2 * d)) * ((-Real.log scale) ^ γ) *
+          (S_lim 2 ![opP_conj, opP] ![scale • x, 0] -
+            S_lim 1 ![opP_conj] ![scale • x] * S_lim 1 ![opP] ![0]).re)
+        (nhdsWithin 0 (Set.Ioi 0))
+        (nhds (c_P / (‖x‖ ^ (2 * d)))))
+    (recon_of : ∀ os : OsterwalderSchraderYangMills SU2
+      YangMills.CurvatureJetConstructive.su2CurvaturePolynomialAlgebra,
+      OSIIWightmanReconstruction os)
+    (ope : YangMills.OPE.OperatorProductExpansion
+      YangMills.OPE.actionDensityOp YangMills.OPE.actionDensityOp 5)
+    (h_mem : YangMills.OPE.actionDensityOp ∈ ope.intermediateOps)
+    (deltaRem : ℝ) (h_gap : deltaRem < 4)
+    (h_rg_rem : ∀ (scale : ℝ) (_hscale : 0 < scale) (_hscale_small : scale < 1 / 2),
+      (ope.coeff YangMills.OPE.actionDensityOp h_mem).amplitude * scale ^ (-(4 : ℝ)) -
+        ope.remainderBound * scale ^ (-deltaRem) ≤
+        ‖S_lim 4
+            (YangMills.ContinuumFieldNontriviality.glueballOps4
+              YangMills.CurvatureJetConstructive.su2CurvaturePolynomialAlgebra)
+            ![scale • YangMills.ContinuumFieldNontriviality.unitTimeVec, 0,
+              (1 + scale) • YangMills.ContinuumFieldNontriviality.unitTimeVec,
+              1 • YangMills.ContinuumFieldNontriviality.unitTimeVec] -
+          S_lim 2
+            ![YangMills.ContinuumFieldNontriviality.glueballOp
+                YangMills.CurvatureJetConstructive.su2CurvaturePolynomialAlgebra,
+              YangMills.ContinuumFieldNontriviality.glueballOp
+                YangMills.CurvatureJetConstructive.su2CurvaturePolynomialAlgebra]
+            ![scale • YangMills.ContinuumFieldNontriviality.unitTimeVec, 0] *
+          S_lim 2
+            ![YangMills.ContinuumFieldNontriviality.glueballOp
+                YangMills.CurvatureJetConstructive.su2CurvaturePolynomialAlgebra,
+              YangMills.ContinuumFieldNontriviality.glueballOp
+                YangMills.CurvatureJetConstructive.su2CurvaturePolynomialAlgebra]
+            ![(1 + scale) • YangMills.ContinuumFieldNontriviality.unitTimeVec,
+              1 • YangMills.ContinuumFieldNontriviality.unitTimeVec]‖) :
+    ConstructiveContinuumSU2Witness :=
+  let os := YangMills.OsterwalderSchrader.os_of_haar_continuum_limit
+    S_lat S_lim h_lim S_smeared h_smeared_linear h_smeared_compat
+    C_temp hC_temp r_fac hr_fac h_temp h_smeared_os0 h0
+    (fun n ops R v x hR hdet => by
+      obtain ⟨δ, hδ, hb⟩ := h_defect n ops R v x hR hdet
+      refine ⟨δ, hδ, fun k => ?_⟩
+      convert hb k using 4
+      funext i
+      cases ops i <;> rfl) h_os2 h_os3
+    m_phys hm_phys h_os4 h_uv
+  { os := os
+    recon := recon_of os
+    ope_wit := YangMills.ContinuumFieldNontriviality.directChannelOPEWitness_of_rg_ope_expansion
+      os 1 ope h_mem deltaRem h_gap
+      (fun scale hs hsm => by
+        dsimp only [os, YangMills.OsterwalderSchrader.os_of_haar_continuum_limit]
+        simpa using h_rg_rem scale hs hsm) }
+
 /-- **Master Constructive SU(2) Millennium Synthesis Theorem**:
     Establishes the full multi-clause synthesis for `SU(2)` from the 3-pillar
     `ConstructiveContinuumSU2Witness` using `su2_compactSimpleLieGroup` and
@@ -527,7 +691,23 @@ theorem constructive_su2_millennium_synthesis
           (gnsCompletedSemigroup w.os t1 ht1).comp (gnsCompletedSemigroup w.os t2 ht2)) ∧
       (∀ (t : ℝ) (ht : 0 ≤ t) (x y : GNSCompletedHilbert w.os),
         inner ℂ (gnsCompletedSemigroup w.os t ht x) y =
-          inner ℂ x (gnsCompletedSemigroup w.os t ht y))) ∧
+          inner ℂ x (gnsCompletedSemigroup w.os t ht y)) ∧
+      ‖gnsCompletedVacuum w.os‖ = 1 ∧
+      (∀ (t : ℝ) (ht : 0 ≤ t),
+        gnsCompletedSemigroup w.os t ht (gnsCompletedVacuum w.os) = gnsCompletedVacuum w.os) ∧
+      (∀ (x : GNSLinearPreHilbert w.os) (m C : ℝ), 0 ≤ C →
+        (∀ (s : ℝ) (hs : 0 ≤ s), ‖gnsLinearSemigroup w.os s hs x‖ ≤ C * Real.exp (-m * s)) →
+        ∀ (t : ℝ) (ht : 0 ≤ t), ‖gnsLinearSemigroup w.os t ht x‖ ≤ Real.exp (-m * t) * ‖x‖) ∧
+      (∀ (x : GNSLinearPreHilbert w.os) (m : ℝ),
+        (∀ (t : ℝ) (ht : 0 ≤ t), ‖gnsLinearSemigroup w.os t ht x‖ ≤ Real.exp (-m * t) * ‖x‖) →
+        (∀ (t : ℝ) (ht : 0 ≤ t),
+          ‖gnsCompletedSemigroup w.os t ht (gnsLinearToCompleted w.os x)‖ ≤
+            Real.exp (-m * t) * ‖gnsLinearToCompleted w.os x‖) ∧
+        (inner ℂ (gnsLinearVacuum w.os) x = 0 →
+          inner ℂ (gnsCompletedVacuum w.os) (gnsLinearToCompleted w.os x) = 0)) ∧
+      (∀ [SeparableSpace (GNSCompletedHilbert w.os)]
+        (recon_c : GNSCompletedWightmanReconstruction w.os),
+        HasMassGap _ (GNSCompletedHilbert w.os) recon_c.theory)) ∧
     ((∀ (z : EuclideanSpace4) (lam : ℝ) (_hlam : 0 < lam),
         YangMills.CurvatureJetConstructive.su2CurvaturePolynomialAlgebra.ope_coeff
           YangMills.CurvatureJetConstructive.su2CurvaturePolynomialAlgebra.tr_F_sq
@@ -563,9 +743,151 @@ theorem constructive_su2_millennium_synthesis
                   R • YangMills.ContinuumFieldNontriviality.unitTimeVec]‖) →
         Nonempty (YangMills.ContinuumFieldNontriviality.DirectChannelOPEWitness w.os
           (YangMills.ContinuumFieldNontriviality.glueballOps4
+            YangMills.CurvatureJetConstructive.su2CurvaturePolynomialAlgebra) R)) ∧
+      (∀ (R : ℝ)
+        (ope : YangMills.OPE.OperatorProductExpansion
+          YangMills.OPE.actionDensityOp YangMills.OPE.actionDensityOp 5)
+        (h_mem : YangMills.OPE.actionDensityOp ∈ ope.intermediateOps)
+        (deltaRem : ℝ), deltaRem < 4 →
+        (∀ (scale : ℝ) (_hscale : 0 < scale) (_hscale_small : scale < R / 2),
+          (ope.coeff YangMills.OPE.actionDensityOp h_mem).amplitude * scale ^ (-(4 : ℝ)) -
+            ope.remainderBound * scale ^ (-deltaRem) ≤
+            ‖w.os.schwinger 4
+                (YangMills.ContinuumFieldNontriviality.glueballOps4
+                  YangMills.CurvatureJetConstructive.su2CurvaturePolynomialAlgebra)
+                ![scale • YangMills.ContinuumFieldNontriviality.unitTimeVec, 0,
+                  (R + scale) • YangMills.ContinuumFieldNontriviality.unitTimeVec,
+                  R • YangMills.ContinuumFieldNontriviality.unitTimeVec] -
+              w.os.schwinger 2
+                ![YangMills.ContinuumFieldNontriviality.glueballOp
+                    YangMills.CurvatureJetConstructive.su2CurvaturePolynomialAlgebra,
+                  YangMills.ContinuumFieldNontriviality.glueballOp
+                    YangMills.CurvatureJetConstructive.su2CurvaturePolynomialAlgebra]
+                ![scale • YangMills.ContinuumFieldNontriviality.unitTimeVec, 0] *
+              w.os.schwinger 2
+                ![YangMills.ContinuumFieldNontriviality.glueballOp
+                    YangMills.CurvatureJetConstructive.su2CurvaturePolynomialAlgebra,
+                  YangMills.ContinuumFieldNontriviality.glueballOp
+                    YangMills.CurvatureJetConstructive.su2CurvaturePolynomialAlgebra]
+                ![(R + scale) • YangMills.ContinuumFieldNontriviality.unitTimeVec,
+                  R • YangMills.ContinuumFieldNontriviality.unitTimeVec]‖) →
+        Nonempty (YangMills.ContinuumFieldNontriviality.DirectChannelOPEWitness w.os
+          (YangMills.ContinuumFieldNontriviality.glueballOps4
             YangMills.CurvatureJetConstructive.su2CurvaturePolynomialAlgebra) R))) ∧
+    (∀ {P : Type} (B n : ℕ)
+        (S_W : (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ) (hS : Continuous S_W)
+        (s_p : P → (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ) (ε : ℝ)
+        (hs : ∀ p : P, Continuous (s_p p))
+        (obs : Fin n → ((Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℂ))
+        (β r0 : ℝ) (hβ : (5 / 2 : ℝ) ≤ β) (hr_lo : 0 ≤ r0) (hr_hi : r0 ≤ 1 / 4)
+        (k_mode : Fin 4 → Fin 2) (hk_mode : k_mode ≠ 0)
+        (φ : (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ) (hφ : Continuous φ)
+        (γ : Finset YangMills.HypercubicPolymerCounting.Z4Plaquette)
+        (hne : γ.Nonempty) (hclosed : YangMills.HypercubicPolymerCounting.IsClosed2Cycle γ)
+        (h_large_action : ∀ U ∈ Integration.largeFieldSet B s_p ε,
+          max 0 (Real.log (20 * β / 2401)) + β * (γ.card : ℝ) ≤ S_W U),
+        let H := YangMills.ContinuumCauchy.su3CanonicalHaarMultiscaleHierarchy
+          B n S_W hS s_p ε hs obs β r0 hβ hr_lo hr_hi k_mode hk_mode φ hφ γ hne hclosed h_large_action
+        CauchySeq H.S_k ∧
+        (∃! S_inf : ℝ, Filter.Tendsto H.S_k Filter.atTop (nhds S_inf)) ∧
+        (∀ k : ℕ, |YangMills.ContinuumCauchy.continuumSchwingerLimit H -
+          Integration.su3HaarRenormalizedSeq B S_W n obs
+            (YangMills.ContinuumCauchy.su3CanonicalDyadicStep B S_W s_p ε β r0 k_mode φ) k| ≤
+            2 * (1 / 4 : ℝ) * (1 / 2 : ℝ) ^ k)) ∧
+    -- 16. Pointwise k → ∞ OS Axiom Limit-Transfer Theorems (S₀ = 1, OS0, OS1, OS2, OS3, OS4)
+    (∀ {G : Type} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+      {Curv : CurvaturePolynomialAlgebra G}
+      (S_lat : ℕ → (n : ℕ) → (Fin n → ObservableLabel G Curv) → (Fin n → EuclideanSpace4) → ℂ)
+      (S_lim : (n : ℕ) → (Fin n → ObservableLabel G Curv) → (Fin n → EuclideanSpace4) → ℂ),
+      (∀ n ops x, Filter.Tendsto (fun k => S_lat k n ops x) Filter.atTop (nhds (S_lim n ops x))) →
+      ((∀ k ops x, S_lat k 0 ops x = 1) → ∀ ops x, S_lim 0 ops x = 1) ∧
+      (∀ (C_temp : ℝ) (r_fac : ℕ),
+        (∀ k n ops x, Pairwise (fun i j => x i ≠ x j) →
+          ‖S_lat k n ops x‖ ≤ C_temp ^ n * (Nat.factorial n : ℝ) ^ r_fac) →
+        ∀ n ops x, Pairwise (fun i j => x i ≠ x j) →
+          ‖S_lim n ops x‖ ≤ C_temp ^ n * (Nat.factorial n : ℝ) ^ r_fac) ∧
+      ((∀ (n : ℕ) (ops : Fin n → ObservableLabel G Curv)
+          (R : Matrix (Fin 4) (Fin 4) ℝ) (v : EuclideanSpace4) (x : Fin n → EuclideanSpace4),
+          R.transpose * R = 1 → Matrix.det R = 1 →
+          ∃ δ : ℕ → ℝ, Filter.Tendsto δ Filter.atTop (nhds 0) ∧
+            ∀ k, ‖S_lat k n
+                (fun i => match ops i with
+                  | .localCurv P => .localCurv (Curv.transform R P)
+                  | .wilsonChar chi => .wilsonChar chi)
+                (fun i => euclideanTransform R v (x i)) -
+              S_lat k n ops x‖ ≤ δ k) →
+        ∀ (n : ℕ) (ops : Fin n → ObservableLabel G Curv)
+          (R : Matrix (Fin 4) (Fin 4) ℝ) (v : EuclideanSpace4) (x : Fin n → EuclideanSpace4),
+          R.transpose * R = 1 → Matrix.det R = 1 →
+          S_lim n
+            (fun i => match ops i with
+              | .localCurv P => .localCurv (Curv.transform R P)
+              | .wilsonChar chi => .wilsonChar chi)
+            (fun i => euclideanTransform R v (x i)) =
+          S_lim n ops x) ∧
+      ((∀ (k m : ℕ) (deg : Fin m → ℕ)
+          (ops : (r : Fin m) → Fin (deg r) → ObservableLabel G Curv)
+          (X : (r : Fin m) → Fin (deg r) → EuclideanSpace4)
+          (c : Fin m → ℂ),
+          (∀ (r : Fin m) (i : Fin (deg r)), 0 < toCoords (X r i) 0) →
+          0 ≤ (∑ r : Fin m, ∑ s : Fin m,
+            starRingEnd ℂ (c r) * (c s) *
+              S_lat k (deg r + deg s)
+                (safeReflectConcatLabels (ops r) (ops s))
+                (safeReflectConcatMixed (X r) (X s))).re) →
+        ∀ (m : ℕ) (deg : Fin m → ℕ)
+          (ops : (r : Fin m) → Fin (deg r) → ObservableLabel G Curv)
+          (X : (r : Fin m) → Fin (deg r) → EuclideanSpace4)
+          (c : Fin m → ℂ),
+          (∀ (r : Fin m) (i : Fin (deg r)), 0 < toCoords (X r i) 0) →
+          0 ≤ (∑ r : Fin m, ∑ s : Fin m,
+            starRingEnd ℂ (c r) * (c s) *
+              S_lim (deg r + deg s)
+                (safeReflectConcatLabels (ops r) (ops s))
+                (safeReflectConcatMixed (X r) (X s))).re) ∧
+      ((∀ k (n : ℕ) (σ : Equiv.Perm (Fin n))
+          (ops : Fin n → ObservableLabel G Curv) (x : Fin n → EuclideanSpace4),
+          S_lat k n (ops ∘ σ) (x ∘ σ) = S_lat k n ops x) →
+        ∀ (n : ℕ) (σ : Equiv.Perm (Fin n))
+          (ops : Fin n → ObservableLabel G Curv) (x : Fin n → EuclideanSpace4),
+          S_lim n (ops ∘ σ) (x ∘ σ) = S_lim n ops x) ∧
+      (∀ (m_phys : ℝ),
+        (∀ (n m : ℕ)
+          (ops1 : Fin n → ObservableLabel G Curv)
+          (ops2 : Fin m → ObservableLabel G Curv)
+          (X : Fin n → EuclideanSpace4)
+          (Y : Fin m → EuclideanSpace4)
+          (a : EuclideanSpace4),
+          (∀ i : Fin n, 0 < toCoords (X i) 0) →
+          (∀ j : Fin m, 0 < toCoords (Y j) 0) →
+          0 ≤ toCoords a 0 → ‖a‖ = 1 →
+          ∃ C_fg : ℝ, 0 ≤ C_fg ∧
+            ∀ (k : ℕ) (scale : ℝ), 0 ≤ scale →
+              ‖S_lat k (n + m)
+                  (safeReflectConcatLabels ops1 ops2)
+                  (safeReflectConcatMixed X (translateConfig (scale • a) Y)) -
+                starRingEnd ℂ (S_lat k n (reverseConjLabels ops1) (reverseReflectConfig X)) *
+                  S_lat k m ops2 Y‖ ≤
+                C_fg * Real.exp (-m_phys * scale)) →
+        ∀ (n m : ℕ)
+          (ops1 : Fin n → ObservableLabel G Curv)
+          (ops2 : Fin m → ObservableLabel G Curv)
+          (X : Fin n → EuclideanSpace4)
+          (Y : Fin m → EuclideanSpace4)
+          (a : EuclideanSpace4),
+          (∀ i : Fin n, 0 < toCoords (X i) 0) →
+          (∀ j : Fin m, 0 < toCoords (Y j) 0) →
+          0 ≤ toCoords a 0 → ‖a‖ = 1 →
+          ∃ C_fg : ℝ, 0 ≤ C_fg ∧
+            ∀ (scale : ℝ), 0 ≤ scale →
+              ‖S_lim (n + m)
+                  (safeReflectConcatLabels ops1 ops2)
+                  (safeReflectConcatMixed X (translateConfig (scale • a) Y)) -
+                starRingEnd ℂ (S_lim n (reverseConjLabels ops1) (reverseReflectConfig X)) *
+                  S_lim m ops2 Y‖ ≤
+                C_fg * Real.exp (-m_phys * scale))) ∧
     YangMills.YangMillsSU2MassGap.{0} := by
-  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · intro β r hβ_lo hβ_hi hr_lo hr_hi
     exact YangMills.UVThresholdBridge.gaussian_remainder_contraction_on_uv_bridge
       hβ_lo hβ_hi hr_lo hr_hi
@@ -650,13 +972,37 @@ theorem constructive_su2_millennium_synthesis
   · exact ⟨fun t ht x => gnsLinearSemigroup_norm_le w.os t ht x,
       fun t ht => gnsCompletedSemigroup_norm_le_one w.os t ht,
       fun t1 t2 ht1 ht2 => gnsCompletedSemigroup_add w.os t1 t2 ht1 ht2,
-      fun t ht x y => gnsCompletedSemigroup_inner_symm w.os t ht x y⟩
+      fun t ht x y => gnsCompletedSemigroup_inner_symm w.os t ht x y,
+      norm_gnsCompletedVacuum w.os,
+      fun t ht => gnsCompletedSemigroup_vacuum w.os t ht,
+      fun x m C hC h_shift => gnsLinearSemigroup_exp_decay_of_shift_bound w.os x m C hC h_shift,
+      fun x m h_lin => gnsCompletedSemigroup_exp_decay_of_linear w.os x m h_lin,
+      fun recon_c => recon_c.has_mass_gap⟩
   · exact ⟨fun z lam hlam =>
         YangMills.ContinuumFieldNontriviality.glueballOp_ope_self_scaling
           YangMills.CurvatureJetConstructive.su2CurvaturePolynomialAlgebra z lam hlam,
       fun R c_P K_rem deltaRem hc_P hK_rem h_gap h_rem =>
         ⟨YangMills.ContinuumFieldNontriviality.directChannelOPEWitness_of_tr_F_sq_remainder
-          w.os R c_P hc_P K_rem hK_rem deltaRem h_gap h_rem⟩⟩
+          w.os R c_P hc_P K_rem hK_rem deltaRem h_gap h_rem⟩,
+      fun R ope h_mem deltaRem h_gap h_rg_rem =>
+        ⟨YangMills.ContinuumFieldNontriviality.directChannelOPEWitness_of_rg_ope_expansion
+          w.os R ope h_mem deltaRem h_gap h_rg_rem⟩⟩
+  · intro P B n S_W hS s_p ε hs obs β r0 hβ hr_lo hr_hi k_mode hk_mode φ hφ γ hne hclosed h_large_action
+    exact YangMills.ContinuumCauchy.su3CanonicalHaarMultiscaleHierarchy_converges
+      B n S_W hS s_p ε hs obs β r0 hβ hr_lo hr_hi k_mode hk_mode φ hφ γ hne hclosed h_large_action
+  · intro G _ _ _ Curv S_lat S_lim h_lim
+    refine ⟨?_, ?_, ?_, ?_, ?_, ?_⟩
+    · exact fun h0 => YangMills.OsterwalderSchrader.limit_transfer_schwinger_zero S_lat S_lim h_lim h0
+    · exact fun C_temp r_fac h_temp =>
+        YangMills.OsterwalderSchrader.limit_transfer_os0_temperedness S_lat S_lim h_lim C_temp r_fac h_temp
+    · exact fun h_defect =>
+        YangMills.OsterwalderSchrader.limit_transfer_os1_from_anisotropy_defect S_lat S_lim h_lim h_defect
+    · exact fun h_os2 =>
+        YangMills.OsterwalderSchrader.limit_transfer_os2_reflection_positivity S_lat S_lim h_lim h_os2
+    · exact fun h_os3 =>
+        YangMills.OsterwalderSchrader.limit_transfer_os3_permutation_symmetry S_lat S_lim h_lim h_os3
+    · exact fun m_phys h_os4 =>
+        YangMills.OsterwalderSchrader.limit_transfer_os4_exponential_clustering S_lat S_lim h_lim m_phys h_os4
   · exact yang_mills_su2_mass_gap_of_witness w
 
 /-- Canonical 4-tuple of scalar glueball `Tr(F²)` observables for `SU(3)`. -/
@@ -686,6 +1032,170 @@ theorem yang_mills_su3_mass_gap_of_witness (w : ConstructiveContinuumSU3Witness)
   ⟨YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra,
     w.recon.H.HilbertSpace, w.recon.H.normedGroup, w.recon.H.innerProduct, w.recon.H.complete,
     w.recon.H.separable, w.recon.H.theory, rfl, w.recon.has_mass_gap⟩
+
+/-- **Pillar 1 + Pillar 2 + Pillar 3 `SU(3)` Witness Assembly**:
+    Constructs `ConstructiveContinuumSU3Witness` directly from:
+    1. Pillar 1 (`os_of_haar_continuum_limit` from a convergent lattice Haar hierarchy),
+    2. Pillar 3 (`OSIIWightmanReconstruction os`), and
+    3. Pillar 2 (`directChannelOPEWitness_of_rg_ope_expansion` from `OperatorProductExpansion`). -/
+noncomputable def su3_constructive_witness_of_3pillars
+    (S_lat : ℕ → (n : ℕ) →
+      (Fin n → ObservableLabel (Matrix.specialUnitaryGroup (Fin 3) ℂ)
+        YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra) →
+      (Fin n → EuclideanSpace4) → ℂ)
+    (S_lim : (n : ℕ) →
+      (Fin n → ObservableLabel (Matrix.specialUnitaryGroup (Fin 3) ℂ)
+        YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra) →
+      (Fin n → EuclideanSpace4) → ℂ)
+    (h_lim : ∀ n ops x,
+      Filter.Tendsto (fun k => S_lat k n ops x) Filter.atTop (nhds (S_lim n ops x)))
+    (S_smeared : (n : ℕ) →
+      (Fin n → ObservableLabel (Matrix.specialUnitaryGroup (Fin 3) ℂ)
+        YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra) →
+      (Fin n → SchwartzMap EuclideanSpace4 ℂ) → ℂ)
+    (h_smeared_linear : ∀ (n : ℕ)
+      (ops : Fin n → ObservableLabel (Matrix.specialUnitaryGroup (Fin 3) ℂ)
+        YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra)
+      (i : Fin n) (c1 c2 : ℂ) (f1 f2 : SchwartzMap EuclideanSpace4 ℂ)
+      (rest : Fin n → SchwartzMap EuclideanSpace4 ℂ),
+      S_smeared n ops (Function.update rest i (c1 • f1 + c2 • f2)) =
+        c1 * S_smeared n ops (Function.update rest i f1) +
+        c2 * S_smeared n ops (Function.update rest i f2))
+    (h_smeared_compat : ∀ (n : ℕ)
+      (ops : Fin n → ObservableLabel (Matrix.specialUnitaryGroup (Fin 3) ℂ)
+        YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra)
+      (f : Fin n → SchwartzMap EuclideanSpace4 ℂ),
+      DisjointSupports f →
+      S_smeared n ops f =
+        ∫ x : Fin n → EuclideanSpace4,
+          (∏ i : Fin n, (f i : EuclideanSpace4 → ℂ) (x i)) * S_lim n ops x)
+    (C_temp : ℝ) (hC_temp : 1 ≤ C_temp) (r_fac : ℕ) (hr_fac : 0 < r_fac)
+    (h_temp : ∀ k n ops x, Pairwise (fun i j => x i ≠ x j) →
+      ‖S_lat k n ops x‖ ≤ C_temp ^ n * (Nat.factorial n : ℝ) ^ r_fac)
+    (h_smeared_os0 : ∀ (k_gen : ℕ)
+      (gen : Fin k_gen → ObservableLabel (Matrix.specialUnitaryGroup (Fin 3) ℂ)
+        YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra),
+      ∃ (α β : ℝ) (s : ℕ), 0 < α ∧ 0 < β ∧
+        (∀ (n : ℕ) (idx : Fin n → Fin k_gen)
+           (f : Fin n → SchwartzMap EuclideanSpace4 ℂ),
+           DisjointSupports f →
+           ‖S_smeared n (fun i => gen (idx i)) f‖ ≤
+             (α ^ n) * ((Nat.factorial n : ℝ) ^ β) *
+             ∏ i : Fin n, SchwartzMap.seminorm ℝ s s (f i)))
+    (h0 : ∀ k ops x, S_lat k 0 ops x = 1)
+    (h_defect : ∀ (n : ℕ)
+      (ops : Fin n → ObservableLabel (Matrix.specialUnitaryGroup (Fin 3) ℂ)
+        YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra)
+      (R : Matrix (Fin 4) (Fin 4) ℝ) (v : EuclideanSpace4) (x : Fin n → EuclideanSpace4),
+      R.transpose * R = 1 → Matrix.det R = 1 →
+      ∃ δ : ℕ → ℝ, Filter.Tendsto δ Filter.atTop (nhds 0) ∧
+        ∀ k, ‖S_lat k n
+            (fun i => match ops i with
+              | .localCurv P => .localCurv
+                  (YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra.transform R P)
+              | .wilsonChar chi => .wilsonChar chi)
+            (fun i => euclideanTransform R v (x i)) -
+          S_lat k n ops x‖ ≤ δ k)
+    (h_os2 : ∀ (k m : ℕ) (deg : Fin m → ℕ)
+      (ops : (r : Fin m) → Fin (deg r) → ObservableLabel (Matrix.specialUnitaryGroup (Fin 3) ℂ)
+        YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra)
+      (X : (r : Fin m) → Fin (deg r) → EuclideanSpace4)
+      (c : Fin m → ℂ),
+      (∀ (r : Fin m) (i : Fin (deg r)), 0 < toCoords (X r i) 0) →
+      0 ≤ (∑ r : Fin m, ∑ s : Fin m,
+        starRingEnd ℂ (c r) * (c s) *
+          S_lat k (deg r + deg s)
+            (safeReflectConcatLabels (ops r) (ops s))
+            (safeReflectConcatMixed (X r) (X s))).re)
+    (h_os3 : ∀ k (n : ℕ) (σ : Equiv.Perm (Fin n))
+      (ops : Fin n → ObservableLabel (Matrix.specialUnitaryGroup (Fin 3) ℂ)
+        YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra)
+      (x : Fin n → EuclideanSpace4),
+      S_lat k n (ops ∘ σ) (x ∘ σ) = S_lat k n ops x)
+    (m_phys : ℝ) (hm_phys : 0 < m_phys)
+    (h_os4 : ∀ (n m : ℕ)
+      (ops1 : Fin n → ObservableLabel (Matrix.specialUnitaryGroup (Fin 3) ℂ)
+        YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra)
+      (ops2 : Fin m → ObservableLabel (Matrix.specialUnitaryGroup (Fin 3) ℂ)
+        YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra)
+      (X : Fin n → EuclideanSpace4) (Y : Fin m → EuclideanSpace4) (a : EuclideanSpace4),
+      (∀ i : Fin n, 0 < toCoords (X i) 0) →
+      (∀ j : Fin m, 0 < toCoords (Y j) 0) →
+      0 ≤ toCoords a 0 → ‖a‖ = 1 →
+      ∃ C_fg : ℝ, 0 ≤ C_fg ∧
+        ∀ (k : ℕ) (scale : ℝ), 0 ≤ scale →
+          ‖S_lat k (n + m)
+              (safeReflectConcatLabels ops1 ops2)
+              (safeReflectConcatMixed X (translateConfig (scale • a) Y)) -
+            starRingEnd ℂ (S_lat k n (reverseConjLabels ops1) (reverseReflectConfig X)) *
+              S_lat k m ops2 Y‖ ≤
+            C_fg * Real.exp (-m_phys * scale))
+    (h_uv : ∀ (P : YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra.Poly)
+      (x : EuclideanSpace4),
+      P ≠ 0 → 4 ≤ YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra.classicalDim P →
+      x ≠ 0 →
+      let d := YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra.classicalDim P
+      let γ := YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra.anomalous_exponent P
+      let c_P := YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra.uv_two_point_coeff P
+      let opP : ObservableLabel (Matrix.specialUnitaryGroup (Fin 3) ℂ)
+        YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra := .localCurv P
+      let opP_conj : ObservableLabel (Matrix.specialUnitaryGroup (Fin 3) ℂ)
+        YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra :=
+        .localCurv (YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra.conj P)
+      Filter.Tendsto
+        (fun (scale : ℝ) =>
+          (scale ^ (2 * d)) * ((-Real.log scale) ^ γ) *
+          (S_lim 2 ![opP_conj, opP] ![scale • x, 0] -
+            S_lim 1 ![opP_conj] ![scale • x] * S_lim 1 ![opP] ![0]).re)
+        (nhdsWithin 0 (Set.Ioi 0))
+        (nhds (c_P / (‖x‖ ^ (2 * d)))))
+    (recon_of : ∀ os : OsterwalderSchraderYangMills (Matrix.specialUnitaryGroup (Fin 3) ℂ)
+      YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra,
+      OSIIWightmanReconstruction os)
+    (ope : YangMills.OPE.OperatorProductExpansion
+      YangMills.OPE.actionDensityOp YangMills.OPE.actionDensityOp 5)
+    (h_mem : YangMills.OPE.actionDensityOp ∈ ope.intermediateOps)
+    (deltaRem : ℝ) (h_gap : deltaRem < 4)
+    (h_rg_rem : ∀ (scale : ℝ) (_hscale : 0 < scale) (_hscale_small : scale < 1 / 2),
+      (ope.coeff YangMills.OPE.actionDensityOp h_mem).amplitude * scale ^ (-(4 : ℝ)) -
+        ope.remainderBound * scale ^ (-deltaRem) ≤
+        ‖S_lim 4
+            (YangMills.ContinuumFieldNontriviality.glueballOps4
+              YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra)
+            ![scale • YangMills.ContinuumFieldNontriviality.unitTimeVec, 0,
+              (1 + scale) • YangMills.ContinuumFieldNontriviality.unitTimeVec,
+              1 • YangMills.ContinuumFieldNontriviality.unitTimeVec] -
+          S_lim 2
+            ![YangMills.ContinuumFieldNontriviality.glueballOp
+                YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra,
+              YangMills.ContinuumFieldNontriviality.glueballOp
+                YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra]
+            ![scale • YangMills.ContinuumFieldNontriviality.unitTimeVec, 0] *
+          S_lim 2
+            ![YangMills.ContinuumFieldNontriviality.glueballOp
+                YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra,
+              YangMills.ContinuumFieldNontriviality.glueballOp
+                YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra]
+            ![(1 + scale) • YangMills.ContinuumFieldNontriviality.unitTimeVec,
+              1 • YangMills.ContinuumFieldNontriviality.unitTimeVec]‖) :
+    ConstructiveContinuumSU3Witness :=
+  let os := YangMills.OsterwalderSchrader.os_of_haar_continuum_limit
+    S_lat S_lim h_lim S_smeared h_smeared_linear h_smeared_compat
+    C_temp hC_temp r_fac hr_fac h_temp h_smeared_os0 h0
+    (fun n ops R v x hR hdet => by
+      obtain ⟨δ, hδ, hb⟩ := h_defect n ops R v x hR hdet
+      refine ⟨δ, hδ, fun k => ?_⟩
+      convert hb k using 4
+      funext i
+      cases ops i <;> rfl) h_os2 h_os3
+    m_phys hm_phys h_os4 h_uv
+  { os := os
+    recon := recon_of os
+    ope_wit := YangMills.ContinuumFieldNontriviality.directChannelOPEWitness_of_rg_ope_expansion
+      os 1 ope h_mem deltaRem h_gap
+      (fun scale hs hsm => by
+        dsimp only [os, YangMills.OsterwalderSchrader.os_of_haar_continuum_limit]
+        simpa using h_rg_rem scale hs hsm) }
 
 /-- **Master Constructive SU(3) Millennium Synthesis Theorem**:
     Eliminates tautological `P → P` hypotheses by wiring the constructive pipeline modules
@@ -862,7 +1372,23 @@ theorem constructive_su3_millennium_synthesis
           (gnsCompletedSemigroup w.os t1 ht1).comp (gnsCompletedSemigroup w.os t2 ht2)) ∧
       (∀ (t : ℝ) (ht : 0 ≤ t) (x y : GNSCompletedHilbert w.os),
         inner ℂ (gnsCompletedSemigroup w.os t ht x) y =
-          inner ℂ x (gnsCompletedSemigroup w.os t ht y))) ∧
+          inner ℂ x (gnsCompletedSemigroup w.os t ht y)) ∧
+      ‖gnsCompletedVacuum w.os‖ = 1 ∧
+      (∀ (t : ℝ) (ht : 0 ≤ t),
+        gnsCompletedSemigroup w.os t ht (gnsCompletedVacuum w.os) = gnsCompletedVacuum w.os) ∧
+      (∀ (x : GNSLinearPreHilbert w.os) (m C : ℝ), 0 ≤ C →
+        (∀ (s : ℝ) (hs : 0 ≤ s), ‖gnsLinearSemigroup w.os s hs x‖ ≤ C * Real.exp (-m * s)) →
+        ∀ (t : ℝ) (ht : 0 ≤ t), ‖gnsLinearSemigroup w.os t ht x‖ ≤ Real.exp (-m * t) * ‖x‖) ∧
+      (∀ (x : GNSLinearPreHilbert w.os) (m : ℝ),
+        (∀ (t : ℝ) (ht : 0 ≤ t), ‖gnsLinearSemigroup w.os t ht x‖ ≤ Real.exp (-m * t) * ‖x‖) →
+        (∀ (t : ℝ) (ht : 0 ≤ t),
+          ‖gnsCompletedSemigroup w.os t ht (gnsLinearToCompleted w.os x)‖ ≤
+            Real.exp (-m * t) * ‖gnsLinearToCompleted w.os x‖) ∧
+        (inner ℂ (gnsLinearVacuum w.os) x = 0 →
+          inner ℂ (gnsCompletedVacuum w.os) (gnsLinearToCompleted w.os x) = 0)) ∧
+      (∀ [SeparableSpace (GNSCompletedHilbert w.os)]
+        (recon_c : GNSCompletedWightmanReconstruction w.os),
+        HasMassGap _ (GNSCompletedHilbert w.os) recon_c.theory)) ∧
     ((∀ (z : EuclideanSpace4) (lam : ℝ) (_hlam : 0 < lam),
         YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra.ope_coeff
           YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra.tr_F_sq
@@ -898,9 +1424,227 @@ theorem constructive_su3_millennium_synthesis
                   R • YangMills.ContinuumFieldNontriviality.unitTimeVec]‖) →
         Nonempty (YangMills.ContinuumFieldNontriviality.DirectChannelOPEWitness w.os
           (YangMills.ContinuumFieldNontriviality.glueballOps4
+            YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra) R)) ∧
+      (∀ (R : ℝ)
+        (ope : YangMills.OPE.OperatorProductExpansion
+          YangMills.OPE.actionDensityOp YangMills.OPE.actionDensityOp 5)
+        (h_mem : YangMills.OPE.actionDensityOp ∈ ope.intermediateOps)
+        (deltaRem : ℝ), deltaRem < 4 →
+        (∀ (scale : ℝ) (_hscale : 0 < scale) (_hscale_small : scale < R / 2),
+          (ope.coeff YangMills.OPE.actionDensityOp h_mem).amplitude * scale ^ (-(4 : ℝ)) -
+            ope.remainderBound * scale ^ (-deltaRem) ≤
+            ‖w.os.schwinger 4
+                (YangMills.ContinuumFieldNontriviality.glueballOps4
+                  YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra)
+                ![scale • YangMills.ContinuumFieldNontriviality.unitTimeVec, 0,
+                  (R + scale) • YangMills.ContinuumFieldNontriviality.unitTimeVec,
+                  R • YangMills.ContinuumFieldNontriviality.unitTimeVec] -
+              w.os.schwinger 2
+                ![YangMills.ContinuumFieldNontriviality.glueballOp
+                    YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra,
+                  YangMills.ContinuumFieldNontriviality.glueballOp
+                    YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra]
+                ![scale • YangMills.ContinuumFieldNontriviality.unitTimeVec, 0] *
+              w.os.schwinger 2
+                ![YangMills.ContinuumFieldNontriviality.glueballOp
+                    YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra,
+                  YangMills.ContinuumFieldNontriviality.glueballOp
+                    YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra]
+                ![(R + scale) • YangMills.ContinuumFieldNontriviality.unitTimeVec,
+                  R • YangMills.ContinuumFieldNontriviality.unitTimeVec]‖) →
+        Nonempty (YangMills.ContinuumFieldNontriviality.DirectChannelOPEWitness w.os
+          (YangMills.ContinuumFieldNontriviality.glueballOps4
             YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra) R))) ∧
+    ((∀ {P : Type} (B : ℕ)
+        (S_W : (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ)
+        (s_p : P → (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ) (ε : ℝ)
+        (β r : ℝ), 0 < r → ∀ (k_mode : Fin 4 → Fin 2)
+        (φ : (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ),
+        (1 : Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) ∈ Integration.smallFieldSet B s_p ε →
+        φ 1 = 0 →
+        0 < Integration.su3CanonicalHaarRemainder B S_W s_p ε β r k_mode φ 1) ∧
+      (∀ {P : Type} (B : ℕ)
+        (S_W : (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ), Continuous S_W →
+        ∀ (s_p : P → (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ) (ε : ℝ),
+        (∀ p : P, Continuous (s_p p)) →
+        ∀ (β r : ℝ), (5 / 2 : ℝ) ≤ β → 0 ≤ r → r ≤ 1 / 4 →
+        ∀ (k_mode : Fin 4 → Fin 2), k_mode ≠ 0 →
+        ∀ (φ : (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ), Continuous φ →
+        ∀ (γ : Finset YangMills.HypercubicPolymerCounting.Z4Plaquette),
+        γ.Nonempty → YangMills.HypercubicPolymerCounting.IsClosed2Cycle γ →
+        (∀ U ∈ Integration.largeFieldSet B s_p ε,
+          max 0 (Real.log (20 * β / 2401)) + β * (γ.card : ℝ) ≤ S_W U) →
+        0 ≤ (∫ U : Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ,
+          Integration.su3CanonicalHaarRemainder B S_W s_p ε β r k_mode φ U
+            ∂(Integration.wilsonLatticeHaarMeasure (Matrix.specialUnitaryGroup (Fin 3) ℂ) B)) ∧
+        (∫ U : Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ,
+          Integration.su3CanonicalHaarRemainder B S_W s_p ε β r k_mode φ U
+            ∂(Integration.wilsonLatticeHaarMeasure (Matrix.specialUnitaryGroup (Fin 3) ℂ) B)) ≤
+          YangMills.UVThresholdBridge.gaussianRemainderMajorant β r ∧
+        (∫ U : Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ,
+          Integration.su3CanonicalHaarRemainder B S_W s_p ε β r k_mode φ U
+            ∂(Integration.wilsonLatticeHaarMeasure (Matrix.specialUnitaryGroup (Fin 3) ℂ) B)) < 1 / 4) ∧
+      (∀ {P : Type} (B : ℕ)
+        (S_W : (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ), Continuous S_W →
+        ∀ (s_p : P → (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ) (ε : ℝ),
+        (∀ p : P, Continuous (s_p p)) →
+        ∀ (R_rem : (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ),
+        (∀ U, 0 ≤ R_rem U) →
+        MeasureTheory.Integrable R_rem
+          (Integration.wilsonLatticeHaarMeasure (Matrix.specialUnitaryGroup (Fin 3) ℂ) B) →
+        ∀ (β r : ℝ), (5 / 2 : ℝ) ≤ β → 0 ≤ r → r ≤ 1 / 4 →
+        ∀ (k_mode : Fin 4 → Fin 2), k_mode ≠ 0 →
+        ∀ (φ : (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ),
+        (∀ U ∈ Integration.smallFieldSet B s_p ε,
+          R_rem U ≤ ((1 / 2 : ℝ) * r + (1 / 8 : ℝ) * r ^ 2) *
+            Real.exp (- Integration.blockQuadraticAction β k_mode (φ U))) →
+        ∀ (γ : Finset YangMills.HypercubicPolymerCounting.Z4Plaquette),
+        γ.Nonempty → YangMills.HypercubicPolymerCounting.IsClosed2Cycle γ →
+        (∀ U ∈ Integration.largeFieldSet B s_p ε,
+          max 0 (Real.log (20 * β / 2401)) + β * (γ.card : ℝ) ≤ S_W U) →
+        (∀ U ∈ Integration.largeFieldSet B s_p ε, R_rem U ≤ Real.exp (- S_W U)) →
+        ∀ (N k_rg L : ℕ) [NeZero N] (hL : 2 ≤ L), 1 ≤ k_rg →
+        ∀ (C_hop : ℝ), 0 < C_hop →
+        ∃ b_cre : Integration.Su3HaarLFR1CREBundle B s_p ε R_rem N k_rg L hL,
+          b_cre.cre_step.polymer_norm =
+            (∫ U : Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ,
+              R_rem U ∂(Integration.wilsonLatticeHaarMeasure (Matrix.specialUnitaryGroup (Fin 3) ℂ) B)) ∧
+          b_cre.cre_step.polymer_norm < 1 / 4) ∧
+      (∀ (ch : NormalizedGaugeCharacter (Matrix.specialUnitaryGroup (Fin 3) ℂ))
+        (L B : ℕ) (e : SpatialEdge L ≃ Fin B) (β : ℝ) (p : Integration.SpatialPlaquette L),
+        let S_W := Integration.spatialWilsonActionOnBonds ch L B β e
+        let Z := Integration.wilsonPartitionFunction (Matrix.specialUnitaryGroup (Fin 3) ℂ) B S_W
+        0 ≤ (Integration.wilsonLatticeSchwingerFunction (Matrix.specialUnitaryGroup (Fin 3) ℂ)
+          B S_W Z 1 ![Integration.spatialPlaquetteObs ch e p]).re ∧
+        (Integration.wilsonLatticeSchwingerFunction (Matrix.specialUnitaryGroup (Fin 3) ℂ)
+          B S_W Z 1 ![Integration.spatialPlaquetteObs ch e p]).re ≤ 2) ∧
+      (∀ (B n : ℕ) (S_W : (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ)
+        (obs : Fin n → ((Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℂ))
+        (R_step : ℕ → (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ)
+        (C_n : ℝ) (hC_pos : 0 < C_n)
+        (h_nonneg : ∀ j U, 0 ≤ R_step j U)
+        (h_dyadic : ∀ j : ℕ,
+          (∫ U : Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ,
+            R_step j U ∂(Integration.wilsonLatticeHaarMeasure (Matrix.specialUnitaryGroup (Fin 3) ℂ) B)) ≤
+            C_n * (1 / 2 : ℝ) ^ j),
+        let H := YangMills.ContinuumCauchy.su3HaarMultiscaleHierarchy B n S_W obs R_step C_n hC_pos h_nonneg h_dyadic
+        (∃! S_inf : ℝ, Filter.Tendsto H.S_k Filter.atTop (nhds S_inf)) ∧
+        (∀ k : ℕ, |YangMills.ContinuumCauchy.continuumSchwingerLimit H -
+          Integration.su3HaarRenormalizedSeq B S_W n obs R_step k| ≤ 2 * C_n * (1 / 2 : ℝ) ^ k)) ∧
+      (∀ {P : Type} (B n : ℕ)
+        (S_W : (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ) (hS : Continuous S_W)
+        (s_p : P → (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ) (ε : ℝ)
+        (hs : ∀ p : P, Continuous (s_p p))
+        (obs : Fin n → ((Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℂ))
+        (β r0 : ℝ) (hβ : (5 / 2 : ℝ) ≤ β) (hr_lo : 0 ≤ r0) (hr_hi : r0 ≤ 1 / 4)
+        (k_mode : Fin 4 → Fin 2) (hk_mode : k_mode ≠ 0)
+        (φ : (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ) (hφ : Continuous φ)
+        (γ : Finset YangMills.HypercubicPolymerCounting.Z4Plaquette)
+        (hne : γ.Nonempty) (hclosed : YangMills.HypercubicPolymerCounting.IsClosed2Cycle γ)
+        (h_large_action : ∀ U ∈ Integration.largeFieldSet B s_p ε,
+          max 0 (Real.log (20 * β / 2401)) + β * (γ.card : ℝ) ≤ S_W U),
+        let H := YangMills.ContinuumCauchy.su3CanonicalHaarMultiscaleHierarchy
+          B n S_W hS s_p ε hs obs β r0 hβ hr_lo hr_hi k_mode hk_mode φ hφ γ hne hclosed h_large_action
+        CauchySeq H.S_k ∧
+        (∃! S_inf : ℝ, Filter.Tendsto H.S_k Filter.atTop (nhds S_inf)) ∧
+        (∀ k : ℕ, |YangMills.ContinuumCauchy.continuumSchwingerLimit H -
+          Integration.su3HaarRenormalizedSeq B S_W n obs
+            (YangMills.ContinuumCauchy.su3CanonicalDyadicStep B S_W s_p ε β r0 k_mode φ) k| ≤
+            2 * (1 / 4 : ℝ) * (1 / 2 : ℝ) ^ k))) ∧
+    -- 16. Pointwise k → ∞ OS Axiom Limit-Transfer Theorems (S₀ = 1, OS0, OS1, OS2, OS3, OS4)
+    (∀ {G : Type} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+      {Curv : CurvaturePolynomialAlgebra G}
+      (S_lat : ℕ → (n : ℕ) → (Fin n → ObservableLabel G Curv) → (Fin n → EuclideanSpace4) → ℂ)
+      (S_lim : (n : ℕ) → (Fin n → ObservableLabel G Curv) → (Fin n → EuclideanSpace4) → ℂ),
+      (∀ n ops x, Filter.Tendsto (fun k => S_lat k n ops x) Filter.atTop (nhds (S_lim n ops x))) →
+      ((∀ k ops x, S_lat k 0 ops x = 1) → ∀ ops x, S_lim 0 ops x = 1) ∧
+      (∀ (C_temp : ℝ) (r_fac : ℕ),
+        (∀ k n ops x, Pairwise (fun i j => x i ≠ x j) →
+          ‖S_lat k n ops x‖ ≤ C_temp ^ n * (Nat.factorial n : ℝ) ^ r_fac) →
+        ∀ n ops x, Pairwise (fun i j => x i ≠ x j) →
+          ‖S_lim n ops x‖ ≤ C_temp ^ n * (Nat.factorial n : ℝ) ^ r_fac) ∧
+      ((∀ (n : ℕ) (ops : Fin n → ObservableLabel G Curv)
+          (R : Matrix (Fin 4) (Fin 4) ℝ) (v : EuclideanSpace4) (x : Fin n → EuclideanSpace4),
+          R.transpose * R = 1 → Matrix.det R = 1 →
+          ∃ δ : ℕ → ℝ, Filter.Tendsto δ Filter.atTop (nhds 0) ∧
+            ∀ k, ‖S_lat k n
+                (fun i => match ops i with
+                  | .localCurv P => .localCurv (Curv.transform R P)
+                  | .wilsonChar chi => .wilsonChar chi)
+                (fun i => euclideanTransform R v (x i)) -
+              S_lat k n ops x‖ ≤ δ k) →
+        ∀ (n : ℕ) (ops : Fin n → ObservableLabel G Curv)
+          (R : Matrix (Fin 4) (Fin 4) ℝ) (v : EuclideanSpace4) (x : Fin n → EuclideanSpace4),
+          R.transpose * R = 1 → Matrix.det R = 1 →
+          S_lim n
+            (fun i => match ops i with
+              | .localCurv P => .localCurv (Curv.transform R P)
+              | .wilsonChar chi => .wilsonChar chi)
+            (fun i => euclideanTransform R v (x i)) =
+          S_lim n ops x) ∧
+      ((∀ (k m : ℕ) (deg : Fin m → ℕ)
+          (ops : (r : Fin m) → Fin (deg r) → ObservableLabel G Curv)
+          (X : (r : Fin m) → Fin (deg r) → EuclideanSpace4)
+          (c : Fin m → ℂ),
+          (∀ (r : Fin m) (i : Fin (deg r)), 0 < toCoords (X r i) 0) →
+          0 ≤ (∑ r : Fin m, ∑ s : Fin m,
+            starRingEnd ℂ (c r) * (c s) *
+              S_lat k (deg r + deg s)
+                (safeReflectConcatLabels (ops r) (ops s))
+                (safeReflectConcatMixed (X r) (X s))).re) →
+        ∀ (m : ℕ) (deg : Fin m → ℕ)
+          (ops : (r : Fin m) → Fin (deg r) → ObservableLabel G Curv)
+          (X : (r : Fin m) → Fin (deg r) → EuclideanSpace4)
+          (c : Fin m → ℂ),
+          (∀ (r : Fin m) (i : Fin (deg r)), 0 < toCoords (X r i) 0) →
+          0 ≤ (∑ r : Fin m, ∑ s : Fin m,
+            starRingEnd ℂ (c r) * (c s) *
+              S_lim (deg r + deg s)
+                (safeReflectConcatLabels (ops r) (ops s))
+                (safeReflectConcatMixed (X r) (X s))).re) ∧
+      ((∀ k (n : ℕ) (σ : Equiv.Perm (Fin n))
+          (ops : Fin n → ObservableLabel G Curv) (x : Fin n → EuclideanSpace4),
+          S_lat k n (ops ∘ σ) (x ∘ σ) = S_lat k n ops x) →
+        ∀ (n : ℕ) (σ : Equiv.Perm (Fin n))
+          (ops : Fin n → ObservableLabel G Curv) (x : Fin n → EuclideanSpace4),
+          S_lim n (ops ∘ σ) (x ∘ σ) = S_lim n ops x) ∧
+      (∀ (m_phys : ℝ),
+        (∀ (n m : ℕ)
+          (ops1 : Fin n → ObservableLabel G Curv)
+          (ops2 : Fin m → ObservableLabel G Curv)
+          (X : Fin n → EuclideanSpace4)
+          (Y : Fin m → EuclideanSpace4)
+          (a : EuclideanSpace4),
+          (∀ i : Fin n, 0 < toCoords (X i) 0) →
+          (∀ j : Fin m, 0 < toCoords (Y j) 0) →
+          0 ≤ toCoords a 0 → ‖a‖ = 1 →
+          ∃ C_fg : ℝ, 0 ≤ C_fg ∧
+            ∀ (k : ℕ) (scale : ℝ), 0 ≤ scale →
+              ‖S_lat k (n + m)
+                  (safeReflectConcatLabels ops1 ops2)
+                  (safeReflectConcatMixed X (translateConfig (scale • a) Y)) -
+                starRingEnd ℂ (S_lat k n (reverseConjLabels ops1) (reverseReflectConfig X)) *
+                  S_lat k m ops2 Y‖ ≤
+                C_fg * Real.exp (-m_phys * scale)) →
+        ∀ (n m : ℕ)
+          (ops1 : Fin n → ObservableLabel G Curv)
+          (ops2 : Fin m → ObservableLabel G Curv)
+          (X : Fin n → EuclideanSpace4)
+          (Y : Fin m → EuclideanSpace4)
+          (a : EuclideanSpace4),
+          (∀ i : Fin n, 0 < toCoords (X i) 0) →
+          (∀ j : Fin m, 0 < toCoords (Y j) 0) →
+          0 ≤ toCoords a 0 → ‖a‖ = 1 →
+          ∃ C_fg : ℝ, 0 ≤ C_fg ∧
+            ∀ (scale : ℝ), 0 ≤ scale →
+              ‖S_lim (n + m)
+                  (safeReflectConcatLabels ops1 ops2)
+                  (safeReflectConcatMixed X (translateConfig (scale • a) Y)) -
+                starRingEnd ℂ (S_lim n (reverseConjLabels ops1) (reverseReflectConfig X)) *
+                  S_lim m ops2 Y‖ ≤
+                C_fg * Real.exp (-m_phys * scale))) ∧
     YangMills.YangMillsSU3MassGap.{0} := by
-  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · intro β r hβ_lo hβ_hi hr_lo hr_hi
     exact YangMills.UVThresholdBridge.gaussian_remainder_contraction_on_uv_bridge
       hβ_lo hβ_hi hr_lo hr_hi
@@ -985,15 +1729,58 @@ theorem constructive_su3_millennium_synthesis
   · exact ⟨fun t ht x => gnsLinearSemigroup_norm_le w.os t ht x,
       fun t ht => gnsCompletedSemigroup_norm_le_one w.os t ht,
       fun t1 t2 ht1 ht2 => gnsCompletedSemigroup_add w.os t1 t2 ht1 ht2,
-      fun t ht x y => gnsCompletedSemigroup_inner_symm w.os t ht x y⟩
+      fun t ht x y => gnsCompletedSemigroup_inner_symm w.os t ht x y,
+      norm_gnsCompletedVacuum w.os,
+      fun t ht => gnsCompletedSemigroup_vacuum w.os t ht,
+      fun x m C hC h_shift => gnsLinearSemigroup_exp_decay_of_shift_bound w.os x m C hC h_shift,
+      fun x m h_lin => gnsCompletedSemigroup_exp_decay_of_linear w.os x m h_lin,
+      fun recon_c => recon_c.has_mass_gap⟩
   · exact ⟨fun z lam hlam =>
         YangMills.ContinuumFieldNontriviality.glueballOp_ope_self_scaling
           YangMills.CurvatureJetConstructive.su3CurvaturePolynomialAlgebra z lam hlam,
       fun R c_P K_rem deltaRem hc_P hK_rem h_gap h_rem =>
         ⟨YangMills.ContinuumFieldNontriviality.directChannelOPEWitness_of_tr_F_sq_remainder
-          w.os R c_P hc_P K_rem hK_rem deltaRem h_gap h_rem⟩⟩
+          w.os R c_P hc_P K_rem hK_rem deltaRem h_gap h_rem⟩,
+      fun R ope h_mem deltaRem h_gap h_rg_rem =>
+        ⟨YangMills.ContinuumFieldNontriviality.directChannelOPEWitness_of_rg_ope_expansion
+          w.os R ope h_mem deltaRem h_gap h_rg_rem⟩⟩
+  · refine ⟨?_, ?_, ?_, ?_, ?_, ?_⟩
+    · intro P B S_W s_p ε β r hr k_mode φ h_one h_phi
+      exact Integration.su3CanonicalHaarRemainder_pos_at_one B S_W s_p ε β r hr k_mode φ h_one h_phi
+    · intro P B S_W hS s_p ε hs β r hβ hr_lo hr_hi k_mode hk_mode φ hφ γ hne hclosed h_large
+      exact Integration.su3CanonicalHaarRemainder_contraction
+        B S_W hS s_p ε hs β r hβ hr_lo hr_hi k_mode hk_mode φ hφ γ hne hclosed h_large
+    · intro P B S_W hS s_p ε hs R_rem h_nonneg h_int β r hβ hr_lo hr_hi k_mode hk_mode φ
+        h_small γ hne hclosed h_large_act h_large_bnd N k_rg L _ hL hk1 C_hop hC
+      exact (Integration.su3_haar_1step_rg_contraction_explicit
+        B S_W hS s_p ε hs R_rem h_nonneg h_int β r hβ hr_lo hr_hi k_mode hk_mode φ
+        h_small γ hne hclosed h_large_act h_large_bnd N k_rg L hL hk1 C_hop hC).2.2.2.2.1
+    · intro ch L B e β p
+      exact Integration.wilsonLatticeSchwingerFunction_plaquette_bounds ch L B e β p
+    · intro B n S_W obs R_step C_n hC_pos h_nonneg h_dyadic
+      have h_conv := YangMills.ContinuumCauchy.su3HaarMultiscaleHierarchy_converges
+        B n S_W obs R_step C_n hC_pos h_nonneg h_dyadic
+      exact ⟨h_conv.2.1, h_conv.2.2⟩
+    · intro P B n S_W hS s_p ε hs obs β r0 hβ hr_lo hr_hi k_mode hk_mode φ hφ γ hne hclosed h_large_action
+      exact YangMills.ContinuumCauchy.su3CanonicalHaarMultiscaleHierarchy_converges
+        B n S_W hS s_p ε hs obs β r0 hβ hr_lo hr_hi k_mode hk_mode φ hφ γ hne hclosed h_large_action
+  · intro G _ _ _ Curv S_lat S_lim h_lim
+    refine ⟨?_, ?_, ?_, ?_, ?_, ?_⟩
+    · exact fun h0 => YangMills.OsterwalderSchrader.limit_transfer_schwinger_zero S_lat S_lim h_lim h0
+    · exact fun C_temp r_fac h_temp =>
+        YangMills.OsterwalderSchrader.limit_transfer_os0_temperedness S_lat S_lim h_lim C_temp r_fac h_temp
+    · exact fun h_defect =>
+        YangMills.OsterwalderSchrader.limit_transfer_os1_from_anisotropy_defect S_lat S_lim h_lim h_defect
+    · exact fun h_os2 =>
+        YangMills.OsterwalderSchrader.limit_transfer_os2_reflection_positivity S_lat S_lim h_lim h_os2
+    · exact fun h_os3 =>
+        YangMills.OsterwalderSchrader.limit_transfer_os3_permutation_symmetry S_lat S_lim h_lim h_os3
+    · exact fun m_phys h_os4 =>
+        YangMills.OsterwalderSchrader.limit_transfer_os4_exponential_clustering S_lat S_lim h_lim m_phys h_os4
   · exact yang_mills_su3_mass_gap_of_witness w
 
+#print axioms su2_constructive_witness_of_3pillars
+#print axioms su3_constructive_witness_of_3pillars
 #print axioms constructive_su2_millennium_synthesis
 #print axioms constructive_su3_millennium_synthesis
 #print axioms yang_mills_su2_mass_gap_of_witness

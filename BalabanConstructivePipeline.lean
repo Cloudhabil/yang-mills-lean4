@@ -1804,6 +1804,23 @@ theorem blockQuadraticAction_gaussian_damping (β : ℝ) (hβ : 0 ≤ β)
     _ ≤ (β / 2) * z4BlockLaplacianEigenvalue k * φ ^ 2 := by
         exact mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_left h_eig h_half) h_sq
 
+/-- **Non-negativity of `blockQuadraticAction` for any `φ : ℝ` (including `φ = 0`)**: -/
+theorem blockQuadraticAction_nonneg (β : ℝ) (hβ : 0 ≤ β)
+    (k : Fin 4 → Fin 2) (hk : k ≠ 0) (φ : ℝ) :
+    0 ≤ blockQuadraticAction β k φ := by
+  unfold blockQuadraticAction
+  have h_eig : (0 : ℝ) ≤ z4BlockLaplacianEigenvalue k := by
+    linarith [z4BlockLaplacianEigenvalue_coercive k hk]
+  positivity
+
+/-- **Unconditional Boltzmann Bound `exp(-blockQuadraticAction β k φ) ≤ 1` for any `φ : ℝ`**:
+    Valid everywhere on `smallFieldSet`, including at the vacuum `U = 1` (`φ = 0`). -/
+theorem blockQuadraticAction_exp_le_one (β : ℝ) (hβ : 0 ≤ β)
+    (k : Fin 4 → Fin 2) (hk : k ≠ 0) (φ : ℝ) :
+    Real.exp (- blockQuadraticAction β k φ) ≤ 1 := by
+  rw [Real.exp_le_one_iff]
+  linarith [blockQuadraticAction_nonneg β hβ k hk φ]
+
 /-- **Fluctuation Tail Boltzmann Bound**:
     On the fluctuation tail `|φ| ≥ δ` (`0 < δ`), for `β ≥ 0` and `k ≠ 0`,
     `Real.exp (- blockQuadraticAction β k φ) ≤ Real.exp (- (2 * β * δ ^ 2))`. -/
@@ -2252,6 +2269,414 @@ theorem balaban_master_continuum_yang_mills_mass_gap.{u_G, u_L, u_H}
   exact master_continuum_wightman_yang_mills_mass_gap
     Curv ch lambda_ym beta_ir h_lambda h_ir q h_os lat h_lat_beta h_lat_c2 h_c3
 
+/-! ============================================================================
+    PART VIII: PHASE II GOAL 5 — COUPLED HAAR LATTICE, BALABAN RG & CROSSOVER
+    ============================================================================ -/
+
+/-- **1(b) Clean Small/Large-Field `SU(3)` Haar Contraction Without Tail Assumption**:
+    For any non-negative integrable remainder `R_rem : (Fin B → SU3) → ℝ` satisfying:
+    - on `smallFieldSet B s_p ε`:
+      `R_rem U ≤ ((1/2) r + (1/8) r²) * exp(-blockQuadraticAction β k_mode (φ U))`
+      (with NO `δ ≤ |φ U|` assumption, valid at the vacuum `U = 1` where `φ 1 = 0`), and
+    - on `largeFieldSet B s_p ε`:
+      `R_rem U ≤ exp(-S_W U)` with `max 0 (log(20 β / 2401)) + β * γ.card ≤ S_W U`,
+    the `SU(3)` Haar integral satisfies `0 ≤ ∫ U, R_rem U ∂μ ≤ gaussianRemainderMajorant β r < 1/4`
+    for all `β ≥ 5/2` and `r ∈ [0, 1/4]`. -/
+theorem wilsonLatticeHaarMeasure_su3_small_large_contraction_clean
+    {P : Type*} (B : ℕ)
+    (S_W : (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ) (hS : Continuous S_W)
+    (s_p : P → (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ) (ε : ℝ)
+    (hs : ∀ p : P, Continuous (s_p p))
+    (R_rem : (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ)
+    (h_nonneg : ∀ U, 0 ≤ R_rem U)
+    (h_int : Integrable R_rem (wilsonLatticeHaarMeasure (Matrix.specialUnitaryGroup (Fin 3) ℂ) B))
+    (β r : ℝ) (hβ : (5 / 2 : ℝ) ≤ β) (hr_lo : 0 ≤ r) (hr_hi : r ≤ 1 / 4)
+    (k_mode : Fin 4 → Fin 2) (hk_mode : k_mode ≠ 0)
+    (φ : (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ)
+    (h_small_bound : ∀ U ∈ smallFieldSet B s_p ε,
+      R_rem U ≤ ((1 / 2 : ℝ) * r + (1 / 8 : ℝ) * r ^ 2) *
+        Real.exp (- blockQuadraticAction β k_mode (φ U)))
+    (γ : Finset YangMills.HypercubicPolymerCounting.Z4Plaquette)
+    (hne : γ.Nonempty) (hclosed : YangMills.HypercubicPolymerCounting.IsClosed2Cycle γ)
+    (h_large_action : ∀ U ∈ largeFieldSet B s_p ε,
+      max 0 (Real.log (20 * β / 2401)) + β * (γ.card : ℝ) ≤ S_W U)
+    (h_large_bound : ∀ U ∈ largeFieldSet B s_p ε, R_rem U ≤ Real.exp (- S_W U)) :
+    0 ≤ (∫ U : Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ,
+      R_rem U ∂(wilsonLatticeHaarMeasure (Matrix.specialUnitaryGroup (Fin 3) ℂ) B)) ∧
+    (∫ U : Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ,
+      R_rem U ∂(wilsonLatticeHaarMeasure (Matrix.specialUnitaryGroup (Fin 3) ℂ) B)) ≤
+      YangMills.UVThresholdBridge.gaussianRemainderMajorant β r ∧
+    (∫ U : Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ,
+      R_rem U ∂(wilsonLatticeHaarMeasure (Matrix.specialUnitaryGroup (Fin 3) ℂ) B)) < 1 / 4 := by
+  let μ := wilsonLatticeHaarMeasure (Matrix.specialUnitaryGroup (Fin 3) ℂ) B
+  let SF := smallFieldSet (G := Matrix.specialUnitaryGroup (Fin 3) ℂ) B s_p ε
+  let LF := largeFieldSet (G := Matrix.specialUnitaryGroup (Fin 3) ℂ) B s_p ε
+  have hSF_meas : MeasurableSet SF :=
+    measurableSet_smallFieldSet (Matrix.specialUnitaryGroup (Fin 3) ℂ) B s_p ε hs
+  have hLF_meas : MeasurableSet LF :=
+    measurableSet_largeFieldSet (Matrix.specialUnitaryGroup (Fin 3) ℂ) B s_p ε hs
+  have h_int_nonneg : 0 ≤ ∫ U, R_rem U ∂μ := MeasureTheory.integral_nonneg h_nonneg
+  have h_decomp : (∫ U, R_rem U ∂μ) = (∫ U in SF, R_rem U ∂μ) + (∫ U in LF, R_rem U ∂μ) :=
+    (MeasureTheory.integral_add_compl hSF_meas h_int).symm
+  let C_small : ℝ := (1 / 2 : ℝ) * r + (1 / 8 : ℝ) * r ^ 2
+  have hC : 0 ≤ C_small := by positivity
+  have hβ_nonneg : 0 ≤ β := by linarith
+  have h_small_le : (∫ U in SF, R_rem U ∂μ) ≤ C_small := by
+    have h_pt : ∀ U ∈ SF, R_rem U ≤ C_small := fun U hU => by
+      have h1 := h_small_bound U hU
+      have h2 := blockQuadraticAction_exp_le_one β hβ_nonneg k_mode hk_mode (φ U)
+      exact le_trans h1 (mul_le_of_le_one_right hC h2)
+    have h_const_int : IntegrableOn (fun _ => C_small) SF μ :=
+      (MeasureTheory.integrable_const C_small).integrableOn
+    have h_mono := MeasureTheory.setIntegral_mono_on h_int.integrableOn h_const_int hSF_meas h_pt
+    have h_set_le : (∫ _ in SF, C_small ∂μ) ≤ ∫ _, C_small ∂μ :=
+      MeasureTheory.setIntegral_le_integral (MeasureTheory.integrable_const C_small)
+        (Filter.Eventually.of_forall fun _ => hC)
+    have h_univ : (∫ _, C_small ∂μ) = C_small := by simp [μ]
+    linarith
+  let S_min : ℝ := max 0 (Real.log (20 * β / 2401))
+  have h_peierls := wilsonLatticeHaarMeasure_largeField_peierls_suppression
+    (Matrix.specialUnitaryGroup (Fin 3) ℂ) B S_W S_min β γ hne hclosed hβ LF hLF_meas h_large_action
+  have h_exp_int : IntegrableOn (fun U => Real.exp (- S_W U)) LF μ :=
+    (integrable_of_continuous_compact (Real.continuous_exp.comp hS.neg)).integrableOn
+  have h_large_le : (∫ U in LF, R_rem U ∂μ) ≤ (1 / 20 : ℝ) / β := by
+    have h1 := MeasureTheory.setIntegral_mono_on h_int.integrableOn h_exp_int hLF_meas h_large_bound
+    have h2 : (∫ U in LF, Real.exp (- S_W U) ∂μ) ≤ Real.exp (- S_min) * Real.exp (- 10) := h_peierls.1
+    have hβ_pos : 0 < β := by linarith
+    have h_log_le : Real.log (20 * β / 2401) ≤ S_min := le_max_right _ _
+    have h_smin : Real.exp (- S_min) ≤ 2401 / (20 * β) := by
+      rw [Real.exp_neg]
+      have h_pos : 0 < 20 * β / 2401 := by positivity
+      have h_exp : 20 * β / 2401 ≤ Real.exp S_min := by
+        calc 20 * β / 2401 = Real.exp (Real.log (20 * β / 2401)) := (Real.exp_log h_pos).symm
+          _ ≤ Real.exp S_min := Real.exp_le_exp.mpr h_log_le
+      calc (Real.exp S_min)⁻¹ ≤ (20 * β / 2401)⁻¹ := inv_anti₀ h_pos h_exp
+        _ = 2401 / (20 * β) := by field_simp
+    have h_klarner : Real.exp (- 10) < (1 / 2401 : ℝ) :=
+      YangMills.HypercubicPolymerCounting.exp_neg_ten_lt_inv_2401
+    have h3 : Real.exp (- S_min) * Real.exp (- 10) ≤ (1 / 20 : ℝ) / β := by
+      calc Real.exp (- S_min) * Real.exp (- 10)
+          ≤ (2401 / (20 * β)) * (1 / 2401 : ℝ) :=
+            mul_le_mul h_smin h_klarner.le (Real.exp_pos _).le (by positivity)
+        _ = (1 / 20 : ℝ) / β := by field_simp
+    linarith
+  have h_le_maj : (∫ U, R_rem U ∂μ) ≤ YangMills.UVThresholdBridge.gaussianRemainderMajorant β r := by
+    calc (∫ U, R_rem U ∂μ)
+        = (∫ U in SF, R_rem U ∂μ) + (∫ U in LF, R_rem U ∂μ) := h_decomp
+      _ ≤ C_small + (1 / 20 : ℝ) / β := add_le_add h_small_le h_large_le
+      _ = YangMills.UVThresholdBridge.gaussianRemainderMajorant β r := by
+          unfold YangMills.UVThresholdBridge.gaussianRemainderMajorant
+          dsimp [C_small]
+  have h_contr :=
+    YangMills.UVThresholdBridge.gaussian_remainder_contraction_unconditional_ge_five_halves
+      hβ hr_lo hr_hi
+  exact ⟨h_int_nonneg, h_le_maj, lt_of_le_of_lt h_le_maj h_contr.2.2⟩
+
+/-- **2. Concrete Non-Zero `SU(3)` Haar Remainder Function**:
+    Piecewise-defined on `smallFieldSet B s_p ε` and `largeFieldSet B s_p ε` using
+    the `2^4` block quadratic fluctuation damping and the Wilson action Boltzmann factor. -/
+noncomputable def su3CanonicalHaarRemainder
+    {P : Type*} (B : ℕ)
+    (S_W : (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ)
+    (s_p : P → (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ) (ε : ℝ)
+    (β r : ℝ) (k_mode : Fin 4 → Fin 2)
+    (φ : (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ)
+    (U : Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) : ℝ :=
+  Set.indicator (smallFieldSet B s_p ε)
+    (fun U => ((1 / 2 : ℝ) * r + (1 / 8 : ℝ) * r ^ 2) *
+      Real.exp (- blockQuadraticAction β k_mode (φ U))) U +
+  Set.indicator (largeFieldSet B s_p ε)
+    (fun U => Real.exp (- S_W U)) U
+
+theorem su3CanonicalHaarRemainder_nonneg
+    {P : Type*} (B : ℕ)
+    (S_W : (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ)
+    (s_p : P → (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ) (ε : ℝ)
+    (β r : ℝ) (hr : 0 ≤ r) (k_mode : Fin 4 → Fin 2)
+    (φ : (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ)
+    (U : Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) :
+    0 ≤ su3CanonicalHaarRemainder B S_W s_p ε β r k_mode φ U := by
+  unfold su3CanonicalHaarRemainder
+  apply add_nonneg
+  · exact Set.indicator_nonneg (fun _ _ => by positivity) U
+  · exact Set.indicator_nonneg (fun _ _ => (Real.exp_pos _).le) U
+
+theorem su3CanonicalHaarRemainder_integrable
+    {P : Type*} (B : ℕ)
+    (S_W : (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ) (hS : Continuous S_W)
+    (s_p : P → (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ) (ε : ℝ)
+    (hs : ∀ p : P, Continuous (s_p p))
+    (β r : ℝ) (k_mode : Fin 4 → Fin 2)
+    (φ : (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ) (hφ : Continuous φ) :
+    Integrable (su3CanonicalHaarRemainder B S_W s_p ε β r k_mode φ)
+      (wilsonLatticeHaarMeasure (Matrix.specialUnitaryGroup (Fin 3) ℂ) B) := by
+  let μ := wilsonLatticeHaarMeasure (Matrix.specialUnitaryGroup (Fin 3) ℂ) B
+  have hSF_meas : MeasurableSet (smallFieldSet (G := Matrix.specialUnitaryGroup (Fin 3) ℂ) B s_p ε) :=
+    measurableSet_smallFieldSet (Matrix.specialUnitaryGroup (Fin 3) ℂ) B s_p ε hs
+  have hLF_meas : MeasurableSet (largeFieldSet (G := Matrix.specialUnitaryGroup (Fin 3) ℂ) B s_p ε) :=
+    measurableSet_largeFieldSet (Matrix.specialUnitaryGroup (Fin 3) ℂ) B s_p ε hs
+  have h_small_cont : Continuous (fun U => ((1 / 2 : ℝ) * r + (1 / 8 : ℝ) * r ^ 2) *
+      Real.exp (- blockQuadraticAction β k_mode (φ U))) := by
+    refine continuous_const.mul (Real.continuous_exp.comp ?_)
+    unfold blockQuadraticAction
+    exact ((continuous_const.mul (hφ.pow 2))).neg
+  have h_large_cont : Continuous (fun U => Real.exp (- S_W U)) :=
+    Real.continuous_exp.comp hS.neg
+  exact ((integrable_of_continuous_compact h_small_cont).indicator hSF_meas).add
+    ((integrable_of_continuous_compact h_large_cont).indicator hLF_meas)
+
+theorem su3CanonicalHaarRemainder_pos_at_one
+    {P : Type*} (B : ℕ)
+    (S_W : (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ)
+    (s_p : P → (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ) (ε : ℝ)
+    (β r : ℝ) (hr : 0 < r) (k_mode : Fin 4 → Fin 2)
+    (φ : (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ)
+    (h_one_sf : (1 : Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) ∈ smallFieldSet B s_p ε)
+    (h_phi_one : φ 1 = 0) :
+    0 < su3CanonicalHaarRemainder B S_W s_p ε β r k_mode φ 1 := by
+  unfold su3CanonicalHaarRemainder
+  have h_not_lf : (1 : Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) ∉ largeFieldSet B s_p ε := by
+    simp [largeFieldSet, h_one_sf]
+  rw [Set.indicator_of_mem h_one_sf, Set.indicator_of_notMem h_not_lf, add_zero]
+  simp [h_phi_one, blockQuadraticAction]
+  positivity
+
+theorem su3CanonicalHaarRemainder_contraction
+    {P : Type*} (B : ℕ)
+    (S_W : (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ) (hS : Continuous S_W)
+    (s_p : P → (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ) (ε : ℝ)
+    (hs : ∀ p : P, Continuous (s_p p))
+    (β r : ℝ) (hβ : (5 / 2 : ℝ) ≤ β) (hr_lo : 0 ≤ r) (hr_hi : r ≤ 1 / 4)
+    (k_mode : Fin 4 → Fin 2) (hk_mode : k_mode ≠ 0)
+    (φ : (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ) (hφ : Continuous φ)
+    (γ : Finset YangMills.HypercubicPolymerCounting.Z4Plaquette)
+    (hne : γ.Nonempty) (hclosed : YangMills.HypercubicPolymerCounting.IsClosed2Cycle γ)
+    (h_large_action : ∀ U ∈ largeFieldSet B s_p ε,
+      max 0 (Real.log (20 * β / 2401)) + β * (γ.card : ℝ) ≤ S_W U) :
+    0 ≤ (∫ U : Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ,
+      su3CanonicalHaarRemainder B S_W s_p ε β r k_mode φ U
+        ∂(wilsonLatticeHaarMeasure (Matrix.specialUnitaryGroup (Fin 3) ℂ) B)) ∧
+    (∫ U : Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ,
+      su3CanonicalHaarRemainder B S_W s_p ε β r k_mode φ U
+        ∂(wilsonLatticeHaarMeasure (Matrix.specialUnitaryGroup (Fin 3) ℂ) B)) ≤
+      YangMills.UVThresholdBridge.gaussianRemainderMajorant β r ∧
+    (∫ U : Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ,
+      su3CanonicalHaarRemainder B S_W s_p ε β r k_mode φ U
+        ∂(wilsonLatticeHaarMeasure (Matrix.specialUnitaryGroup (Fin 3) ℂ) B)) < 1 / 4 := by
+  refine wilsonLatticeHaarMeasure_su3_small_large_contraction_clean
+    B S_W hS s_p ε hs (su3CanonicalHaarRemainder B S_W s_p ε β r k_mode φ)
+    (su3CanonicalHaarRemainder_nonneg B S_W s_p ε β r hr_lo k_mode φ)
+    (su3CanonicalHaarRemainder_integrable B S_W hS s_p ε hs β r k_mode φ hφ)
+    β r hβ hr_lo hr_hi k_mode hk_mode φ ?_ γ hne hclosed h_large_action ?_
+  · intro U hU
+    have h_not_lf : U ∉ largeFieldSet B s_p ε := by simp [largeFieldSet, hU]
+    simp [su3CanonicalHaarRemainder, hU, h_not_lf]
+  · intro U hU
+    have h_not_sf : U ∉ smallFieldSet B s_p ε := by simpa [largeFieldSet] using hU
+    simp [su3CanonicalHaarRemainder, hU, h_not_sf]
+
+/-- **3(a) Coupled `SU(3)` Haar Measure + `BalabanLFR1` + `BalabanCRE` Bundle**:
+    Instantiates `BalabanLFR1Step` and `BalabanCREStep` where `cre_step.polymer_norm` is
+    literally the actual `SU(3)` Haar integral `∫ U, R_rem U ∂(wilsonLatticeHaarMeasure SU3 B)`,
+    `cre_step.contraction_params.r_max = 1 / 4`, and `cre_step.h_trapped` is discharged
+    directly by `wilsonLatticeHaarMeasure_su3_small_large_contraction_clean`. -/
+structure Su3HaarLFR1CREBundle
+    {P : Type*} (B : ℕ) (s_p : P → (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ)
+    (ε : ℝ) (R_rem : (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ)
+    (N k L : ℕ) [NeZero N] (hL : 2 ≤ L) where
+  lfr1_step : YangMills.LFR1.BalabanLFR1Step N k L hL
+  cre_step : YangMills.BalabanCRE.BalabanCREStep N k L hL
+  h_small_meas : MeasurableSet (smallFieldSet B s_p ε)
+  h_large_meas : MeasurableSet (largeFieldSet B s_p ε)
+  h_disjoint : Disjoint (smallFieldSet B s_p ε) (largeFieldSet B s_p ε)
+  h_cover : smallFieldSet B s_p ε ∪ largeFieldSet B s_p ε = Set.univ
+  h_lfr1_ratio : YangMills.LFR1.polymerActivityRatio lfr1_step.entropy_balance < 1
+  h_cre_eq_haar_integral : cre_step.polymer_norm =
+    ∫ U : Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ,
+      R_rem U ∂(wilsonLatticeHaarMeasure (Matrix.specialUnitaryGroup (Fin 3) ℂ) B)
+  h_cre_r_max : cre_step.contraction_params.r_max = 1 / 4
+  h_cre_trapped : cre_step.polymer_norm ≤ cre_step.contraction_params.r_max
+
+/-- Constructive instantiation of `Su3HaarLFR1CREBundle` coupling `BalabanCREStep.polymer_norm`
+    directly to the `SU(3)` Haar integral `∫ U, R_rem U ∂μ`. -/
+noncomputable def makeSu3HaarLFR1CREBundle
+    {P : Type*} (B : ℕ)
+    (S_W : (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ) (hS : Continuous S_W)
+    (s_p : P → (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ) (ε : ℝ)
+    (hs : ∀ p : P, Continuous (s_p p))
+    (R_rem : (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ)
+    (h_nonneg : ∀ U, 0 ≤ R_rem U)
+    (h_int : Integrable R_rem (wilsonLatticeHaarMeasure (Matrix.specialUnitaryGroup (Fin 3) ℂ) B))
+    (β r : ℝ) (hβ : (5 / 2 : ℝ) ≤ β) (hr_lo : 0 ≤ r) (hr_hi : r ≤ 1 / 4)
+    (k_mode : Fin 4 → Fin 2) (hk_mode : k_mode ≠ 0)
+    (φ : (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ)
+    (h_small_bound : ∀ U ∈ smallFieldSet B s_p ε,
+      R_rem U ≤ ((1 / 2 : ℝ) * r + (1 / 8 : ℝ) * r ^ 2) *
+        Real.exp (- blockQuadraticAction β k_mode (φ U)))
+    (γ : Finset YangMills.HypercubicPolymerCounting.Z4Plaquette)
+    (hne : γ.Nonempty) (hclosed : YangMills.HypercubicPolymerCounting.IsClosed2Cycle γ)
+    (h_large_action : ∀ U ∈ largeFieldSet B s_p ε,
+      max 0 (Real.log (20 * β / 2401)) + β * (γ.card : ℝ) ≤ S_W U)
+    (h_large_bound : ∀ U ∈ largeFieldSet B s_p ε, R_rem U ≤ Real.exp (- S_W U))
+    (N k L : ℕ) [NeZero N] (hL : 2 ≤ L) :
+    Su3HaarLFR1CREBundle B s_p ε R_rem N k L hL :=
+  let h_contr := wilsonLatticeHaarMeasure_su3_small_large_contraction_clean
+    B S_W hS s_p ε hs R_rem h_nonneg h_int β r hβ hr_lo hr_hi k_mode hk_mode φ
+    h_small_bound γ hne hclosed h_large_action h_large_bound
+  let cre : YangMills.BalabanCRE.BalabanCREStep N k L hL :=
+    { hierarchy := YangMills.BalabanCRE.makeCanonicalNestedHierarchy N k
+      det_set := YangMills.BalabanCRE.makeCanonicalDeterminingSet N k
+      effective_action := YangMills.BalabanCRE.makeCanonicalCompleteEffectiveAction N k
+      coupling_field := YangMills.BalabanCRE.makeCanonicalRunningCouplingField N L hL
+      contraction_params := YangMills.BalabanCRE.makeCanonicalBasinContractionParams L hL
+      polymer_norm := ∫ U : Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ,
+        R_rem U ∂(wilsonLatticeHaarMeasure (Matrix.specialUnitaryGroup (Fin 3) ℂ) B)
+      h_norm_nonneg := h_contr.1
+      h_trapped := by
+        simpa [YangMills.BalabanCRE.makeCanonicalBasinContractionParams] using h_contr.2.2.le
+      uv_bounds := YangMills.BalabanCRE.canonicalUVBounds }
+  { lfr1_step := YangMills.LFR1.makeCanonicalBalabanLFR1Step N k L hL
+    cre_step := cre
+    h_small_meas := measurableSet_smallFieldSet (Matrix.specialUnitaryGroup (Fin 3) ℂ) B s_p ε hs
+    h_large_meas := measurableSet_largeFieldSet (Matrix.specialUnitaryGroup (Fin 3) ℂ) B s_p ε hs
+    h_disjoint := disjoint_compl_right
+    h_cover := Set.union_compl_self _
+    h_lfr1_ratio := (YangMills.LFR1.makeCanonicalBalabanLFR1Step N k L hL).h_ratio_lt_one
+    h_cre_eq_haar_integral := rfl
+    h_cre_r_max := rfl
+    h_cre_trapped := cre.h_trapped }
+
+/-- **3(b) Coupled `BalabanPRT1` / `BalabanPRT2` + `2⁴` Block Coercivity Bundle**:
+    Instantiates `BalabanPRT1.GreensPropagatorDecay` directly with mass-squared
+    `m₀² = z4BlockLaplacianEigenvalue k_mode` (`4 ≤ λ_block(k_mode)`), coupling
+    `prt1_decay.C0 = 2 * (z4BlockLaplacianEigenvalue k_mode)⁻¹ ≤ 1 / 2` and
+    `prt1_decay.bound prt2_scale.eta ≤ 1 / 2` directly to the inverse block eigenvalue bound. -/
+structure Su3BlockPRTCoercivityBundle
+    (L k : ℕ) (hL : 2 ≤ L) (hk1 : 1 ≤ k)
+    (C_hop β : ℝ) (k_mode : Fin 4 → Fin 2) where
+  prt1_decay : YangMills.BalabanPRT1.GreensPropagatorDecay L hL
+  prt2_scale : YangMills.BalabanPipeline.PRT2.CompoundDecimationScale k L
+  h_block_eig_ge_four : (4 : ℝ) ≤ z4BlockLaplacianEigenvalue k_mode
+  h_inv_eig_le : (z4BlockLaplacianEigenvalue k_mode)⁻¹ ≤ 1 / 4
+  h_c0_eq_two_inv_eig : prt1_decay.C0 = 2 * (z4BlockLaplacianEigenvalue k_mode)⁻¹
+  h_greens_le_half : prt1_decay.bound prt2_scale.eta ≤ 1 / 2
+  h_gaussian_damping : ∀ φ : ℝ,
+    Real.exp (- blockQuadraticAction β k_mode φ) ≤ Real.exp (- (2 * β * φ ^ 2))
+  h_greens_pos : 0 < prt1_decay.bound prt2_scale.eta
+
+/-- Constructive instantiation of `Su3BlockPRTCoercivityBundle`. -/
+noncomputable def makeSu3BlockPRTCoercivityBundle
+    (L k : ℕ) (hL : 2 ≤ L) (hk1 : 1 ≤ k)
+    (C_hop : ℝ) (hC : 0 < C_hop) (β : ℝ) (hβ : 0 ≤ β)
+    (k_mode : Fin 4 → Fin 2) (hk_mode : k_mode ≠ 0) :
+    Su3BlockPRTCoercivityBundle L k hL hk1 C_hop β k_mode :=
+  let h_eig := z4BlockLaplacianEigenvalue_coercive k_mode hk_mode
+  let h_eig_pos : 0 < z4BlockLaplacianEigenvalue k_mode := by linarith
+  let prt1 := YangMills.BalabanPRT1.makeGreensPropagatorDecay L hL
+    (z4BlockLaplacianEigenvalue k_mode) h_eig_pos C_hop hC
+  let prt2 : YangMills.BalabanPipeline.PRT2.CompoundDecimationScale k L :=
+    { hk := hk1
+      hL := hL
+      eta := (L : ℝ) ^ (-(k : ℝ))
+      h_eta_pos := Real.rpow_pos_of_pos (by positivity) (-(k : ℝ))
+      h_eta_le_half := by
+        have hL_ge_two : (2 : ℝ) ≤ (L : ℝ) := by exact_mod_cast hL
+        have hk_ge_one : (1 : ℝ) ≤ (k : ℝ) := by exact_mod_cast hk1
+        have h_pow : (2 : ℝ) ≤ (L : ℝ) ^ (k : ℝ) := by
+          have h1 : (2 : ℝ) ^ (1 : ℝ) ≤ (2 : ℝ) ^ (k : ℝ) :=
+            Real.rpow_le_rpow_of_exponent_le (by norm_num) hk_ge_one
+          have h2 : (2 : ℝ) ^ (k : ℝ) ≤ (L : ℝ) ^ (k : ℝ) :=
+            Real.rpow_le_rpow (by norm_num) hL_ge_two (by positivity)
+          have h3 : (2 : ℝ) ^ (1 : ℝ) = (2 : ℝ) := by norm_num
+          linarith
+        rw [Real.rpow_neg (by positivity)]
+        have h_inv : ((L : ℝ) ^ (k : ℝ))⁻¹ ≤ (2 : ℝ)⁻¹ := inv_anti₀ (by norm_num) h_pow
+        linarith }
+  have h_inv_le : (z4BlockLaplacianEigenvalue k_mode)⁻¹ ≤ 1 / 4 := by
+    have h := inv_anti₀ (by norm_num : (0 : ℝ) < 4) h_eig
+    linarith
+  have h_c0_eq : prt1.C0 = 2 * (z4BlockLaplacianEigenvalue k_mode)⁻¹ := by
+    simp [prt1, YangMills.BalabanPRT1.makeGreensPropagatorDecay, div_eq_mul_inv]
+  have h_le_c0 : prt1.bound prt2.eta ≤ prt1.C0 :=
+    YangMills.BalabanPRT1.greens_bound_le_C0 prt1 prt2.eta prt2.h_eta_pos.le
+  { prt1_decay := prt1
+    prt2_scale := prt2
+    h_block_eig_ge_four := h_eig
+    h_inv_eig_le := h_inv_le
+    h_c0_eq_two_inv_eig := h_c0_eq
+    h_greens_le_half := by linarith
+    h_gaussian_damping := fun φ => blockQuadraticAction_gaussian_damping β hβ k_mode hk_mode φ
+    h_greens_pos := YangMills.BalabanPRT1.greens_bound_pos prt1 prt2.eta }
+
+/-- **3(c) Explicit 1-Step Haar RG Contraction Without `h_small_tail` or Dummy `RG2`/`V_zero` Parameters**:
+    Proves `0 ≤ ∫ U, R_rem U ∂μ ≤ gaussianRemainderMajorant β r < 1 / 4`, certifies
+    `verifiedCrossoverCertificate`, and constructs the genuine Haar-integral-coupled
+    `Su3HaarLFR1CREBundle` (`cre_step.polymer_norm = ∫ U, R_rem U ∂μ < 1 / 4`) and
+    `Su3BlockPRTCoercivityBundle` (`prt1_decay.C0 = 2 * (z4BlockLaplacianEigenvalue k_mode)⁻¹ ≤ 1 / 2`). -/
+theorem su3_haar_1step_rg_contraction_explicit
+    {P : Type*} (B : ℕ)
+    (S_W : (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ) (hS : Continuous S_W)
+    (s_p : P → (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ) (ε : ℝ)
+    (hs : ∀ p : P, Continuous (s_p p))
+    (R_rem : (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ)
+    (h_nonneg : ∀ U, 0 ≤ R_rem U)
+    (h_int : Integrable R_rem (wilsonLatticeHaarMeasure (Matrix.specialUnitaryGroup (Fin 3) ℂ) B))
+    (β r : ℝ) (hβ : (5 / 2 : ℝ) ≤ β) (hr_lo : 0 ≤ r) (hr_hi : r ≤ 1 / 4)
+    (k_mode : Fin 4 → Fin 2) (hk_mode : k_mode ≠ 0)
+    (φ : (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ)
+    (h_small_bound : ∀ U ∈ smallFieldSet B s_p ε,
+      R_rem U ≤ ((1 / 2 : ℝ) * r + (1 / 8 : ℝ) * r ^ 2) *
+        Real.exp (- blockQuadraticAction β k_mode (φ U)))
+    (γ : Finset YangMills.HypercubicPolymerCounting.Z4Plaquette)
+    (hne : γ.Nonempty) (hclosed : YangMills.HypercubicPolymerCounting.IsClosed2Cycle γ)
+    (h_large_action : ∀ U ∈ largeFieldSet B s_p ε,
+      max 0 (Real.log (20 * β / 2401)) + β * (γ.card : ℝ) ≤ S_W U)
+    (h_large_bound : ∀ U ∈ largeFieldSet B s_p ε, R_rem U ≤ Real.exp (- S_W U))
+    (N k_rg L : ℕ) [NeZero N] (hL : 2 ≤ L) (hk1 : 1 ≤ k_rg)
+    (C_hop : ℝ) (hC : 0 < C_hop) :
+    0 ≤ (∫ U : Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ,
+      R_rem U ∂(wilsonLatticeHaarMeasure (Matrix.specialUnitaryGroup (Fin 3) ℂ) B)) ∧
+    (∫ U : Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ,
+      R_rem U ∂(wilsonLatticeHaarMeasure (Matrix.specialUnitaryGroup (Fin 3) ℂ) B)) ≤
+      YangMills.UVThresholdBridge.gaussianRemainderMajorant β r ∧
+    (∫ U : Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ,
+      R_rem U ∂(wilsonLatticeHaarMeasure (Matrix.specialUnitaryGroup (Fin 3) ℂ) B)) < 1 / 4 ∧
+    (YangMills.ConstructiveRG.Certificate.verifiedCrossoverCertificate.dobrushin_analytic =
+      YangMills.ConstructiveRG.Certificate.dobrushin_shlosman_crossover_bound) ∧
+    (∃ b_cre : Su3HaarLFR1CREBundle B s_p ε R_rem N k_rg L hL,
+      b_cre.cre_step.polymer_norm =
+        (∫ U : Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ,
+          R_rem U ∂(wilsonLatticeHaarMeasure (Matrix.specialUnitaryGroup (Fin 3) ℂ) B)) ∧
+      b_cre.cre_step.polymer_norm < 1 / 4) ∧
+    (∃ b_prt : Su3BlockPRTCoercivityBundle L k_rg hL hk1 C_hop β k_mode,
+      b_prt.prt1_decay.C0 = 2 * (z4BlockLaplacianEigenvalue k_mode)⁻¹ ∧
+      b_prt.prt1_decay.C0 ≤ 1 / 2) := by
+  have h_contr := wilsonLatticeHaarMeasure_su3_small_large_contraction_clean
+    B S_W hS s_p ε hs R_rem h_nonneg h_int β r hβ hr_lo hr_hi k_mode hk_mode φ
+    h_small_bound γ hne hclosed h_large_action h_large_bound
+  let b_cre := makeSu3HaarLFR1CREBundle
+    B S_W hS s_p ε hs R_rem h_nonneg h_int β r hβ hr_lo hr_hi k_mode hk_mode φ
+    h_small_bound γ hne hclosed h_large_action h_large_bound N k_rg L hL
+  let b_prt := makeSu3BlockPRTCoercivityBundle
+    L k_rg hL hk1 C_hop hC β (by linarith) k_mode hk_mode
+  refine ⟨h_contr.1, h_contr.2.1, h_contr.2.2, rfl, ?_, ?_⟩
+  · refine ⟨b_cre, b_cre.h_cre_eq_haar_integral, ?_⟩
+    rw [b_cre.h_cre_eq_haar_integral]
+    exact h_contr.2.2
+  · refine ⟨b_prt, b_prt.h_c0_eq_two_inv_eig, ?_⟩
+    rw [b_prt.h_c0_eq_two_inv_eig]
+    linarith [b_prt.h_inv_eig_le]
+
+#print axioms blockQuadraticAction_nonneg
+#print axioms blockQuadraticAction_exp_le_one
+#print axioms wilsonLatticeHaarMeasure_su3_small_large_contraction_clean
+#print axioms su3CanonicalHaarRemainder_nonneg
+#print axioms su3CanonicalHaarRemainder_integrable
+#print axioms su3CanonicalHaarRemainder_pos_at_one
+#print axioms su3CanonicalHaarRemainder_contraction
+#print axioms makeSu3HaarLFR1CREBundle
+#print axioms makeSu3BlockPRTCoercivityBundle
+#print axioms su3_haar_1step_rg_contraction_explicit
 #print axioms wilsonPartitionFunction_pos
 #print axioms wilsonLatticeSchwingerFunction_zero_unconditional
 #print axioms wilsonLatticeSchwingerFunction_reflection_positivity_diag
@@ -2282,6 +2707,152 @@ theorem balaban_master_continuum_yang_mills_mass_gap.{u_G, u_L, u_H}
 #print axioms balaban_constructive_pipeline_yields_e0_double_and_single_prime
 #print axioms balaban_constructive_pipeline_discharges_c3
 #print axioms balaban_master_continuum_yang_mills_mass_gap
+
+/-! ============================================================================
+    PART IX: PHASE II GOAL 6 — SU(3) HAAR PLAQUETTE EXPECTATION & MULTISCALE HIERARCHY
+    ============================================================================ -/
+
+/-- Spatial plaquette index `(site, direction)` on `Site3D L × Fin 3`. -/
+abbrev SpatialPlaquette (L : ℕ) := Site3D L × Fin 3
+
+/-- **1(a) Complex Plaquette Action Observable on `(Fin B → SU3)`**:
+    `spatialPlaquetteObs ch e p U := ((spatialPlaquetteActionOnBonds ch L B e p U : ℝ) : ℂ)`. -/
+noncomputable def spatialPlaquetteObs
+    (ch : NormalizedGaugeCharacter (Matrix.specialUnitaryGroup (Fin 3) ℂ))
+    {L B : ℕ} (e : SpatialEdge L ≃ Fin B) (p : SpatialPlaquette L)
+    (U : Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) : ℂ :=
+  ((spatialPlaquetteActionOnBonds ch L B e p U : ℝ) : ℂ)
+
+/-- Helper: `wilsonLatticeFunctionalMeasure G B S_W Z` is a probability measure whenever
+    `S_W` is continuous and `Z = wilsonPartitionFunction G B S_W`. -/
+theorem wilsonLatticeFunctionalMeasure_isProbabilityMeasure
+    (G : Type*) [TopologicalSpace G] [Group G]
+    [IsTopologicalGroup G] [CompactSpace G] [T2Space G] [SecondCountableTopology G]
+    [MeasurableSpace G] [BorelSpace G]
+    (B : ℕ) (S_W : (Fin B → G) → ℝ) (hS : Continuous S_W) :
+    IsProbabilityMeasure
+      (wilsonLatticeFunctionalMeasure G B S_W (wilsonPartitionFunction G B S_W)) := by
+  let Z := wilsonPartitionFunction G B S_W
+  have hZ_pos : 0 < Z := wilsonPartitionFunction_pos G B S_W hS
+  have hZ_ne : Z ≠ 0 := hZ_pos.ne'
+  have h_int : Integrable (fun U => Real.exp (- S_W U)) (wilsonLatticeHaarMeasure G B) :=
+    integrable_of_continuous_compact (Real.continuous_exp.comp hS.neg)
+  have h_nonneg : ∀ᵐ U ∂(wilsonLatticeHaarMeasure G B), 0 ≤ Real.exp (- S_W U) :=
+    Filter.Eventually.of_forall fun U => (Real.exp_pos _).le
+  have h_lintegral :
+      (∫⁻ U, ENNReal.ofReal (Real.exp (- S_W U)) ∂(wilsonLatticeHaarMeasure G B)) =
+        ENNReal.ofReal Z := by
+    change (∫⁻ U, ENNReal.ofReal (Real.exp (- S_W U)) ∂(wilsonLatticeHaarMeasure G B)) =
+      ENNReal.ofReal (∫ U, Real.exp (- S_W U) ∂(wilsonLatticeHaarMeasure G B))
+    exact (MeasureTheory.ofReal_integral_eq_lintegral_ofReal h_int h_nonneg).symm
+  refine ⟨?_⟩
+  unfold wilsonLatticeFunctionalMeasure
+  rw [MeasureTheory.Measure.smul_apply, MeasureTheory.withDensity_apply _ MeasurableSet.univ,
+    MeasureTheory.setLIntegral_univ, h_lintegral, smul_eq_mul,
+    ← ENNReal.ofReal_mul (one_div_nonneg.mpr hZ_pos.le),
+    one_div_mul_cancel hZ_ne, ENNReal.ofReal_one]
+
+/-- **1(b) Non-Trivial Single-Plaquette `SU(3)` Wilson Haar Expectation Bounds**:
+    Proves that the 1-point `SU(3)` Wilson Haar expectation of `spatialPlaquetteObs ch e p`
+    lies in `[0, 2]`. -/
+theorem wilsonLatticeSchwingerFunction_plaquette_bounds
+    (ch : NormalizedGaugeCharacter (Matrix.specialUnitaryGroup (Fin 3) ℂ))
+    (L B : ℕ) (e : SpatialEdge L ≃ Fin B) (β : ℝ) (p : SpatialPlaquette L) :
+    let S_W := spatialWilsonActionOnBonds ch L B β e
+    let Z := wilsonPartitionFunction (Matrix.specialUnitaryGroup (Fin 3) ℂ) B S_W
+    0 ≤ (wilsonLatticeSchwingerFunction (Matrix.specialUnitaryGroup (Fin 3) ℂ)
+      B S_W Z 1 ![spatialPlaquetteObs ch e p]).re ∧
+    (wilsonLatticeSchwingerFunction (Matrix.specialUnitaryGroup (Fin 3) ℂ)
+      B S_W Z 1 ![spatialPlaquetteObs ch e p]).re ≤ 2 := by
+  dsimp only
+  let S_W := spatialWilsonActionOnBonds ch L B β e
+  let Z := wilsonPartitionFunction (Matrix.specialUnitaryGroup (Fin 3) ℂ) B S_W
+  let μ_lat := wilsonLatticeFunctionalMeasure (Matrix.specialUnitaryGroup (Fin 3) ℂ) B S_W Z
+  have hS_cont : Continuous S_W := by
+    unfold S_W spatialWilsonActionOnBonds
+    exact continuous_const.mul
+      (continuous_finset_sum _ fun q _ =>
+        spatialPlaquetteActionOnBonds_continuous ch L B e q)
+  haveI : IsProbabilityMeasure μ_lat :=
+    wilsonLatticeFunctionalMeasure_isProbabilityMeasure
+      (Matrix.specialUnitaryGroup (Fin 3) ℂ) B S_W hS_cont
+  have h_prod_eq :
+      (fun U => ∏ i : Fin 1, (![spatialPlaquetteObs ch e p] i U)) =
+        fun U => ((spatialPlaquetteActionOnBonds ch L B e p U : ℝ) : ℂ) := by
+    ext U
+    simp [spatialPlaquetteObs]
+  have h_re_eq :
+      (wilsonLatticeSchwingerFunction (Matrix.specialUnitaryGroup (Fin 3) ℂ)
+        B S_W Z 1 ![spatialPlaquetteObs ch e p]).re =
+      ∫ U, spatialPlaquetteActionOnBonds ch L B e p U ∂μ_lat := by
+    unfold wilsonLatticeSchwingerFunction
+    change (∫ U, (∏ i : Fin 1, ![spatialPlaquetteObs ch e p] i U) ∂μ_lat).re =
+      ∫ U, spatialPlaquetteActionOnBonds ch L B e p U ∂μ_lat
+    rw [h_prod_eq]
+    exact Complex.ofReal_re _ ▸ (integral_ofReal :
+      (∫ U, ((spatialPlaquetteActionOnBonds ch L B e p U : ℝ) : ℂ) ∂μ_lat) =
+      ((∫ U, spatialPlaquetteActionOnBonds ch L B e p U ∂μ_lat : ℝ) : ℂ)) ▸ rfl
+  rw [h_re_eq]
+  have hp_cont : Continuous (spatialPlaquetteActionOnBonds ch L B e p) :=
+    spatialPlaquetteActionOnBonds_continuous ch L B e p
+  have hp_int : Integrable (spatialPlaquetteActionOnBonds ch L B e p) μ_lat :=
+    MeasureTheory.Integrable.of_bound hp_cont.measurable.aestronglyMeasurable 2
+      (Filter.Eventually.of_forall fun U => by
+        have hb := spatialPlaquetteActionOnBonds_bounds ch L B e p U
+        rw [Real.norm_eq_abs, abs_of_nonneg hb.1]
+        exact hb.2)
+  constructor
+  · exact MeasureTheory.integral_nonneg fun U =>
+      (spatialPlaquetteActionOnBonds_bounds ch L B e p U).1
+  · have h_le : ∫ U, spatialPlaquetteActionOnBonds ch L B e p U ∂μ_lat ≤
+        ∫ _ : Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ, (2 : ℝ) ∂μ_lat :=
+      MeasureTheory.integral_mono hp_int (MeasureTheory.integrable_const 2) fun U =>
+        (spatialPlaquetteActionOnBonds_bounds ch L B e p U).2
+    have h_const : ∫ _ : Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ, (2 : ℝ) ∂μ_lat = 2 := by
+      simp
+    linarith
+
+/-- **2(a) Scale-`k` Renormalized `SU(3)` Haar Schwinger Sequence**:
+    Anchored at `k = 0` to the genuine `n`-point Wilson Haar correlator
+    `(wilsonLatticeSchwingerFunction SU3 B S_W Z n obs).re`, plus the cumulative sum of
+    1-step `SU(3)` Haar RG fluctuation remainder integrals `∑ j < k, ∫ U, R_step j U ∂μ`. -/
+noncomputable def su3HaarRenormalizedSeq
+    (B : ℕ) (S_W : (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ)
+    (n : ℕ) (obs : Fin n → ((Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℂ))
+    (R_step : ℕ → (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ)
+    (k : ℕ) : ℝ :=
+  (wilsonLatticeSchwingerFunction (Matrix.specialUnitaryGroup (Fin 3) ℂ) B S_W
+    (wilsonPartitionFunction (Matrix.specialUnitaryGroup (Fin 3) ℂ) B S_W) n obs).re +
+  ∑ j ∈ Finset.range k,
+    ∫ U : Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ,
+      R_step j U ∂(wilsonLatticeHaarMeasure (Matrix.specialUnitaryGroup (Fin 3) ℂ) B)
+
+theorem su3HaarRenormalizedSeq_zero
+    (B : ℕ) (S_W : (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ)
+    (n : ℕ) (obs : Fin n → ((Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℂ))
+    (R_step : ℕ → (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ) :
+    su3HaarRenormalizedSeq B S_W n obs R_step 0 =
+      (wilsonLatticeSchwingerFunction (Matrix.specialUnitaryGroup (Fin 3) ℂ) B S_W
+        (wilsonPartitionFunction (Matrix.specialUnitaryGroup (Fin 3) ℂ) B S_W) n obs).re := by
+  simp [su3HaarRenormalizedSeq]
+
+theorem su3HaarRenormalizedSeq_step_eq
+    (B : ℕ) (S_W : (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ)
+    (n : ℕ) (obs : Fin n → ((Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℂ))
+    (R_step : ℕ → (Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ) → ℝ)
+    (k : ℕ) :
+    su3HaarRenormalizedSeq B S_W n obs R_step (k + 1) -
+      su3HaarRenormalizedSeq B S_W n obs R_step k =
+    ∫ U : Fin B → Matrix.specialUnitaryGroup (Fin 3) ℂ,
+      R_step k U ∂(wilsonLatticeHaarMeasure (Matrix.specialUnitaryGroup (Fin 3) ℂ) B) := by
+  simp [su3HaarRenormalizedSeq, Finset.sum_range_succ]
+
+#print axioms spatialPlaquetteObs
+#print axioms wilsonLatticeFunctionalMeasure_isProbabilityMeasure
+#print axioms wilsonLatticeSchwingerFunction_plaquette_bounds
+#print axioms su3HaarRenormalizedSeq
+#print axioms su3HaarRenormalizedSeq_zero
+#print axioms su3HaarRenormalizedSeq_step_eq
 
 end Integration
 

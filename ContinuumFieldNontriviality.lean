@@ -29,7 +29,6 @@ import Mathlib
 import MillenniumYangMills
 import ConstructiveGNSReconstruction
 import QuantumOperatorProductExpansion
-import QuantumOperatorProductExpansion
 
 noncomputable section
 
@@ -1330,6 +1329,61 @@ def directChannelOPEWitness_of_tr_F_sq_remainder
     rw [h01, h23]
     exact h_rem scale hscale hscale_small
 
+/-- **Canonical Scalar Glueball `OperatorProductExpansion` Instantiation**:
+    Instantiates `YangMills.OPE.OperatorProductExpansion` at cutoff `5` for the canonical
+    dimension-4 scalar glueball `glueballOp Curv` (`YangMills.OPE.actionDensityOp`),
+    tying the leading Wilson coefficient amplitude to `Curv.ope_coeff Curv.tr_F_sq ...`
+    plus a positive baseline `c0 > 0`, and remainder bound `K_rem > 0`. -/
+def glueballOPEExpansion
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    (Curv : CurvaturePolynomialAlgebra G)
+    (c0 K_rem : ℝ) (hc0 : 0 < c0) (hK_rem : 0 < K_rem) :
+    YangMills.OPE.OperatorProductExpansion
+      YangMills.OPE.actionDensityOp YangMills.OPE.actionDensityOp 5 where
+  intermediateOps := [YangMills.OPE.actionDensityOp]
+  h_cutoff := fun C hC => by
+    simp only [List.mem_singleton] at hC
+    subst hC
+    decide
+  coeff := fun _ _ =>
+    { amplitude := ‖Curv.ope_coeff Curv.tr_F_sq Curv.tr_F_sq Curv.tr_F_sq unitTimeVec‖ + c0
+      h_amp_pos := add_pos_of_nonneg_of_pos (norm_nonneg _) hc0 }
+  remainderBound := K_rem
+  h_rem_pos := hK_rem
+  remainderLogExponent := 0
+  h_rem_log_nonneg := le_rfl
+
+/-- **RG-to-OPE Short-Distance Witness Constructor (`directChannelOPEWitness_of_rg_ope_expansion`)**:
+    Bridges `YangMills.OPE.OperatorProductExpansion` into `directChannelOPEWitness_of_tr_F_sq_remainder`
+    to construct `DirectChannelOPEWitness os (glueballOps4 Curv) R` for any gauge group `G`
+    and curvature polynomial algebra `Curv`. -/
+def directChannelOPEWitness_of_rg_ope_expansion
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (R : ℝ)
+    (ope : YangMills.OPE.OperatorProductExpansion
+      YangMills.OPE.actionDensityOp YangMills.OPE.actionDensityOp 5)
+    (h_mem : YangMills.OPE.actionDensityOp ∈ ope.intermediateOps)
+    (deltaRem : ℝ) (h_gap : deltaRem < 4)
+    (h_rg_rem : ∀ (scale : ℝ) (_hscale : 0 < scale) (_hscale_small : scale < R / 2),
+      (ope.coeff YangMills.OPE.actionDensityOp h_mem).amplitude * scale ^ (-(4 : ℝ)) -
+        ope.remainderBound * scale ^ (-deltaRem) ≤
+        ‖os.schwinger 4 (glueballOps4 Curv)
+            ![scale • unitTimeVec, 0, (R + scale) • unitTimeVec, R • unitTimeVec] -
+          os.schwinger 2 ![glueballOp Curv, glueballOp Curv] ![scale • unitTimeVec, 0] *
+          os.schwinger 2 ![glueballOp Curv, glueballOp Curv]
+            ![(R + scale) • unitTimeVec, R • unitTimeVec]‖) :
+    DirectChannelOPEWitness os (glueballOps4 Curv) R :=
+  directChannelOPEWitness_of_tr_F_sq_remainder os R
+    (ope.coeff YangMills.OPE.actionDensityOp h_mem).amplitude
+    (ope.coeff YangMills.OPE.actionDensityOp h_mem).h_amp_pos
+    ope.remainderBound
+    ope.h_rem_pos.le
+    deltaRem
+    h_gap
+    h_rg_rem
+
 #print axioms epstein_glaser_kernel_desingularization
 #print axioms epstein_glaser_integrand_desingularized
 #print axioms epstein_glaser_disjoint_supports_invariance
@@ -1350,5 +1404,7 @@ def directChannelOPEWitness_of_tr_F_sq_remainder
 #print axioms glueballOp_ope_self_scaling
 #print axioms glueballOp_ope_self_scaling_diff
 #print axioms directChannelOPEWitness_of_tr_F_sq_remainder
+#print axioms glueballOPEExpansion
+#print axioms directChannelOPEWitness_of_rg_ope_expansion
 
 end YangMills.ContinuumFieldNontriviality

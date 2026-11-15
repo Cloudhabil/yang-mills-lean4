@@ -1898,6 +1898,286 @@ theorem gnsCompletedSemigroup_inner_symm
       exact gnsLinearSemigroup_inner_symm os t ht a b
 
 /-! ============================================================================
+    PART IV-B: UNIT VACUUM STATE & EXPONENTIAL SEMIGROUP CONTRACTION
+    ============================================================================ -/
+
+/-- Formal vacuum state `1 · |Ω⟩` in `FormalPosTimeState G Curv`. -/
+noncomputable def formalVacuumState
+    (G : Type*) [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    (Curv : CurvaturePolynomialAlgebra G) : FormalPosTimeState G Curv :=
+  Finsupp.single (vacuumTestData G Curv) 1
+
+/-- Canonical unit vacuum vector in `GNSLinearPreHilbert os`. -/
+noncomputable def gnsLinearVacuum
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv) : GNSLinearPreHilbert os :=
+  Submodule.Quotient.mk (formalVacuumState G Curv)
+
+/-- Canonical unit vacuum vector in `GNSCompletedHilbert os`. -/
+noncomputable def gnsCompletedVacuum
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv) : GNSCompletedHilbert os :=
+  gnsLinearToCompleted os (gnsLinearVacuum os)
+
+theorem shiftPositiveTimeTestData_vacuum
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    (Curv : CurvaturePolynomialAlgebra G) (t : ℝ) (ht : 0 ≤ t) :
+    shiftPositiveTimeTestData t ht (vacuumTestData G Curv) = vacuumTestData G Curv := by
+  unfold shiftPositiveTimeTestData vacuumTestData
+  congr 1
+  funext i
+  exact Fin.elim0 i
+
+theorem inner_gnsLinearVacuum_self
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv) :
+    inner ℂ (gnsLinearVacuum os) (gnsLinearVacuum os) = 1 := by
+  change sesqOSHermQuotient os (Submodule.Quotient.mk (formalVacuumState G Curv))
+    (Submodule.Quotient.mk (formalVacuumState G Curv)) = 1
+  rw [sesqOSHermQuotient_mk]
+  unfold sesqOSHerm formalVacuumState
+  rw [sesqOSLinear_single_single]
+  have hvac : sesqOS os (vacuumTestData G Curv) (vacuumTestData G Curv) = 1 :=
+    osSesquilinearForm_vacuum_norm_one os
+  rw [hvac]
+  simp [map_one]
+  norm_num
+
+theorem norm_gnsLinearVacuum
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv) :
+    ‖gnsLinearVacuum os‖ = 1 := by
+  have hsq : ‖gnsLinearVacuum os‖ ^ 2 = 1 := by
+    rw [InnerProductSpace.norm_sq_eq_re_inner (𝕜 := ℂ), inner_gnsLinearVacuum_self os]
+    simp
+  have h0 : 0 ≤ ‖gnsLinearVacuum os‖ := norm_nonneg _
+  nlinarith
+
+theorem inner_gnsCompletedVacuum_self
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv) :
+    inner ℂ (gnsCompletedVacuum os) (gnsCompletedVacuum os) = 1 := by
+  rw [gnsCompletedVacuum, (gnsLinearToCompleted os).inner_map_map, inner_gnsLinearVacuum_self os]
+
+theorem norm_gnsCompletedVacuum
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv) :
+    ‖gnsCompletedVacuum os‖ = 1 := by
+  rw [gnsCompletedVacuum, (gnsLinearToCompleted os).norm_map, norm_gnsLinearVacuum os]
+
+theorem gnsCompletedVacuum_ne_zero
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv) :
+    gnsCompletedVacuum os ≠ 0 := by
+  intro h
+  have h1 := norm_gnsCompletedVacuum os
+  rw [h, norm_zero] at h1
+  norm_num at h1
+
+theorem gnsLinearSemigroup_vacuum
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (t : ℝ) (ht : 0 ≤ t) :
+    gnsLinearSemigroup os t ht (gnsLinearVacuum os) = gnsLinearVacuum os := by
+  rw [gnsLinearVacuum, gnsLinearSemigroup_mk, formalVacuumState,
+    shiftFormalPosTimeState_single, shiftPositiveTimeTestData_vacuum]
+
+theorem gnsCompletedSemigroup_vacuum
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (t : ℝ) (ht : 0 ≤ t) :
+    gnsCompletedSemigroup os t ht (gnsCompletedVacuum os) = gnsCompletedVacuum os := by
+  rw [gnsCompletedVacuum, gnsCompletedSemigroup_apply_coe, gnsLinearSemigroup_vacuum]
+
+/-- **Exponential Semigroup Contraction on `GNSLinearPreHilbert os`**:
+    Eliminates any constant prefactor `C ≥ 0` in `‖T_s x‖ ≤ C * exp(-m * s)` via
+    `gnsLinearSemigroup_pow_two_cauchy_schwarz` and the `2^k`-power root limit `k → ∞`. -/
+theorem gnsLinearSemigroup_exp_decay_of_shift_bound
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (x : GNSLinearPreHilbert os) (m C : ℝ) (_hC : 0 ≤ C)
+    (h_shift : ∀ (s : ℝ) (hs : 0 ≤ s), ‖gnsLinearSemigroup os s hs x‖ ≤ C * Real.exp (-m * s)) :
+    ∀ (t : ℝ) (ht : 0 ≤ t), ‖gnsLinearSemigroup os t ht x‖ ≤ Real.exp (-m * t) * ‖x‖ := by
+  intro t ht
+  by_cases hx0 : ‖x‖ = 0
+  · have h_le := gnsLinearSemigroup_norm_le os t ht x
+    rw [hx0] at h_le ⊢
+    rw [mul_zero]
+    exact h_le
+  · have hx_pos : 0 < ‖x‖ := lt_of_le_of_ne (norm_nonneg x) (Ne.symm hx0)
+    have hA_pos : 0 < Real.exp (-m * t) * ‖x‖ := mul_pos (Real.exp_pos _) hx_pos
+    by_contra h_gt
+    push_neg at h_gt
+    have h_ratio_gt : 1 < ‖gnsLinearSemigroup os t ht x‖ / (Real.exp (-m * t) * ‖x‖) :=
+      (one_lt_div hA_pos).mpr h_gt
+    have h_unb := tendsto_pow_atTop_atTop_of_one_lt h_ratio_gt
+    obtain ⟨N, hN⟩ := (h_unb.eventually (Filter.eventually_gt_atTop (C / ‖x‖))).exists
+    have hN_lt : N < 2 ^ N := Nat.lt_two_pow_self
+    have h_pow_mono :
+        (‖gnsLinearSemigroup os t ht x‖ / (Real.exp (-m * t) * ‖x‖)) ^ N ≤
+          (‖gnsLinearSemigroup os t ht x‖ / (Real.exp (-m * t) * ‖x‖)) ^ (2 ^ N) :=
+      pow_le_pow_right₀ h_ratio_gt.le hN_lt.le
+    have h_cs := gnsLinearSemigroup_pow_two_cauchy_schwarz os t ht x N
+    have h_s := h_shift ((2 ^ N : ℝ) * t) (mul_nonneg (pow_nonneg zero_le_two N) ht)
+    have h_exp : Real.exp (-m * ((2 ^ N : ℝ) * t)) = (Real.exp (-m * t)) ^ (2 ^ N) := by
+      have h_eq : -m * ((2 ^ N : ℝ) * t) = ((2 ^ N : ℕ) : ℝ) * (-m * t) := by
+        push_cast; ring
+      rw [h_eq, Real.exp_nat_mul]
+    have h_rhs :
+        ‖x‖ ^ (2 ^ N - 1) *
+            ‖gnsLinearSemigroup os ((2 ^ N : ℝ) * t)
+              (mul_nonneg (pow_nonneg zero_le_two N) ht) x‖ ≤
+          (C / ‖x‖) * (Real.exp (-m * t) * ‖x‖) ^ (2 ^ N) := by
+      calc ‖x‖ ^ (2 ^ N - 1) *
+            ‖gnsLinearSemigroup os ((2 ^ N : ℝ) * t)
+              (mul_nonneg (pow_nonneg zero_le_two N) ht) x‖
+          ≤ ‖x‖ ^ (2 ^ N - 1) * (C * Real.exp (-m * ((2 ^ N : ℝ) * t))) :=
+            mul_le_mul_of_nonneg_left h_s (pow_nonneg hx_pos.le _)
+        _ = (C / ‖x‖) * (Real.exp (-m * t) * ‖x‖) ^ (2 ^ N) := by
+            rw [h_exp, mul_pow]
+            have h2N : 1 ≤ 2 ^ N := Nat.one_le_two_pow
+            have h_pow_split : ‖x‖ ^ (2 ^ N) = ‖x‖ ^ (2 ^ N - 1) * ‖x‖ := by
+              conv_lhs => rw [← Nat.sub_add_cancel h2N, pow_succ]
+            rw [h_pow_split]
+            field_simp [hx_pos.ne']
+    have h_bound :
+        (‖gnsLinearSemigroup os t ht x‖ / (Real.exp (-m * t) * ‖x‖)) ^ (2 ^ N) ≤ C / ‖x‖ := by
+      rw [div_pow, div_le_iff₀ (pow_pos hA_pos (2 ^ N))]
+      exact h_cs.trans h_rhs
+    linarith
+
+/-- **Exponential Semigroup Contraction & Vacuum Orthogonality on `GNSCompletedHilbert os`**: -/
+theorem gnsCompletedSemigroup_exp_decay_of_linear
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (x : GNSLinearPreHilbert os) (m : ℝ)
+    (h_lin : ∀ (t : ℝ) (ht : 0 ≤ t),
+      ‖gnsLinearSemigroup os t ht x‖ ≤ Real.exp (-m * t) * ‖x‖) :
+    (∀ (t : ℝ) (ht : 0 ≤ t),
+      ‖gnsCompletedSemigroup os t ht (gnsLinearToCompleted os x)‖ ≤
+        Real.exp (-m * t) * ‖gnsLinearToCompleted os x‖) ∧
+    (inner ℂ (gnsLinearVacuum os) x = 0 →
+      inner ℂ (gnsCompletedVacuum os) (gnsLinearToCompleted os x) = 0) := by
+  refine ⟨fun t ht => ?_, fun h_ortho => ?_⟩
+  · rw [gnsCompletedSemigroup_apply_coe, (gnsLinearToCompleted os).norm_map,
+      (gnsLinearToCompleted os).norm_map]
+    exact h_lin t ht
+  · rw [gnsCompletedVacuum, (gnsLinearToCompleted os).inner_map_map, h_ortho]
+
+/-- Total `ℝ → GNSCompletedHilbert os` curve extending `gnsCompletedSemigroup os t ht` for `t ≥ 0`. -/
+noncomputable def gnsCompletedSemigroupCurve
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (ψ : GNSCompletedHilbert os) (t : ℝ) : GNSCompletedHilbert os :=
+  if ht : 0 ≤ t then gnsCompletedSemigroup os t ht ψ else ψ
+
+theorem gnsCompletedSemigroupCurve_zero
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    (ψ : GNSCompletedHilbert os) :
+    gnsCompletedSemigroupCurve os ψ 0 = ψ := by
+  simp [gnsCompletedSemigroupCurve, gnsCompletedSemigroup_zero]
+
+/-- **Constructive GNS Wightman Reconstruction on `GNSCompletedHilbert os`**:
+    Directly grounds `WightmanQuantumYangMills G (GNSCompletedHilbert os) Curv` on Goal 8's
+    `GNSCompletedHilbert os`, `gnsCompletedVacuum os`, `gnsCompletedSemigroup os`, and
+    exponential contraction without any `GNSMetricCompletion` detour. -/
+structure GNSCompletedWightmanReconstruction
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    [SeparableSpace (GNSCompletedHilbert os)] where
+  theory : WightmanQuantumYangMills G (GNSCompletedHilbert os) Curv
+  h_vacuum : theory.vacuum = gnsCompletedVacuum os
+  h_deriv : ∀ ψ : theory.domain,
+    HasDerivAt (gnsCompletedSemigroupCurve os (ψ : GNSCompletedHilbert os))
+      (- (theory.Hamiltonian ψ : GNSCompletedHilbert os)) 0
+  h_semigroup_decay : ∀ (ψ : theory.domain),
+    inner ℂ theory.vacuum (ψ : GNSCompletedHilbert os) = 0 →
+    ∀ (t : ℝ) (ht : 0 ≤ t),
+      ‖gnsCompletedSemigroup os t ht (ψ : GNSCompletedHilbert os)‖ ≤
+        Real.exp (-os.mass_rate * t) * ‖(ψ : GNSCompletedHilbert os)‖
+  h_finite_spec : ∃ (M : ℝ) (ψ : theory.domain),
+    0 < M ∧ inner ℂ theory.vacuum (ψ : GNSCompletedHilbert os) = 0 ∧
+    (ψ : GNSCompletedHilbert os) ≠ 0 ∧
+    ‖theory.Hamiltonian ψ‖ ≤ M * ‖(ψ : GNSCompletedHilbert os)‖
+
+/-- **Constructive Mass Gap on `GNSCompletedHilbert os` (`Δ = os.mass_rate > 0`)**:
+    Proves `HasMassGap G (GNSCompletedHilbert os) recon.theory` directly from
+    `gnsCompletedSemigroup os` and `os_semigroup_clustering_implies_hamiltonian_gap`. -/
+theorem GNSCompletedWightmanReconstruction.has_mass_gap
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    {os : OsterwalderSchraderYangMills G Curv}
+    [SeparableSpace (GNSCompletedHilbert os)]
+    (recon : GNSCompletedWightmanReconstruction os) :
+    HasMassGap G (GNSCompletedHilbert os) recon.theory := by
+  refine ⟨os.mass_rate, os.mass_rate_pos, ?_, recon.h_finite_spec⟩
+  intro ψ h_ortho
+  have h_init : gnsCompletedSemigroupCurve os (ψ : GNSCompletedHilbert os) 0 =
+      (ψ : GNSCompletedHilbert os) :=
+    gnsCompletedSemigroupCurve_zero os (ψ : GNSCompletedHilbert os)
+  have h_cluster : ∀ t : ℝ, 0 ≤ t →
+      ‖gnsCompletedSemigroupCurve os (ψ : GNSCompletedHilbert os) t‖ ≤
+        Real.exp (-os.mass_rate * t) * ‖(ψ : GNSCompletedHilbert os)‖ := by
+    intro t ht
+    simp only [gnsCompletedSemigroupCurve, dif_pos ht]
+    exact recon.h_semigroup_decay ψ h_ortho t ht
+  exact os_semigroup_clustering_implies_hamiltonian_gap
+    (gnsCompletedSemigroupCurve os (ψ : GNSCompletedHilbert os))
+    (ψ : GNSCompletedHilbert os)
+    (recon.theory.Hamiltonian ψ : GNSCompletedHilbert os)
+    os.mass_rate h_init (recon.h_deriv ψ) h_cluster
+
+/-- **Constructor for `GNSCompletedWightmanReconstruction os` from Linear-Quotient Shift Bounds**:
+    Automatically discharges `h_semigroup_decay` on `gnsLinearToCompleted os` domain vectors
+    via `gnsLinearSemigroup_exp_decay_of_shift_bound` and `gnsCompletedSemigroup_exp_decay_of_linear`. -/
+def GNSCompletedWightmanReconstruction.ofLinearShiftDecay
+    {G : Type*} [TopologicalSpace G] [Group G] [CompactSimpleLieGroup G]
+    {Curv : CurvaturePolynomialAlgebra G}
+    (os : OsterwalderSchraderYangMills G Curv)
+    [SeparableSpace (GNSCompletedHilbert os)]
+    (theory : WightmanQuantumYangMills G (GNSCompletedHilbert os) Curv)
+    (h_vacuum : theory.vacuum = gnsCompletedVacuum os)
+    (h_deriv : ∀ ψ : theory.domain,
+      HasDerivAt (gnsCompletedSemigroupCurve os (ψ : GNSCompletedHilbert os))
+        (- (theory.Hamiltonian ψ : GNSCompletedHilbert os)) 0)
+    (h_domain_linear : ∀ ψ : theory.domain,
+      inner ℂ theory.vacuum (ψ : GNSCompletedHilbert os) = 0 →
+      ∃ x : GNSLinearPreHilbert os,
+        (ψ : GNSCompletedHilbert os) = gnsLinearToCompleted os x ∧
+        ∃ C : ℝ, 0 ≤ C ∧
+          ∀ (s : ℝ) (hs : 0 ≤ s), ‖gnsLinearSemigroup os s hs x‖ ≤ C * Real.exp (-os.mass_rate * s))
+    (h_finite_spec : ∃ (M : ℝ) (ψ : theory.domain),
+      0 < M ∧ inner ℂ theory.vacuum (ψ : GNSCompletedHilbert os) = 0 ∧
+      (ψ : GNSCompletedHilbert os) ≠ 0 ∧
+      ‖theory.Hamiltonian ψ‖ ≤ M * ‖(ψ : GNSCompletedHilbert os)‖) :
+    GNSCompletedWightmanReconstruction os where
+  theory := theory
+  h_vacuum := h_vacuum
+  h_deriv := h_deriv
+  h_semigroup_decay := fun ψ h_ortho t ht => by
+    rcases h_domain_linear ψ h_ortho with ⟨x, hψ_eq, C, hC, h_shift⟩
+    have h_lin := gnsLinearSemigroup_exp_decay_of_shift_bound os x os.mass_rate C hC h_shift
+    have h_comp := (gnsCompletedSemigroup_exp_decay_of_linear os x os.mass_rate h_lin).1 t ht
+    rw [← hψ_eq] at h_comp
+    exact h_comp
+  h_finite_spec := h_finite_spec
+
+/-! ============================================================================
     PART V: TRUNCATED CONTINUUM CHARACTERISTIC FUNCTIONAL (OS0)
     ============================================================================ -/
 
@@ -2164,6 +2444,19 @@ theorem massSqOp_rest_frame_mass_shell_bound
 #print axioms gnsCompletedSemigroup_zero
 #print axioms gnsCompletedSemigroup_add
 #print axioms gnsCompletedSemigroup_inner_symm
+#print axioms shiftPositiveTimeTestData_vacuum
+#print axioms inner_gnsLinearVacuum_self
+#print axioms norm_gnsLinearVacuum
+#print axioms inner_gnsCompletedVacuum_self
+#print axioms norm_gnsCompletedVacuum
+#print axioms gnsCompletedVacuum_ne_zero
+#print axioms gnsLinearSemigroup_vacuum
+#print axioms gnsCompletedSemigroup_vacuum
+#print axioms gnsLinearSemigroup_exp_decay_of_shift_bound
+#print axioms gnsCompletedSemigroup_exp_decay_of_linear
+#print axioms gnsCompletedSemigroupCurve_zero
+#print axioms GNSCompletedWightmanReconstruction.has_mass_gap
+#print axioms GNSCompletedWightmanReconstruction.ofLinearShiftDecay
 #print axioms sesqOS_shift_clustering
 #print axioms charFunctionalTrunc_zero
 #print axioms charFunctionalTrunc_zero_test
